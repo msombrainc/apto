@@ -55,6 +55,22 @@ public class MigrationStartupTests
         Assert.True(recorder.WasCalled);
     }
 
+    [Fact]
+    public void Startup_fails_without_connection_string_outside_testing()
+    {
+        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting(WebHostDefaults.EnvironmentKey, Environments.Development);
+            builder.ConfigureAppConfiguration((_, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>());
+            });
+        });
+
+        var ex = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
+        Assert.Contains("ConnectionStrings:Default", ex.Message, StringComparison.Ordinal);
+    }
+
     private sealed class RecordingMigrationApplier : IDatabaseMigrationApplier
     {
         public bool WasCalled { get; private set; }
