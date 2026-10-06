@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var isTesting = builder.Environment.IsEnvironment("Testing");
 
+builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
+
 builder.Services.AddDbContext<AptoDbContext>(options =>
 {
     if (isTesting)
@@ -22,12 +24,7 @@ builder.Services.AddDbContext<AptoDbContext>(options =>
 
 var app = builder.Build();
 
-if (!isTesting)
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
-    db.Database.Migrate();
-}
+DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
 
 static string ResolveBuildId(string contentRoot)
 {

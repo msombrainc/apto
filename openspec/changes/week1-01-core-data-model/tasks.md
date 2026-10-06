@@ -7,4 +7,4 @@
 ## 2. Verification
 
 - [x] 2.1 In-memory DbContext integration test
-- [ ] 2.2 `npm run gate:mr` green
+- [x] 2.2 `npm run gate:mr` green

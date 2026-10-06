@@ -46,6 +46,9 @@ public class CoreDataModelTests
         db.AddRange(account, job, category, part, asset);
         await db.SaveChangesAsync();
 
+        var accountByCode = await db.Accounts.SingleAsync(a => a.Code == "ACME-01");
+        Assert.Equal("Acme Demo", accountByCode.Name);
+
         var loaded = await db.Assets
             .Include(a => a.PartNumber)
             .ThenInclude(p => p!.Category)
