@@ -13,7 +13,7 @@ public class HealthEndpointTests
         Environment.SetEnvironmentVariable("BUILD_ID", "test-env-sha");
         try
         {
-            await using var factory = new WebApplicationFactory<Program>();
+            await using var factory = new AptoWebApplicationFactory();
             using var client = factory.CreateClient();
 
             var response = await client.GetAsync("/api/health");
@@ -35,7 +35,7 @@ public class HealthEndpointTests
         Environment.SetEnvironmentVariable("BUILD_ID", "plain-sha");
         try
         {
-            await using var factory = new WebApplicationFactory<Program>();
+            await using var factory = new AptoWebApplicationFactory();
             using var client = factory.CreateClient();
             var body = await client.GetStringAsync("/api/build-id");
             Assert.Equal("plain-sha", body);
@@ -54,7 +54,7 @@ public class HealthEndpointTests
         try
         {
             await File.WriteAllTextAsync(Path.Combine(tempDir.FullName, "BUILD_ID"), "file-sha");
-            await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            await using var factory = new AptoWebApplicationFactory().WithWebHostBuilder(builder =>
             {
                 builder.UseSetting(WebHostDefaults.ContentRootKey, tempDir.FullName);
             });

@@ -1,6 +1,33 @@
+using Apto.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
+var isTesting = builder.Environment.IsEnvironment("Testing");
+
+builder.Services.AddDbContext<AptoDbContext>(options =>
+{
+    if (isTesting)
+    {
+        options.UseInMemoryDatabase("AptoTests");
+        return;
+    }
+
+    var connectionString = builder.Configuration.GetConnectionString("Default");
+    if (string.IsNullOrWhiteSpace(connectionString))
+        throw new InvalidOperationException("ConnectionStrings:Default is required outside Testing.");
+
+    options.UseSqlServer(connectionString);
+});
+
 var app = builder.Build();
+
+if (!isTesting)
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+    db.Database.Migrate();
+}
 
 static string ResolveBuildId(string contentRoot)
 {
