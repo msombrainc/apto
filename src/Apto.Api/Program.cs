@@ -1,6 +1,27 @@
+using Apto.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
+var isTesting = builder.Environment.IsEnvironment("Testing");
+
+builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
+
+if (!isTesting)
+{
+    builder.Services.AddDbContext<AptoDbContext>(options =>
+    {
+        var connectionString = builder.Configuration.GetConnectionString("Default");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("ConnectionStrings:Default is required outside Testing.");
+
+        options.UseSqlServer(connectionString);
+    });
+}
+
 var app = builder.Build();
+
+DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
 
 static string ResolveBuildId(string contentRoot)
 {
