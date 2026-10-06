@@ -1,0 +1,15 @@
+{
+  "name": "apto",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Apto — Sombrainc product (factory greenfield)",
+  "scripts": {
+    "test": "node --test tests/smoke.test.mjs",
+    "gate:mr": "bash scripts/local_mr_gate.sh",
+    "spec": "openspec"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "^0.17.2"
+  },
+  "engines": { "node": ">=20" }
+}
