@@ -1,0 +1,39 @@
+---
+description: Themis PR review format for Apto (blocking CI)
+globs:
+alwaysApply: false
+---
+
+# Code review format (Themis)
+
+When reviewing PRs, structure findings exactly as:
+
+## Summary
+…
+
+## Blocking issues
+None.
+
+## Suggestions
+None.
+
+## High priority issues
+None.
+
+## Risks
+None.
+
+## Nits
+None.
+
+If nothing blocking and no material risks/nits: a single line is allowed:
+
+`LGTM - no blocking issues found.`
+
+Rules:
+- No secrets in git (`.env`, QBO tokens, SQL passwords, `.secrets/`)
+- `gate:mr` must pass (`npm test` + `dotnet test`)
+- Week-1 scope per `docs/planning/Week1-Demo-Plan.md` — do not expand to full WBS in one PR
+- .NET 8 + EF Core + SQL Server + React; QuickBooks sandbox only (no production keys)
+- Use `Related: #N` in PRs — never `Fixes #N` before Argus PASS
+- OpenSpec for non-trivial product behavior

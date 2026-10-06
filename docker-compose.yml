@@ -1,0 +1,26 @@
+# Week-1 local stack (see docs/planning/Week1-Demo-Plan.md). Web service lands in later slices.
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Apto_Local_Dev_Only!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - apto-mssql-data:/var/opt/mssql
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Apto.Api/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=Apto;User Id=sa;Password=Apto_Local_Dev_Only!;TrustServerCertificate=True"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - sqlserver
+
+volumes:
+  apto-mssql-data:

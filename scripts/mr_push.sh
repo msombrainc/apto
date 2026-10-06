@@ -23,13 +23,16 @@ if [[ -z "$TITLE" ]]; then
   TITLE="$(git log -1 --pretty=%s)"
 fi
 
-if [[ -z "${GH_TOKEN:-}" && -f /Users/max/Downloads/project/personal/sombrainc/.secrets/github.env ]]; then
-  # shellcheck disable=SC1091
-  source /Users/max/Downloads/project/personal/sombrainc/.secrets/github.env
-  export GH_TOKEN="$GITHUB_TOKEN"
-fi
+for gh_env in "$ROOT/.secrets/github.env" "$ROOT/../.secrets/github.env"; do
+  if [[ -z "${GH_TOKEN:-}" && -f "$gh_env" ]]; then
+    # shellcheck disable=SC1090
+    source "$gh_env"
+    export GH_TOKEN="${GITHUB_TOKEN:-$GH_TOKEN}"
+    break
+  fi
+done
 
-gh pr create --repo msombrainc/deca-scheduling \
+gh pr create --repo msombrainc/apto \
   --title "$TITLE" \
   --body "$(cat <<EOF
 ## Summary

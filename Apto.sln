@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CA98C952-16C1-436A-971C-7E371F4B617B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apto.Api", "src\Apto.Api\Apto.Api.csproj", "{A21BF7AB-A785-4754-9E3D-B7E6D836152A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D4F2249A-89F5-4B16-82A4-C1BD839276F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apto.Api.Tests", "tests\Apto.Api.Tests\Apto.Api.Tests.csproj", "{ADB2F2C8-0FDA-467C-9826-63FC9E2E4CAC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A21BF7AB-A785-4754-9E3D-B7E6D836152A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A21BF7AB-A785-4754-9E3D-B7E6D836152A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A21BF7AB-A785-4754-9E3D-B7E6D836152A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A21BF7AB-A785-4754-9E3D-B7E6D836152A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADB2F2C8-0FDA-467C-9826-63FC9E2E4CAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADB2F2C8-0FDA-467C-9826-63FC9E2E4CAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADB2F2C8-0FDA-467C-9826-63FC9E2E4CAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADB2F2C8-0FDA-467C-9826-63FC9E2E4CAC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A21BF7AB-A785-4754-9E3D-B7E6D836152A} = {CA98C952-16C1-436A-971C-7E371F4B617B}
+		{ADB2F2C8-0FDA-467C-9826-63FC9E2E4CAC} = {D4F2249A-89F5-4B16-82A4-C1BD839276F8}
+	EndGlobalSection
+EndGlobal
