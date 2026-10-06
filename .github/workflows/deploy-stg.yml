@@ -57,20 +57,18 @@ jobs:
             ssh-keyscan -H "$DO_DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
           fi
           SSHC="ssh -i $HOME/.ssh/id_ed25519 -o BatchMode=yes -o IdentitiesOnly=yes"
-          REMOTE=/home/deploy/opt/apto
-          STG_PORT=3012
+          REMOTE=/opt/apto
           $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "test -d $REMOTE" || {
-            echo "Missing $REMOTE — run scripts/bootstrap-stg-droplet.sh once (see docs/DEPLOY-STG-DROPLET.md)" >&2
+            echo "Missing $REMOTE — run deploy/droplet/bootstrap-root.sh as root once (see docs/DEPLOY-STG-DROPLET.md)" >&2
             exit 2
           }
           rsync -az --delete -e "$SSHC" deploy/publish/ "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:$REMOTE/"
           $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" bash -s <<REMOTE
           set -euo pipefail
           printf '%s' '${BUILD_ID}' > $REMOTE/BUILD_ID
-          systemctl --user restart apto.service
-          systemctl --user is-active apto.service
+          sudo -n /usr/local/bin/apto-restart
           REMOTE
-          STG_URL="http://${DO_DEPLOY_HOST}:${STG_PORT}"
+          STG_URL="http://apto.${DO_DEPLOY_HOST}.nip.io"
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
             if curl -fsS --max-time 30 "$STG_URL/api/health" | grep -q "$BUILD_ID"; then
               exit 0
