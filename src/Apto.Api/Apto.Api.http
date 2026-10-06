@@ -1,0 +1,6 @@
+@Apto.Api_HostAddress = http://localhost:5085
+
+GET {{Apto.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

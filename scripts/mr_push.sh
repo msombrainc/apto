@@ -29,7 +29,7 @@ if [[ -z "${GH_TOKEN:-}" && -f /Users/max/Downloads/project/personal/sombrainc/.
   export GH_TOKEN="$GITHUB_TOKEN"
 fi
 
-gh pr create --repo msombrainc/deca-scheduling \
+gh pr create --repo msombrainc/apto \
   --title "$TITLE" \
   --body "$(cat <<EOF
 ## Summary
