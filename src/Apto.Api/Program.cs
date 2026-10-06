@@ -7,20 +7,17 @@ var isTesting = builder.Environment.IsEnvironment("Testing");
 
 builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
 
-builder.Services.AddDbContext<AptoDbContext>(options =>
+if (!isTesting)
 {
-    if (isTesting)
+    builder.Services.AddDbContext<AptoDbContext>(options =>
     {
-        options.UseInMemoryDatabase("AptoTests");
-        return;
-    }
+        var connectionString = builder.Configuration.GetConnectionString("Default");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("ConnectionStrings:Default is required outside Testing.");
 
-    var connectionString = builder.Configuration.GetConnectionString("Default");
-    if (string.IsNullOrWhiteSpace(connectionString))
-        throw new InvalidOperationException("ConnectionStrings:Default is required outside Testing.");
-
-    options.UseSqlServer(connectionString);
-});
+        options.UseSqlServer(connectionString);
+    });
+}
 
 var app = builder.Build();
 
