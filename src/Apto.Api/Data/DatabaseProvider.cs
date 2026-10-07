@@ -1,6 +1,6 @@
 namespace Apto.Api.Data;
 
-internal static class DatabaseProvider
+public static class DatabaseProvider
 {
     /// <summary>
     /// SQLite file connection (STG demo) — not SQL Server "Data Source=server".
