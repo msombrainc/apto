@@ -12,8 +12,8 @@ The STG systemd unit SHALL load optional environment from `/home/deploy/.config/
 - **THEN** `stg.env` on the droplet contains `ConnectionStrings__Default=<secret>`
 - **AND** `apto.service` restarts with EF migrations and `/api/accounts` enabled
 
-#### Scenario: Health-only without secret
+#### Scenario: SQLite demo when secret unset
 
 - **WHEN** `APTO_STG_CONNECTION_STRING` is unset
-- **THEN** deploy still succeeds
-- **AND** only `/api/health` is available (no account routes)
+- **THEN** deploy writes `stg.env` with a SQLite file path under `/home/deploy/opt/apto-data/`
+- **AND** `/api/accounts` works against that demo database (no SQL Server on the droplet)
