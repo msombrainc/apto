@@ -10,7 +10,7 @@ Week-1 demo steps 3 & 6: manual asset create on a job, part-number lookup, singl
 
 - REST: job assets list/create, asset get/update, part-number search/create.
 - `AssetChangeLog` persistence (field, old, new, user, timestamp).
-- React: select job → add assets → edit asset with change log table.
+- React: select job → add assets → edit asset with change log table (Week-1 UI: serial edit only; part-number change via API).
 
 ## Out of scope
 

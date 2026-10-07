@@ -92,6 +92,61 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Update_asset_part_number_appends_change_log()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Apto-User", "operator-2");
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Part Co", "PT-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "TX", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var firstPart = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("PN-OLD", "Laptops"));
+        var oldPart = await firstPart.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(oldPart);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(oldPart.Id, "SN-PN", null));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        Assert.Equal("PN-OLD", asset.PartNumber);
+
+        var secondPart = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("PN-NEW", "Laptops"));
+        var newPart = await secondPart.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(newPart);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(newPart.Id, null, null));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var updated = await put.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("PN-NEW", updated.PartNumber);
+        Assert.Contains(
+            updated.ChangeLog,
+            e =>
+                e.FieldName == "partNumber"
+                && e.OldValue == "PN-OLD"
+                && e.NewValue == "PN-NEW"
+                && e.ChangedBy == "operator-2");
+    }
+
+    [Fact]
     public async Task Create_asset_without_part_number_returns_bad_request()
     {
         await using var factory = new AptoWebApplicationFactory();
