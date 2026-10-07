@@ -1,5 +1,6 @@
 using Apto.Api.Accounts;
 using Apto.Api.Data;
+using Apto.Api.Jobs;
 using Apto.Api.QuickBooks;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,6 +45,9 @@ if (useDatabase)
         DatabaseStartup.EnsureSqliteSchemaIfNeeded(app.Services, app.Environment);
     else
         DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
+
+    if (useSqlite && !app.Environment.IsEnvironment("Testing"))
+        await DemoJobSeeder.SeedIfEmptyAsync(app.Services);
 }
 
 static string ResolveBuildId(string contentRoot)
@@ -72,6 +76,7 @@ app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
 if (useDatabase || isTesting)
 {
     app.MapAccountEndpoints();
+    app.MapJobEndpoints();
     app.MapQboOAuthEndpoints();
 }
 

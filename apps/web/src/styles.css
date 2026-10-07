@@ -98,3 +98,61 @@ td {
 .error {
   color: #b91c1c;
 }
+
+.header-actions {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+tr.sla-on-track {
+  background: #ecfdf5;
+}
+
+tr.sla-at-risk {
+  background: #fef9c3;
+}
+
+tr.sla-overdue {
+  background: #fee2e2;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.sla-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.sla-pill--on-track {
+  background: #bbf7d0;
+  color: #14532d;
+}
+
+.sla-pill--at-risk {
+  background: #fde047;
+  color: #713f12;
+}
+
+.sla-pill--overdue {
+  background: #fecaca;
+  color: #7f1d1d;
+}
