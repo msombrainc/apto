@@ -14,23 +14,21 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
 
-if (!isTesting)
+var connectionString = builder.Configuration.GetConnectionString("Default");
+var useDatabase = !isTesting && !string.IsNullOrWhiteSpace(connectionString);
+
+if (useDatabase)
 {
     builder.Services.AddDbContext<AptoDbContext>(options =>
-    {
-        var connectionString = builder.Configuration.GetConnectionString("Default");
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException("ConnectionStrings:Default is required outside Testing.");
-
-        options.UseSqlServer(connectionString);
-    });
+        options.UseSqlServer(connectionString!));
 }
 
 var app = builder.Build();
 
 app.UseCors();
 
-DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
+if (useDatabase)
+    DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
 
 static string ResolveBuildId(string contentRoot)
 {
@@ -54,7 +52,9 @@ var buildId = ResolveBuildId(app.Environment.ContentRootPath);
 
 app.MapGet("/api/health", () => Results.Json(new { status = "ok", buildId }));
 app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
-app.MapAccountEndpoints();
+
+if (useDatabase)
+    app.MapAccountEndpoints();
 
 app.Run();
 
