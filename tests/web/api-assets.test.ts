@@ -57,6 +57,32 @@ test("listJobAssets throws on non-OK", async () => {
   globalThis.fetch = original;
 });
 
+test("updateAsset sends X-Apto-User header", async () => {
+  const original = globalThis.fetch;
+  let headers: Record<string, string> | undefined;
+  globalThis.fetch = async (_input, init) => {
+    headers = init?.headers as Record<string, string>;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        id: "a",
+        jobId: "j",
+        partNumberId: null,
+        partNumber: null,
+        serialNumber: "NEW",
+        createdAtUtc: "2026-01-01T00:00:00Z",
+        changeLog: [],
+      }),
+    } as Response;
+  };
+
+  await updateAsset("asset-1", { serialNumber: "NEW" });
+  assert.equal(headers?.["X-Apto-User"], "demo");
+
+  globalThis.fetch = original;
+});
+
 test("updateAsset surfaces API error message", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () =>

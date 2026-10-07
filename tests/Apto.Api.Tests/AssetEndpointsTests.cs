@@ -173,6 +173,26 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task List_assets_for_missing_job_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/jobs/{Guid.NewGuid()}/assets");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_missing_asset_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/assets/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Part_number_search_returns_matches()
     {
         await using var factory = new AptoWebApplicationFactory();
