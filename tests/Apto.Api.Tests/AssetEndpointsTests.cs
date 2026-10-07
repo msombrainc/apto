@@ -450,4 +450,80 @@ public class AssetEndpointsTests
         Assert.Equal("OTHER-2", byAccount[0].SerialNumber);
         Assert.Equal("TX", byAccount[0].FacilityCode);
     }
+
+    [Fact]
+    public async Task Inventory_list_filters_by_facility_code()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var acct = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Fac Co", "FAC", 1, 1, 1));
+        var account = await acct.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(account);
+
+        var jobGa = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(account.Id, "GA", null, DateTime.UtcNow, null));
+        var jobTx = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(account.Id, "TX", null, DateTime.UtcNow, null));
+        var createdGa = await jobGa.Content.ReadFromJsonAsync<JobResponse>();
+        var createdTx = await jobTx.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdGa);
+        Assert.NotNull(createdTx);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdGa.Id}/assets",
+            new AssetWriteRequest(null, "GA-SN", "PN-FAC-GA"));
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdTx.Id}/assets",
+            new AssetWriteRequest(null, "TX-SN", "PN-FAC-TX"));
+
+        var txOnly = await client.GetFromJsonAsync<List<AssetInventoryRow>>(
+            "/api/assets?facilityCode=tx");
+        Assert.NotNull(txOnly);
+        Assert.Single(txOnly);
+        Assert.Equal("TX-SN", txOnly[0].SerialNumber);
+        Assert.Equal("TX", txOnly[0].FacilityCode);
+    }
+
+    [Fact]
+    public async Task Inventory_list_filters_by_job_id()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var acct = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Job Co", "JBC", 1, 1, 1));
+        var account = await acct.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(account);
+
+        var jobOne = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(account.Id, "GA", null, DateTime.UtcNow, null));
+        var jobTwo = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(account.Id, "GA", null, DateTime.UtcNow, null));
+        var createdOne = await jobOne.Content.ReadFromJsonAsync<JobResponse>();
+        var createdTwo = await jobTwo.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdOne);
+        Assert.NotNull(createdTwo);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdOne.Id}/assets",
+            new AssetWriteRequest(null, "JOB1-SN", "PN-JOB-1"));
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdTwo.Id}/assets",
+            new AssetWriteRequest(null, "JOB2-SN", "PN-JOB-2"));
+
+        var slice = await client.GetFromJsonAsync<List<AssetInventoryRow>>(
+            $"/api/assets?jobId={createdOne.Id}");
+        Assert.NotNull(slice);
+        Assert.Single(slice);
+        Assert.Equal(createdOne.Id, slice[0].JobId);
+        Assert.Equal("JOB1-SN", slice[0].SerialNumber);
+    }
 }
