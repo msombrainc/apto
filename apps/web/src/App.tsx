@@ -316,14 +316,14 @@ export function App() {
           <section className="card">
             <h2>Jobs list</h2>
             <button type="button" onClick={() => void refreshJobs()}>Refresh</button>
-            <table>
+            <table aria-label="Jobs with SLA status">
               <thead>
                 <tr>
-                  <th>Account</th>
-                  <th>Facility</th>
-                  <th>Ops</th>
-                  <th>Days left</th>
-                  <th>SLA</th>
+                  <th scope="col">Account</th>
+                  <th scope="col">Facility</th>
+                  <th scope="col">Ops</th>
+                  <th scope="col">Days left</th>
+                  <th scope="col">SLA</th>
                 </tr>
               </thead>
               <tbody>
@@ -332,8 +332,13 @@ export function App() {
                     <td>{j.accountName}</td>
                     <td>{j.facilityCode ?? "—"}</td>
                     <td>{j.opsStatus ?? "—"}</td>
-                    <td>{j.daysRemaining}</td>
-                    <td>{j.slaStatus}</td>
+                    <td>
+                      <span className="sr-only">Days remaining: </span>
+                      {j.daysRemaining}
+                    </td>
+                    <td>
+                      <span className={`sla-pill sla-pill--${j.slaStatus}`}>{j.slaStatus}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
