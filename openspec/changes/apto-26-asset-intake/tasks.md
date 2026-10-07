@@ -4,4 +4,4 @@
 - [x] Asset + part-number API + change log entity/migration
 - [x] Integration tests
 - [x] React job assets + edit UI
-- [ ] gate:mr
+- [x] gate:mr
