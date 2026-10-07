@@ -92,6 +92,87 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Create_asset_without_part_number_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Bad", "BAD-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "SN-ONLY", null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(body);
+        Assert.Contains("part number", body["error"], StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Create_asset_with_unknown_part_id_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("X", "X-2", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(Guid.NewGuid(), null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_asset_with_no_changes_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Y", "Y-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, null, "PN-PUT-1"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+    }
+
+    [Fact]
     public async Task Part_number_search_returns_matches()
     {
         await using var factory = new AptoWebApplicationFactory();
