@@ -36,6 +36,25 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Search_filters_by_name_only()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Acme Corporation", "ZZZ-ONLY", 0, 0, 0));
+        await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Other LLC", "OTHER", 0, 0, 0));
+
+        var results = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?q=acme");
+        Assert.NotNull(results);
+        Assert.Single(results);
+        Assert.Equal("ZZZ-ONLY", results[0].Code);
+    }
+
+    [Fact]
     public async Task Search_filters_by_code()
     {
         await using var factory = new AptoWebApplicationFactory();
