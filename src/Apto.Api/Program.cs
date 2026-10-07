@@ -1,9 +1,16 @@
+using Apto.Api.Accounts;
 using Apto.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var isTesting = builder.Environment.IsEnvironment("Testing");
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+});
 
 builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
 
@@ -20,6 +27,8 @@ if (!isTesting)
 }
 
 var app = builder.Build();
+
+app.UseCors();
 
 DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
 
@@ -45,6 +54,7 @@ var buildId = ResolveBuildId(app.Environment.ContentRootPath);
 
 app.MapGet("/api/health", () => Results.Json(new { status = "ok", buildId }));
 app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
+app.MapAccountEndpoints();
 
 app.Run();
 
