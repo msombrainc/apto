@@ -11,6 +11,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<PartNumber> PartNumbers => Set<PartNumber>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<QboConnection> QboConnections => Set<QboConnection>();
+    public DbSet<AssetChangeLog> AssetChangeLogs => Set<AssetChangeLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +56,16 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
             e.HasIndex(x => x.Number).IsUnique();
             e.Property(x => x.Number).HasMaxLength(100);
             e.HasOne(x => x.Category).WithMany(x => x.PartNumbers).HasForeignKey(x => x.CategoryId);
+        });
+
+        modelBuilder.Entity<AssetChangeLog>(e =>
+        {
+            e.HasOne(x => x.Asset).WithMany().HasForeignKey(x => x.AssetId);
+            e.Property(x => x.FieldName).HasMaxLength(100);
+            e.Property(x => x.OldValue).HasMaxLength(500);
+            e.Property(x => x.NewValue).HasMaxLength(500);
+            e.Property(x => x.ChangedBy).HasMaxLength(100);
+            e.HasIndex(x => x.AssetId);
         });
     }
 }

@@ -156,3 +156,33 @@ tr.sla-overdue {
   background: #fecaca;
   color: #7f1d1d;
 }
+
+.row-selectable {
+  cursor: pointer;
+}
+
+.row-selectable:hover {
+  filter: brightness(0.97);
+}
+
+.row-selectable:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+tr.row-selected {
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.assets-panel h2 {
+  margin-top: 0;
+}
+
+.change-log-table {
+  font-size: 0.9rem;
+}
+
+.change-log-table th {
+  font-weight: 600;
+  color: #475569;
+}

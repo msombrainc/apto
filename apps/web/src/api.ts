@@ -1,3 +1,5 @@
+import { DEMO_USER } from "./demoAuth";
+
 export type Account = {
   id: string;
   name: string;
@@ -86,6 +88,90 @@ export async function createJob(body: JobWrite): Promise<Job> {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error ?? `create job failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export type PartNumber = {
+  id: string;
+  number: string;
+  categoryName: string | null;
+};
+
+export type AssetChangeLogEntry = {
+  fieldName: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changedBy: string;
+  changedAtUtc: string;
+};
+
+export type Asset = {
+  id: string;
+  jobId: string;
+  partNumberId: string | null;
+  partNumber: string | null;
+  serialNumber: string | null;
+  createdAtUtc: string;
+  changeLog: AssetChangeLogEntry[];
+};
+
+export type AssetWrite = {
+  partNumberId?: string | null;
+  serialNumber?: string | null;
+  newPartNumber?: string | null;
+};
+
+function apiHeaders(): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    "X-Apto-User": DEMO_USER,
+  };
+}
+
+export async function searchPartNumbers(q: string): Promise<PartNumber[]> {
+  const url = q.trim()
+    ? `${base}/api/part-numbers?q=${encodeURIComponent(q.trim())}`
+    : `${base}/api/part-numbers`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`part number search failed: ${res.status}`);
+  return res.json();
+}
+
+export async function listJobAssets(jobId: string): Promise<Asset[]> {
+  const res = await fetch(`${base}/api/jobs/${jobId}/assets`);
+  if (!res.ok) throw new Error(`list assets failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getAsset(id: string): Promise<Asset> {
+  const res = await fetch(`${base}/api/assets/${id}`);
+  if (!res.ok) throw new Error(`get asset failed: ${res.status}`);
+  return res.json();
+}
+
+export async function createJobAsset(jobId: string, body: AssetWrite): Promise<Asset> {
+  const res = await fetch(`${base}/api/jobs/${jobId}/assets`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `create asset failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function updateAsset(id: string, body: AssetWrite): Promise<Asset> {
+  const res = await fetch(`${base}/api/assets/${id}`, {
+    method: "PUT",
+    headers: apiHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `update asset failed: ${res.status}`);
   }
   return res.json();
 }

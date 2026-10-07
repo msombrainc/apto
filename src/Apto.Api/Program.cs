@@ -1,6 +1,8 @@
 using Apto.Api.Accounts;
+using Apto.Api.Assets;
 using Apto.Api.Data;
 using Apto.Api.Jobs;
+using Apto.Api.PartNumbers;
 using Apto.Api.QuickBooks;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,6 +79,8 @@ if (useDatabase || isTesting)
 {
     app.MapAccountEndpoints();
     app.MapJobEndpoints();
+    app.MapAssetEndpoints();
+    app.MapPartNumberEndpoints();
     app.MapQboOAuthEndpoints();
 }
 
