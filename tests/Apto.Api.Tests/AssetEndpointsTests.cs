@@ -431,6 +431,9 @@ public class AssetEndpointsTests
         await client.PostAsJsonAsync(
             $"/api/jobs/{createdJobB.Id}/assets",
             new AssetWriteRequest(null, "OTHER-2", "PN-INV-B"));
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJobA.Id}/assets",
+            new AssetWriteRequest(null, "PLAIN-SN", "UNIQUE-PN-27"));
 
         var all = await client.GetFromJsonAsync<List<AssetInventoryRow>>("/api/assets");
         Assert.NotNull(all);
@@ -449,6 +452,13 @@ public class AssetEndpointsTests
         Assert.Single(byAccount);
         Assert.Equal("OTHER-2", byAccount[0].SerialNumber);
         Assert.Equal("TX", byAccount[0].FacilityCode);
+
+        var byPartNumber = await client.GetFromJsonAsync<List<AssetInventoryRow>>(
+            "/api/assets?q=unique-pn-27");
+        Assert.NotNull(byPartNumber);
+        Assert.Single(byPartNumber);
+        Assert.Equal("PLAIN-SN", byPartNumber[0].SerialNumber);
+        Assert.Equal("UNIQUE-PN-27", byPartNumber[0].PartNumber);
     }
 
     [Fact]
