@@ -70,13 +70,14 @@ jobs:
           systemctl --user restart apto.service
           systemctl --user is-active apto.service
           REMOTE
-          STG_URL="http://${DO_DEPLOY_HOST}:${STG_PORT}"
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            if curl -fsS --max-time 30 "$STG_URL/api/health" | grep -q "$BUILD_ID"; then
+            if $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" \
+              "curl -fsS --max-time 15 http://127.0.0.1:${STG_PORT}/api/health" | grep -q "$BUILD_ID"; then
+              echo "STG health OK on localhost:${STG_PORT}"
               exit 0
             fi
             echo "STG health not ready (attempt $attempt/10), waiting…" >&2
             sleep 3
           done
-          echo "STG health never matched BUILD_ID=$BUILD_ID at $STG_URL" >&2
+          echo "STG health never matched BUILD_ID=$BUILD_ID on localhost:${STG_PORT}" >&2
           exit 1

@@ -35,15 +35,9 @@ public class MigrationStartupTests
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseSetting(WebHostDefaults.EnvironmentKey, Environments.Development);
-            builder.ConfigureAppConfiguration((_, config) =>
-            {
-                config.AddInMemoryCollection(
-                    new Dictionary<string, string?>
-                    {
-                        ["ConnectionStrings:Default"] =
-                            "Server=localhost;Database=AptoTest;TrustServerCertificate=True",
-                    });
-            });
+            builder.UseSetting(
+                "ConnectionStrings:Default",
+                "Server=localhost;Database=AptoTest;TrustServerCertificate=True");
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll<IDatabaseMigrationApplier>();
@@ -56,19 +50,20 @@ public class MigrationStartupTests
     }
 
     [Fact]
-    public void Startup_fails_without_connection_string_outside_testing()
+    public async Task Startup_serves_health_without_connection_string()
     {
-        using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting(WebHostDefaults.EnvironmentKey, Environments.Development);
+            builder.UseSetting(WebHostDefaults.EnvironmentKey, Environments.Production);
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 config.AddInMemoryCollection(new Dictionary<string, string?>());
             });
         });
 
-        var ex = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
-        Assert.Contains("ConnectionStrings:Default", ex.Message, StringComparison.Ordinal);
+        using var client = factory.CreateClient();
+        var body = await client.GetStringAsync("/api/health");
+        Assert.Contains("ok", body);
     }
 
     private sealed class RecordingMigrationApplier : IDatabaseMigrationApplier
