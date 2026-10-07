@@ -1,4 +1,5 @@
 using Apto.Api.Data;
+using Apto.Api.QuickBooks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -11,6 +12,12 @@ namespace Apto.Api.Tests;
 public sealed class AptoWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _inMemoryDatabaseName = Guid.NewGuid().ToString("N");
+    private readonly Action<QboOptions>? _configureQbo;
+
+    public AptoWebApplicationFactory(Action<QboOptions>? configureQbo = null)
+    {
+        _configureQbo = configureQbo;
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -20,6 +27,9 @@ public sealed class AptoWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<AptoDbContext>>();
             services.AddDbContext<AptoDbContext>(options =>
                 options.UseInMemoryDatabase(_inMemoryDatabaseName));
+
+            if (_configureQbo is not null)
+                services.PostConfigure(_configureQbo);
         });
     }
 }
