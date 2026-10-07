@@ -95,12 +95,14 @@ export function App() {
   const refreshInventory = useCallback(async () => {
     setError(null);
     try {
-      setInventoryRows(
-        await listInventoryAssets({
-          q: inventoryQuery,
-          accountId: inventoryAccountId || undefined,
-          facilityCode: inventoryFacility || undefined,
-        }),
+      const rows = await listInventoryAssets({
+        q: inventoryQuery,
+        accountId: inventoryAccountId || undefined,
+        facilityCode: inventoryFacility || undefined,
+      });
+      setInventoryRows(rows);
+      setSelectedAsset((current) =>
+        current && !rows.some((r) => r.id === current.id) ? null : current,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load inventory");

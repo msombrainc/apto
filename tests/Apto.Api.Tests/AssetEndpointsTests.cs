@@ -571,4 +571,38 @@ public class AssetEndpointsTests
         Assert.Equal("OLDER-SN", slice[1].SerialNumber);
         Assert.True(slice[0].CreatedAtUtc >= slice[1].CreatedAtUtc);
     }
+
+    [Fact]
+    public async Task Inventory_list_unfiltered_orders_newest_first()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var acct = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("All Co", "ALL", 1, 1, 1));
+        var account = await acct.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(account);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(account.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "ALL-OLDER", "PN-ALL-1"));
+        await Task.Delay(15);
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "ALL-NEWER", "PN-ALL-2"));
+
+        var all = await client.GetFromJsonAsync<List<AssetInventoryRow>>("/api/assets");
+        Assert.NotNull(all);
+        var newerIdx = all.FindIndex(r => r.SerialNumber == "ALL-NEWER");
+        var olderIdx = all.FindIndex(r => r.SerialNumber == "ALL-OLDER");
+        Assert.True(newerIdx >= 0 && olderIdx >= 0);
+        Assert.True(newerIdx < olderIdx);
+    }
 }
