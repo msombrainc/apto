@@ -80,7 +80,7 @@ public class MigrationStartupTests
     }
 
     [Fact]
-    public async Task Startup_with_legacy_sqlite_without_jobs_table_serves_accounts()
+    public async Task Startup_with_legacy_sqlite_patches_schema_and_serves_accounts_and_jobs()
     {
         var dbPath = Path.Combine(Path.GetTempPath(), $"apto-legacy-{Guid.NewGuid():N}.db");
         try

@@ -7,6 +7,7 @@ namespace Apto.Api.Data;
 /// <summary>
 /// STG SQLite files are created with <see cref="DatabaseFacade.EnsureCreated"/>, which does not
 /// evolve schema. Apply additive patches so deploys after model changes still boot.
+/// When changing <see cref="AptoDbContext"/> or EF migrations, mirror additive DDL here.
 /// </summary>
 public static class SqliteStgSchemaPatcher
 {
