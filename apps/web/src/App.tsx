@@ -128,12 +128,20 @@ export function App() {
       void refreshJobs();
       return;
     }
-    void refreshAccounts();
-    void listFacilities()
-      .then(setFacilities)
-      .catch(() => setFacilities(["GA", "TX", "CA"]));
+    if (view === "inventory") {
+      void refreshAccounts();
+      void listFacilities()
+        .then(setFacilities)
+        .catch(() => setFacilities(["GA", "TX", "CA"]));
+    }
+  }, [loggedIn, view, refreshAccounts, refreshJobs]);
+
+  useEffect(() => {
+    if (!loggedIn || view !== "inventory") return;
     void refreshInventory();
-  }, [loggedIn, view, refreshAccounts, refreshJobs, refreshInventory]);
+    // Tab enter loads once; filter changes use Apply (not filter state in deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loggedIn, view]);
 
   useEffect(() => {
     if (!loggedIn || view !== "jobs") return;
