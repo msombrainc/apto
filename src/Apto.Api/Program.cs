@@ -53,7 +53,7 @@ var buildId = ResolveBuildId(app.Environment.ContentRootPath);
 app.MapGet("/api/health", () => Results.Json(new { status = "ok", buildId }));
 app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
 
-if (useDatabase)
+if (useDatabase || isTesting)
     app.MapAccountEndpoints();
 
 app.Run();
