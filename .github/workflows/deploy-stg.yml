@@ -37,6 +37,7 @@ jobs:
           DO_DEPLOY_USER: ${{ secrets.DO_DEPLOY_USER }}
           DO_SSH_KEY: ${{ secrets.DO_SSH_KEY }}
           DO_KNOWN_HOSTS: ${{ secrets.DO_KNOWN_HOSTS }}
+          APTO_STG_CONNECTION_STRING: ${{ secrets.APTO_STG_CONNECTION_STRING }}
           BUILD_ID: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -64,6 +65,18 @@ jobs:
             $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "bash -s" < deploy/droplet/bootstrap-deploy.sh
           fi
           rsync -az --delete -e "$SSHC" deploy/publish/ "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:$REMOTE/"
+          if [ -n "${APTO_STG_CONNECTION_STRING:-}" ]; then
+            STG_ENV_FILE="$(mktemp)"
+            chmod 600 "$STG_ENV_FILE"
+            printf '%s\n' "ConnectionStrings__Default=${APTO_STG_CONNECTION_STRING}" > "$STG_ENV_FILE"
+            $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "mkdir -p ~/.config/apto"
+            scp -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o IdentitiesOnly=yes \
+              "$STG_ENV_FILE" "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:.config/apto/stg.env"
+            rm -f "$STG_ENV_FILE"
+          else
+            echo "APTO_STG_CONNECTION_STRING not set — STG runs health-only (no /api/accounts)." >&2
+          fi
+          $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "bash -s" < deploy/droplet/bootstrap-deploy.sh
           $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" bash -s <<REMOTE
           set -euo pipefail
           printf '%s' '${BUILD_ID}' > $REMOTE/BUILD_ID

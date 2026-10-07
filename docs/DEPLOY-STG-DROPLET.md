@@ -14,6 +14,10 @@ Same host pattern as Pantheon / Kudos / Lab RM.
 
 GitHub Actions secrets: `DO_DEPLOY_HOST`, `DO_DEPLOY_USER`, `DO_SSH_KEY`, `DO_KNOWN_HOSTS` (copy from pantheon/hackaton).
 
+**Account API / EF on STG:** set `APTO_STG_CONNECTION_STRING` (SQL Server 2022+ reachable from the droplet). CI writes `~/.config/apto/stg.env` on each deploy; `apto.service` loads it. Without this secret, only `/api/health` works.
+
+The shared droplet has **~512MB RAM** — do not run MSSQL in Docker there; use **managed / external SQL Server** (Azure SQL, RDS, or a dedicated DB VM).
+
 ## Bootstrap (no root)
 
 **CI** runs `deploy/droplet/bootstrap-deploy.sh` over SSH if `~/opt/apto` is missing.

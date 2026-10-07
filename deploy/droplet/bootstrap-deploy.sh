@@ -31,6 +31,7 @@ Environment=DOTNET_ROOT=$DOTNET_ROOT
 Environment=PATH=$DOTNET_ROOT:/usr/local/bin:/usr/bin:/bin
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=ASPNETCORE_URLS=http://0.0.0.0:$PORT
+EnvironmentFile=-/home/deploy/.config/apto/stg.env
 ExecStart=$DOTNET_ROOT/dotnet $APP_DIR/Apto.Api.dll
 Restart=on-failure
 RestartSec=3
