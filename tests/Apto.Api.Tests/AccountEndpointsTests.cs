@@ -166,6 +166,26 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Put_code_over_max_length_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "PUTMAX", 0, 0, 0));
+        var body = await created.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(body);
+
+        var tooLongCode = new string('c', 51);
+        var response = await client.PutAsJsonAsync(
+            $"/api/accounts/{body.Id}",
+            new AccountWriteRequest("Valid", tooLongCode, 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Post_negative_sla_returns_bad_request()
     {
         await using var factory = new AptoWebApplicationFactory();
