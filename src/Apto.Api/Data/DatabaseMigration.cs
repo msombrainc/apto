@@ -26,4 +26,15 @@ public static class DatabaseStartup
         var applier = scope.ServiceProvider.GetRequiredService<IDatabaseMigrationApplier>();
         applier.ApplyPendingMigrations(db);
     }
+
+    /// <summary>STG demo: schema from model (no SQL Server migrations on SQLite).</summary>
+    public static void EnsureSqliteSchemaIfNeeded(IServiceProvider services, IHostEnvironment environment)
+    {
+        if (environment.IsEnvironment("Testing"))
+            return;
+
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        db.Database.EnsureCreated();
+    }
 }
