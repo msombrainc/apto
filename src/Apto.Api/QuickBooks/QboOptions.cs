@@ -8,7 +8,7 @@ public sealed class QboOptions
 
     public string ClientSecret { get; set; } = "";
 
-    public string RedirectUri { get; set; } = "http://localhost:5080/api/qbo/oauth/callback";
+    public string RedirectUri { get; set; } = "http://localhost:8080/api/qbo/oauth/callback";
 
     public string OAuthBaseUrl { get; set; } = "https://appcenter.intuit.com/connect/oauth2";
 

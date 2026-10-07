@@ -4,5 +4,5 @@
 - [x] 1.3 Mocked tests
 
 ## 2. Verification
-- [ ] 2.1 `npm run gate:mr`
+- [x] 2.1 `npm run gate:mr`
 - [ ] 2.2 Manual sandbox OAuth + Account create (operator)
