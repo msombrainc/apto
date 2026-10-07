@@ -1,5 +1,6 @@
 using Apto.Api.Accounts;
 using Apto.Api.Data;
+using Apto.Api.QuickBooks;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
+builder.Services.AddQuickBooksIntegration(builder.Configuration);
 
 var connectionString = builder.Configuration.GetConnectionString("Default");
 var useDatabase = !isTesting && !string.IsNullOrWhiteSpace(connectionString);
@@ -68,7 +70,10 @@ app.MapGet("/api/health", () => Results.Json(new { status = "ok", buildId }));
 app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
 
 if (useDatabase || isTesting)
+{
     app.MapAccountEndpoints();
+    app.MapQboOAuthEndpoints();
+}
 
 // Keep all /api endpoint maps above this catch-all.
 app.Map("/api/{**rest}", () => Results.NotFound());

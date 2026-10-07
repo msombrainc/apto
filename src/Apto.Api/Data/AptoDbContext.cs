@@ -10,6 +10,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<PartNumber> PartNumbers => Set<PartNumber>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<QboConnection> QboConnections => Set<QboConnection>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,6 +19,15 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Name).HasMaxLength(200);
             e.Property(x => x.Code).HasMaxLength(50);
+            e.Property(x => x.QboCustomerId).HasMaxLength(50);
+            e.Property(x => x.QboSyncStatus).HasMaxLength(20);
+            e.Property(x => x.QboSyncError).HasMaxLength(2000);
+        });
+
+        modelBuilder.Entity<QboConnection>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.RealmId).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Job>(e =>

@@ -16,5 +16,11 @@ public class Account
 
     public DateTime CreatedAtUtc { get; set; }
 
+    public string? QboCustomerId { get; set; }
+
+    public string QboSyncStatus { get; set; } = "skipped";
+
+    public string? QboSyncError { get; set; }
+
     public ICollection<Job> Jobs { get; set; } = new List<Job>();
 }
