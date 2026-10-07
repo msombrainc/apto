@@ -5,47 +5,35 @@ Same host pattern as Pantheon / Kudos / Lab RM.
 | Item | Value |
 |------|--------|
 | Host | `64.225.115.88` |
-| STG URL | `http://apto.64.225.115.88.nip.io` |
-| App path | `/opt/apto` |
-| Port | **3012** |
-| systemd | `apto.service` |
-| Env | `/etc/apto.env` |
+| **STG URL (factory / Argus)** | `http://64.225.115.88:3012` |
+| App path | `/home/deploy/opt/apto` |
+| Port | **3012** (public) |
+| systemd | `systemctl --user` → `apto.service` |
 | Deploy user | `deploy` |
 | SSH key | `pantheon/.secrets/do_deploy_ed25519` (workspace) |
 
-GitHub Actions secrets (copy from **pantheon** or **hackaton**):
+GitHub Actions secrets: `DO_DEPLOY_HOST`, `DO_DEPLOY_USER`, `DO_SSH_KEY`, `DO_KNOWN_HOSTS` (copy from pantheon/hackaton).
 
-- `DO_DEPLOY_HOST` = `64.225.115.88`
-- `DO_DEPLOY_USER` = `deploy`
-- `DO_SSH_KEY` = private key (raw PEM or base64)
-- `DO_KNOWN_HOSTS` = host key line(s)
+## Bootstrap (no root)
 
-`CURSOR_API_KEY` is already required for Themis (`review (Themis)` / `isolation (Themis)`).
+**CI** runs `deploy/droplet/bootstrap-deploy.sh` over SSH if `~/opt/apto` is missing.
 
-## One-time (root on droplet)
-
-Upload bootstrap from your machine:
+Manual:
 
 ```bash
-bash scripts/push-droplet-bootstrap.sh
+bash scripts/bootstrap-stg-droplet.sh
 ```
 
-DigitalOcean → Droplet → **Access** → **Launch Droplet Console** as **root**:
+## Optional: nip.io on port 80
 
-```bash
-bash /tmp/apto-bootstrap-root.sh
-```
+Requires **root** once (`deploy/droplet/bootstrap-root.sh` via DO Console). Then you may use `http://apto.64.225.115.88.nip.io` and proxy to `:3012`. Factory defaults to **`:3012`** so deploy works without root.
 
 ## Deploy
 
-**CI:** `.github/workflows/deploy-stg.yml` on push to `main` (after secrets + bootstrap).
+`.github/workflows/deploy-stg.yml` on push to `main` or `workflow_dispatch`.
 
-Argus / QA use `/api/health` `buildId` (same contract as hackaton).
+Health gate: `GET /api/health` JSON `buildId` = `github.sha`.
 
-## Factory after live
+## Factory
 
-- `dev-agent/projects/apto/project.yaml` → `stg.base_url`
-- `qa-agent/projects/apto/project.yaml` → `base_url` / `stack.stg_url`
-- `qa-agent/projects/apto/.secrets/server.env` → `STG_URL=http://apto.64.225.115.88.nip.io` (drop `STG_SKIP` when health is green)
-
-QuickBooks sandbox credentials stay in **local** `.secrets/qbo_sandbox.env` (engines + app) — never in GitHub Actions unless a dedicated secret is added later.
+- `dev-agent` / `qa-agent` `projects/apto` → `stg_url` / `STG_URL` = `http://64.225.115.88:3012`
