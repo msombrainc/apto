@@ -17,3 +17,12 @@ public record AssetChangeLogEntry(
     string? NewValue,
     string ChangedBy,
     DateTime ChangedAtUtc);
+
+public record AssetInventoryRow(
+    Guid Id,
+    Guid JobId,
+    string? SerialNumber,
+    string? PartNumber,
+    string AccountName,
+    string? FacilityCode,
+    DateTime CreatedAtUtc);

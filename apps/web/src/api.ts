@@ -116,6 +116,16 @@ export type Asset = {
   changeLog: AssetChangeLogEntry[];
 };
 
+export type AssetInventoryRow = {
+  id: string;
+  jobId: string;
+  serialNumber: string | null;
+  partNumber: string | null;
+  accountName: string;
+  facilityCode: string | null;
+  createdAtUtc: string;
+};
+
 export type AssetWrite = {
   partNumberId?: string | null;
   serialNumber?: string | null;
@@ -135,6 +145,27 @@ export async function searchPartNumbers(q: string): Promise<PartNumber[]> {
     : `${base}/api/part-numbers`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`part number search failed: ${res.status}`);
+  return res.json();
+}
+
+export type InventoryQuery = {
+  q?: string;
+  accountId?: string;
+  facilityCode?: string;
+  jobId?: string;
+};
+
+export async function listInventoryAssets(
+  params: InventoryQuery = {},
+): Promise<AssetInventoryRow[]> {
+  const search = new URLSearchParams();
+  if (params.q?.trim()) search.set("q", params.q.trim());
+  if (params.accountId) search.set("accountId", params.accountId);
+  if (params.facilityCode?.trim()) search.set("facilityCode", params.facilityCode.trim());
+  if (params.jobId) search.set("jobId", params.jobId);
+  const qs = search.toString();
+  const res = await fetch(`${base}/api/assets${qs ? `?${qs}` : ""}`);
+  if (!res.ok) throw new Error(`inventory list failed: ${res.status}`);
   return res.json();
 }
 

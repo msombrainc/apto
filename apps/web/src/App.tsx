@@ -10,14 +10,17 @@ import {
   getAsset,
   listAccounts,
   listFacilities,
+  listInventoryAssets,
   listJobAssets,
   listJobs,
   searchPartNumbers,
   updateAsset,
+  AssetInventoryRow,
 } from "./api";
+import { AssetChangeLogTable } from "./AssetChangeLogTable";
 import { DEMO_PASSWORD, DEMO_USER, isDemoLogin } from "./demoAuth";
 
-type View = "accounts" | "jobs";
+type View = "accounts" | "jobs" | "inventory";
 
 function slaRowClass(status: Job["slaStatus"]): string {
   if (status === "overdue") return "sla-overdue";
@@ -57,6 +60,10 @@ export function App() {
     serialNumber: "",
   });
   const [assetEditSerial, setAssetEditSerial] = useState("");
+  const [inventoryQuery, setInventoryQuery] = useState("");
+  const [inventoryAccountId, setInventoryAccountId] = useState("");
+  const [inventoryFacility, setInventoryFacility] = useState("");
+  const [inventoryRows, setInventoryRows] = useState<AssetInventoryRow[]>([]);
 
   const refreshAccounts = useCallback(async () => {
     setError(null);
@@ -85,6 +92,23 @@ export function App() {
     }
   }, []);
 
+  const refreshInventory = useCallback(async () => {
+    setError(null);
+    try {
+      const rows = await listInventoryAssets({
+        q: inventoryQuery,
+        accountId: inventoryAccountId || undefined,
+        facilityCode: inventoryFacility || undefined,
+      });
+      setInventoryRows(rows);
+      setSelectedAsset((current) =>
+        current && !rows.some((r) => r.id === current.id) ? null : current,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load inventory");
+    }
+  }, [inventoryQuery, inventoryAccountId, inventoryFacility]);
+
   const loadAssetDetail = useCallback(async (assetId: string) => {
     setError(null);
     try {
@@ -98,10 +122,29 @@ export function App() {
 
   useEffect(() => {
     if (!loggedIn) return;
-    void refreshAccounts();
-    if (view === "accounts") return;
-    void refreshJobs();
+    if (view === "accounts") {
+      void refreshAccounts();
+      return;
+    }
+    if (view === "jobs") {
+      void refreshAccounts();
+      void refreshJobs();
+      return;
+    }
+    if (view === "inventory") {
+      void refreshAccounts();
+      void listFacilities()
+        .then(setFacilities)
+        .catch(() => setFacilities(["GA", "TX", "CA"]));
+    }
   }, [loggedIn, view, refreshAccounts, refreshJobs]);
+
+  useEffect(() => {
+    if (!loggedIn || view !== "inventory") return;
+    void refreshInventory();
+    // Tab enter loads once; filter changes use Apply (not filter state in deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loggedIn, view]);
 
   useEffect(() => {
     if (!loggedIn || view !== "jobs") return;
@@ -229,21 +272,43 @@ export function App() {
   return (
     <main className="page">
       <header className="header">
-        <h1>{view === "accounts" ? "Customer accounts" : "Jobs & SLA"}</h1>
+        <h1>
+          {view === "accounts"
+            ? "Customer accounts"
+            : view === "jobs"
+              ? "Jobs & SLA"
+              : "Inventory browse"}
+        </h1>
         <div className="row header-actions">
           <button
             type="button"
             className={view === "accounts" ? "" : "link"}
-            onClick={() => setView("accounts")}
+            onClick={() => {
+              setView("accounts");
+              setSelectedAsset(null);
+            }}
           >
             Accounts
           </button>
           <button
             type="button"
             className={view === "jobs" ? "" : "link"}
-            onClick={() => setView("jobs")}
+            onClick={() => {
+              setView("jobs");
+              setSelectedAsset(null);
+            }}
           >
             Jobs
+          </button>
+          <button
+            type="button"
+            className={view === "inventory" ? "" : "link"}
+            onClick={() => {
+              setView("inventory");
+              setSelectedAsset(null);
+            }}
+          >
+            Inventory
           </button>
           <button type="button" className="link" onClick={() => setLoggedIn(false)}>
             Sign out
@@ -525,7 +590,8 @@ export function App() {
             </section>
           )}
 
-          {selectedAsset && (
+          {selectedAsset &&
+            jobAssets.some((a) => a.id === selectedAsset.id) && (
             <section className="card">
               <h2>Edit asset</h2>
               <form className="grid" onSubmit={onSaveAssetEdit}>
@@ -543,31 +609,108 @@ export function App() {
                 <button type="submit">Save changes</button>
               </form>
               <h3>Change log</h3>
-              <table className="change-log-table" aria-label="Asset change log">
-                <thead>
-                  <tr>
-                    <th>Field</th>
-                    <th>Old</th>
-                    <th>New</th>
-                    <th>User</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedAsset.changeLog.map((e, i) => (
-                    <tr key={`${e.fieldName}-${e.changedAtUtc}-${i}`}>
-                      <td>{e.fieldName}</td>
-                      <td>{e.oldValue ?? "—"}</td>
-                      <td>{e.newValue ?? "—"}</td>
-                      <td>{e.changedBy}</td>
-                      <td>{new Date(e.changedAtUtc).toLocaleString()}</td>
-                    </tr>
+              <AssetChangeLogTable entries={selectedAsset.changeLog} />
+            </section>
+          )}
+        </>
+      )}
+
+      {view === "inventory" && (
+        <>
+          <section className="card">
+            <h2>Search &amp; filter</h2>
+            <div className="grid inventory-filters">
+              <label>
+                Serial or part number
+                <input
+                  value={inventoryQuery}
+                  onChange={(e) => setInventoryQuery(e.target.value)}
+                  placeholder="Contains match"
+                />
+              </label>
+              <label>
+                Account
+                <select
+                  value={inventoryAccountId}
+                  onChange={(e) => setInventoryAccountId(e.target.value)}
+                >
+                  <option value="">All accounts</option>
+                  {accounts.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
                   ))}
-                </tbody>
-              </table>
-              {selectedAsset.changeLog.length === 0 && (
-                <p className="muted">No changes logged yet.</p>
-              )}
+                </select>
+              </label>
+              <label>
+                Facility
+                <select
+                  value={inventoryFacility}
+                  onChange={(e) => setInventoryFacility(e.target.value)}
+                >
+                  <option value="">All facilities</option>
+                  {facilities.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" onClick={() => void refreshInventory()}>Apply</button>
+            </div>
+          </section>
+
+          <section className="card">
+            <h2>Assets</h2>
+            <p className="muted inventory-summary" aria-live="polite">
+              {inventoryRows.length === 0
+                ? "No matching assets."
+                : `${inventoryRows.length} asset${inventoryRows.length === 1 ? "" : "s"} shown (max 200).`}
+            </p>
+            <table aria-label="Cross-job inventory">
+              <thead>
+                <tr>
+                  <th scope="col">Part #</th>
+                  <th scope="col">Serial</th>
+                  <th scope="col">Account</th>
+                  <th scope="col">Facility</th>
+                  <th scope="col">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventoryRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className={`row-selectable${selectedAsset?.id === row.id ? " row-selected" : ""}`}
+                    tabIndex={0}
+                    onClick={() => void loadAssetDetail(row.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        void loadAssetDetail(row.id);
+                      }
+                    }}
+                    aria-selected={selectedAsset?.id === row.id}
+                  >
+                    <td>{row.partNumber ?? "—"}</td>
+                    <td>{row.serialNumber ?? "—"}</td>
+                    <td>{row.accountName}</td>
+                    <td>{row.facilityCode ?? "—"}</td>
+                    <td>{new Date(row.createdAtUtc).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          {selectedAsset && (
+            <section className="card">
+              <h2>Asset detail</h2>
+              <p className="muted">
+                Job {selectedAsset.jobId.slice(0, 8)}… — change log (FR-37).
+              </p>
+              <h3>Change log</h3>
+              <AssetChangeLogTable entries={selectedAsset.changeLog} />
             </section>
           )}
         </>
