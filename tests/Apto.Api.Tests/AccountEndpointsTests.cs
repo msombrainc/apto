@@ -73,6 +73,58 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Post_invalid_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("", "X", -1, 0, 0));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_invalid_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "V1", 0, 0, 0));
+        var body = await created.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(body);
+
+        var response = await client.PutAsJsonAsync(
+            $"/api/accounts/{body.Id}",
+            new AccountWriteRequest("", "V1", 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_duplicate_code_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/accounts", new AccountWriteRequest("A", "CODE-A", 0, 0, 0));
+        var second = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("B", "CODE-B", 0, 0, 0));
+        var b = await second.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(b);
+
+        var conflict = await client.PutAsJsonAsync(
+            $"/api/accounts/{b.Id}",
+            new AccountWriteRequest("B", "CODE-A", 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+    }
+
+    [Fact]
     public async Task Put_missing_returns_not_found()
     {
         await using var factory = new AptoWebApplicationFactory();

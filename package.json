@@ -4,7 +4,7 @@
   "private": true,
   "description": "Apto — Sombrainc product (factory greenfield)",
   "scripts": {
-    "test": "node --test tests/smoke.test.mjs",
+    "test": "node --test tests/smoke.test.mjs tests/web/*.test.mjs",
     "gate:mr": "bash scripts/local_mr_gate.sh",
     "spec": "openspec"
   },

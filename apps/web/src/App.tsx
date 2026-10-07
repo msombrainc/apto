@@ -1,8 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Account, createAccount, listAccounts } from "./api";
-
-const DEMO_USER = "demo";
-const DEMO_PASSWORD = "demo";
+import { DEMO_PASSWORD, DEMO_USER, isDemoLogin } from "./demoAuth";
 
 export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -35,7 +33,7 @@ export function App() {
     const data = new FormData(e.currentTarget as HTMLFormElement);
     const user = String(data.get("user") ?? "");
     const pass = String(data.get("password") ?? "");
-    if (user === DEMO_USER && pass === DEMO_PASSWORD) {
+    if (isDemoLogin(user, pass)) {
       setLoggedIn(true);
       setError(null);
     } else {
