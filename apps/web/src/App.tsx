@@ -1,12 +1,19 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   Account,
+  Asset,
   Job,
+  PartNumber,
   createAccount,
   createJob,
+  createJobAsset,
+  getAsset,
   listAccounts,
   listFacilities,
+  listJobAssets,
   listJobs,
+  searchPartNumbers,
+  updateAsset,
 } from "./api";
 import { DEMO_PASSWORD, DEMO_USER, isDemoLogin } from "./demoAuth";
 
@@ -39,6 +46,17 @@ export function App() {
     opsStatus: "",
     startDateUtc: new Date().toISOString().slice(0, 10),
   });
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [jobAssets, setJobAssets] = useState<Asset[]>([]);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [partSearch, setPartSearch] = useState("");
+  const [partOptions, setPartOptions] = useState<PartNumber[]>([]);
+  const [assetForm, setAssetForm] = useState({
+    partNumberId: "",
+    newPartNumber: "",
+    serialNumber: "",
+  });
+  const [assetEditSerial, setAssetEditSerial] = useState("");
 
   const refreshAccounts = useCallback(async () => {
     setError(null);
@@ -55,6 +73,26 @@ export function App() {
       setJobs(await listJobs());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load jobs");
+    }
+  }, []);
+
+  const refreshJobAssets = useCallback(async (jobId: string) => {
+    setError(null);
+    try {
+      setJobAssets(await listJobAssets(jobId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load assets");
+    }
+  }, []);
+
+  const loadAssetDetail = useCallback(async (assetId: string) => {
+    setError(null);
+    try {
+      const asset = await getAsset(assetId);
+      setSelectedAsset(asset);
+      setAssetEditSerial(asset.serialNumber ?? "");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load asset");
     }
   }, []);
 
@@ -118,6 +156,53 @@ export function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create job failed");
     }
+  }
+
+  async function onSearchParts() {
+    setError(null);
+    try {
+      setPartOptions(await searchPartNumbers(partSearch));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Part search failed");
+    }
+  }
+
+  async function onCreateAsset(e: FormEvent) {
+    e.preventDefault();
+    if (!selectedJobId) return;
+    setError(null);
+    try {
+      await createJobAsset(selectedJobId, {
+        partNumberId: assetForm.partNumberId || null,
+        newPartNumber: assetForm.newPartNumber || null,
+        serialNumber: assetForm.serialNumber || null,
+      });
+      setAssetForm({ partNumberId: "", newPartNumber: "", serialNumber: "" });
+      await refreshJobAssets(selectedJobId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Create asset failed");
+    }
+  }
+
+  async function onSaveAssetEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!selectedAsset) return;
+    setError(null);
+    try {
+      const updated = await updateAsset(selectedAsset.id, {
+        serialNumber: assetEditSerial,
+      });
+      setSelectedAsset(updated);
+      if (selectedJobId) await refreshJobAssets(selectedJobId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Update asset failed");
+    }
+  }
+
+  function selectJob(job: Job) {
+    setSelectedJobId(job.id);
+    setSelectedAsset(null);
+    void refreshJobAssets(job.id);
   }
 
   if (!loggedIn) {
@@ -328,7 +413,19 @@ export function App() {
               </thead>
               <tbody>
                 {jobs.map((j) => (
-                  <tr key={j.id} className={slaRowClass(j.slaStatus)}>
+                  <tr
+                    key={j.id}
+                    className={`row-selectable ${slaRowClass(j.slaStatus)}${selectedJobId === j.id ? " row-selected" : ""}`}
+                    tabIndex={0}
+                    onClick={() => selectJob(j)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        selectJob(j);
+                      }
+                    }}
+                    aria-selected={selectedJobId === j.id}
+                  >
                     <td>{j.accountName}</td>
                     <td>{j.facilityCode ?? "—"}</td>
                     <td>{j.opsStatus ?? "—"}</td>
@@ -345,6 +442,134 @@ export function App() {
             </table>
             {jobs.length === 0 && <p className="muted">No jobs yet.</p>}
           </section>
+
+          {selectedJobId && (
+            <section className="card assets-panel">
+              <h2>Assets on job</h2>
+              <p className="muted">Select a job row above, then add assets (FR-29, FR-35).</p>
+              <form className="grid" onSubmit={onCreateAsset}>
+                <label>
+                  Search part number
+                  <div className="row">
+                    <input
+                      value={partSearch}
+                      onChange={(e) => setPartSearch(e.target.value)}
+                      placeholder="Type to search"
+                    />
+                    <button type="button" onClick={() => void onSearchParts()}>Search</button>
+                  </div>
+                </label>
+                <label>
+                  Existing part
+                  <select
+                    value={assetForm.partNumberId}
+                    onChange={(e) => setAssetForm({ ...assetForm, partNumberId: e.target.value })}
+                  >
+                    <option value="">— or create new below —</option>
+                    {partOptions.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.number}
+                        {p.categoryName ? ` (${p.categoryName})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  New part number
+                  <input
+                    value={assetForm.newPartNumber}
+                    onChange={(e) => setAssetForm({ ...assetForm, newPartNumber: e.target.value })}
+                    placeholder="When not in list"
+                  />
+                </label>
+                <label>
+                  Serial number
+                  <input
+                    value={assetForm.serialNumber}
+                    onChange={(e) => setAssetForm({ ...assetForm, serialNumber: e.target.value })}
+                  />
+                </label>
+                <button type="submit">Add asset</button>
+              </form>
+              <table aria-label="Assets on selected job">
+                <thead>
+                  <tr>
+                    <th>Part #</th>
+                    <th>Serial</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jobAssets.map((a) => (
+                    <tr
+                      key={a.id}
+                      className={`row-selectable${selectedAsset?.id === a.id ? " row-selected" : ""}`}
+                      tabIndex={0}
+                      onClick={() => void loadAssetDetail(a.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          void loadAssetDetail(a.id);
+                        }
+                      }}
+                      aria-selected={selectedAsset?.id === a.id}
+                    >
+                      <td>{a.partNumber ?? "—"}</td>
+                      <td>{a.serialNumber ?? "—"}</td>
+                      <td>{new Date(a.createdAtUtc).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {jobAssets.length === 0 && <p className="muted">No assets on this job yet.</p>}
+            </section>
+          )}
+
+          {selectedAsset && (
+            <section className="card">
+              <h2>Edit asset</h2>
+              <form className="grid" onSubmit={onSaveAssetEdit}>
+                <label>
+                  Part number
+                  <input readOnly value={selectedAsset.partNumber ?? ""} />
+                </label>
+                <label>
+                  Serial number
+                  <input
+                    value={assetEditSerial}
+                    onChange={(e) => setAssetEditSerial(e.target.value)}
+                  />
+                </label>
+                <button type="submit">Save changes</button>
+              </form>
+              <h3>Change log</h3>
+              <table className="change-log-table" aria-label="Asset change log">
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Old</th>
+                    <th>New</th>
+                    <th>User</th>
+                    <th>When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedAsset.changeLog.map((e, i) => (
+                    <tr key={`${e.fieldName}-${e.changedAtUtc}-${i}`}>
+                      <td>{e.fieldName}</td>
+                      <td>{e.oldValue ?? "—"}</td>
+                      <td>{e.newValue ?? "—"}</td>
+                      <td>{e.changedBy}</td>
+                      <td>{new Date(e.changedAtUtc).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {selectedAsset.changeLog.length === 0 && (
+                <p className="muted">No changes logged yet.</p>
+              )}
+            </section>
+          )}
         </>
       )}
 

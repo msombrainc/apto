@@ -125,6 +125,43 @@ namespace Apto.Api.Data.Migrations
                     b.ToTable("Assets");
                 });
 
+            modelBuilder.Entity("Apto.Api.Data.Entities.AssetChangeLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ChangedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChangedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssetId");
+
+                    b.ToTable("AssetChangeLogs");
+                });
+
             modelBuilder.Entity("Apto.Api.Data.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -216,6 +253,17 @@ namespace Apto.Api.Data.Migrations
                     b.Navigation("Job");
 
                     b.Navigation("PartNumber");
+                });
+
+            modelBuilder.Entity("Apto.Api.Data.Entities.AssetChangeLog", b =>
+                {
+                    b.HasOne("Apto.Api.Data.Entities.Asset", "Asset")
+                        .WithMany()
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Asset");
                 });
 
             modelBuilder.Entity("Apto.Api.Data.Entities.Job", b =>

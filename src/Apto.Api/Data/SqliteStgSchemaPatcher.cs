@@ -29,6 +29,7 @@ public static class SqliteStgSchemaPatcher
             EnsureAccountsQboColumns(sqlite);
             EnsureQboConnectionsTable(sqlite);
             EnsureJobsTable(sqlite);
+            EnsureAssetChangeLogsTable(sqlite);
         }
         finally
         {
@@ -92,6 +93,31 @@ public static class SqliteStgSchemaPatcher
             );
             """);
         Execute(connection, """CREATE INDEX "IX_Jobs_AccountId" ON "Jobs" ("AccountId");""");
+    }
+
+    private static void EnsureAssetChangeLogsTable(SqliteConnection connection)
+    {
+        if (TableExists(connection, "AssetChangeLogs"))
+            return;
+
+        if (!TableExists(connection, "Assets"))
+            return;
+
+        Execute(
+            connection,
+            """
+            CREATE TABLE "AssetChangeLogs" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_AssetChangeLogs" PRIMARY KEY,
+                "AssetId" TEXT NOT NULL,
+                "FieldName" TEXT NOT NULL,
+                "OldValue" TEXT NULL,
+                "NewValue" TEXT NULL,
+                "ChangedBy" TEXT NOT NULL,
+                "ChangedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_AssetChangeLogs_Assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES "Assets" ("Id") ON DELETE CASCADE
+            );
+            """);
+        Execute(connection, """CREATE INDEX "IX_AssetChangeLogs_AssetId" ON "AssetChangeLogs" ("AssetId");""");
     }
 
     private static bool TableExists(SqliteConnection connection, string table)
