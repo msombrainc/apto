@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   createJobAsset,
   getAsset,
+  listInventoryAssets,
   listJobAssets,
   searchPartNumbers,
   updateAsset,
@@ -128,6 +129,27 @@ test("updateAsset surfaces API error message", async () => {
     () => updateAsset("asset-1", { serialNumber: "x" }),
     /no changes supplied/,
   );
+
+  globalThis.fetch = original;
+});
+
+test("listInventoryAssets builds query string", async () => {
+  const original = globalThis.fetch;
+  let requested = "";
+  globalThis.fetch = async (input: RequestInfo | URL) => {
+    requested = typeof input === "string" ? input : input.toString();
+    return { ok: true, status: 200, json: async () => [] } as Response;
+  };
+
+  await listInventoryAssets({
+    q: "sn-1",
+    accountId: "acc",
+    facilityCode: "GA",
+  });
+  assert.ok(requested.includes("/api/assets?"));
+  assert.ok(requested.includes("q=sn-1"));
+  assert.ok(requested.includes("accountId=acc"));
+  assert.ok(requested.includes("facilityCode=GA"));
 
   globalThis.fetch = original;
 });

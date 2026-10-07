@@ -395,4 +395,59 @@ public class AssetEndpointsTests
         Assert.NotNull(body);
         Assert.Equal("number must be at most 100 characters.", body["error"]);
     }
+
+    [Fact]
+    public async Task Inventory_list_filters_by_query_and_account()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var acctA = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Inv A", "INA", 1, 1, 1));
+        var accountA = await acctA.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(accountA);
+
+        var acctB = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Inv B", "INB", 1, 1, 1));
+        var accountB = await acctB.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(accountB);
+
+        var jobA = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(accountA.Id, "GA", null, DateTime.UtcNow, null));
+        var jobB = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(accountB.Id, "TX", null, DateTime.UtcNow, null));
+        var createdJobA = await jobA.Content.ReadFromJsonAsync<JobResponse>();
+        var createdJobB = await jobB.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJobA);
+        Assert.NotNull(createdJobB);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJobA.Id}/assets",
+            new AssetWriteRequest(null, "FINDME-1", "PN-INV-A"));
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJobB.Id}/assets",
+            new AssetWriteRequest(null, "OTHER-2", "PN-INV-B"));
+
+        var all = await client.GetFromJsonAsync<List<AssetInventoryRow>>("/api/assets");
+        Assert.NotNull(all);
+        Assert.True(all.Count >= 2);
+
+        var bySerial = await client.GetFromJsonAsync<List<AssetInventoryRow>>(
+            "/api/assets?q=findme");
+        Assert.NotNull(bySerial);
+        Assert.Single(bySerial);
+        Assert.Equal("FINDME-1", bySerial[0].SerialNumber);
+        Assert.Equal("Inv A", bySerial[0].AccountName);
+
+        var byAccount = await client.GetFromJsonAsync<List<AssetInventoryRow>>(
+            $"/api/assets?accountId={accountB.Id}");
+        Assert.NotNull(byAccount);
+        Assert.Single(byAccount);
+        Assert.Equal("OTHER-2", byAccount[0].SerialNumber);
+        Assert.Equal("TX", byAccount[0].FacilityCode);
+    }
 }

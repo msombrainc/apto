@@ -11,9 +11,61 @@ public static class AssetEndpoints
         var group = routes.MapGroup("/api");
         group.MapGet("/jobs/{jobId:guid}/assets", ListForJob);
         group.MapPost("/jobs/{jobId:guid}/assets", CreateForJob);
+        group.MapGet("/assets", ListInventory);
         group.MapGet("/assets/{id:guid}", GetAsset);
         group.MapPut("/assets/{id:guid}", UpdateAsset);
         return group;
+    }
+
+    private static async Task<IResult> ListInventory(
+        string? q,
+        Guid? accountId,
+        string? facilityCode,
+        Guid? jobId,
+        AptoDbContext db,
+        CancellationToken ct)
+    {
+        var query = db.Assets.AsNoTracking()
+            .Include(a => a.PartNumber)
+            .Include(a => a.Job)
+            .ThenInclude(j => j.Account)
+            .AsQueryable();
+
+        if (jobId is { } jid)
+            query = query.Where(a => a.JobId == jid);
+
+        if (accountId is { } aid)
+            query = query.Where(a => a.Job.AccountId == aid);
+
+        if (!string.IsNullOrWhiteSpace(facilityCode))
+        {
+            var fc = facilityCode.Trim().ToUpperInvariant();
+            query = query.Where(a => a.Job.FacilityCode != null
+                && a.Job.FacilityCode.ToUpper() == fc);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = q.Trim().ToLowerInvariant();
+            query = query.Where(a =>
+                (a.SerialNumber != null && a.SerialNumber.ToLower().Contains(term))
+                || (a.PartNumber != null && a.PartNumber.Number.ToLower().Contains(term)));
+        }
+
+        var rows = await query
+            .OrderByDescending(a => a.CreatedAtUtc)
+            .Take(200)
+            .Select(a => new AssetInventoryRow(
+                a.Id,
+                a.JobId,
+                a.SerialNumber,
+                a.PartNumber != null ? a.PartNumber.Number : null,
+                a.Job.Account.Name,
+                a.Job.FacilityCode,
+                a.CreatedAtUtc))
+            .ToListAsync(ct);
+
+        return Results.Ok(rows);
     }
 
     private static async Task<IResult> ListForJob(Guid jobId, AptoDbContext db, CancellationToken ct)
