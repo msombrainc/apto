@@ -668,6 +668,11 @@ export function App() {
 
           <section className="card">
             <h2>Assets</h2>
+            <p className="muted inventory-summary" aria-live="polite">
+              {inventoryRows.length === 0
+                ? "No matching assets."
+                : `${inventoryRows.length} asset${inventoryRows.length === 1 ? "" : "s"} shown (max 200).`}
+            </p>
             <table aria-label="Cross-job inventory">
               <thead>
                 <tr>
