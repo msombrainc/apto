@@ -14,4 +14,7 @@ public sealed record AccountResponse(
     int SlaReceivingDays,
     int SlaProcessingDays,
     int SlaShippingDays,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    string? QboCustomerId,
+    string QboSyncStatus,
+    string? QboSyncError);

@@ -16,6 +16,10 @@ public class AccountEndpointsTests
         var post = await client.PostAsJsonAsync("/api/accounts", create);
         Assert.Equal(HttpStatusCode.Created, post.StatusCode);
 
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+        Assert.Equal("skipped", created.QboSyncStatus);
+
         var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts");
         Assert.NotNull(listed);
         Assert.Contains(listed, a => a.Code == "ACME-01" && a.Name == "Acme Corp");

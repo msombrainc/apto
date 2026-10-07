@@ -1,5 +1,6 @@
 using Apto.Api.Data;
 using Apto.Api.Data.Entities;
+using Apto.Api.QuickBooks;
 using Microsoft.EntityFrameworkCore;
 
 namespace Apto.Api.Accounts;
@@ -39,6 +40,7 @@ public static class AccountEndpoints
     private static async Task<IResult> CreateAccount(
         AccountWriteRequest request,
         AptoDbContext db,
+        IQboCustomerSyncService qboSync,
         CancellationToken ct)
     {
         if (!AccountValidation.TryValidate(request, out var error))
@@ -60,6 +62,12 @@ public static class AccountEndpoints
         };
 
         db.Accounts.Add(account);
+        await db.SaveChangesAsync(ct);
+
+        var sync = await qboSync.SyncAccountCustomerAsync(account, ct);
+        account.QboSyncStatus = sync.Status;
+        account.QboCustomerId = sync.CustomerId;
+        account.QboSyncError = sync.Error;
         await db.SaveChangesAsync(ct);
 
         return Results.Created($"/api/accounts/{account.Id}", ToResponse(account));
@@ -101,5 +109,8 @@ public static class AccountEndpoints
             account.SlaReceivingDays,
             account.SlaProcessingDays,
             account.SlaShippingDays,
-            account.CreatedAtUtc);
+            account.CreatedAtUtc,
+            account.QboCustomerId,
+            account.QboSyncStatus,
+            account.QboSyncError);
 }
