@@ -28,6 +28,24 @@ test("listAccounts returns parsed array", async () => {
   globalThis.fetch = original;
 });
 
+test("listAccounts encodes search query in URL", async () => {
+  const original = globalThis.fetch;
+  let requested = "";
+  globalThis.fetch = async (input: RequestInfo | URL) => {
+    requested = typeof input === "string" ? input : input.toString();
+    return {
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response;
+  };
+
+  await listAccounts("acme co");
+  assert.ok(requested.includes("q=acme%20co"));
+
+  globalThis.fetch = original;
+});
+
 test("listAccounts throws on non-OK", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () =>
