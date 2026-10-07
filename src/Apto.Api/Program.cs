@@ -33,6 +33,8 @@ if (useDatabase)
 var app = builder.Build();
 
 app.UseCors();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 if (useDatabase)
 {
@@ -67,6 +69,10 @@ app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
 
 if (useDatabase || isTesting)
     app.MapAccountEndpoints();
+
+// Keep all /api endpoint maps above this catch-all.
+app.Map("/api/{**rest}", () => Results.NotFound());
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

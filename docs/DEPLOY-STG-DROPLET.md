@@ -34,7 +34,7 @@ Requires **root** once (`deploy/droplet/bootstrap-root.sh` via DO Console). Then
 
 ## Deploy
 
-`.github/workflows/deploy-stg.yml` on push to `main` or `workflow_dispatch`.
+`.github/workflows/deploy-stg.yml` on push to `main` or `workflow_dispatch`. The job runs `npm ci` + `npm run build` in `apps/web`, copies `dist/` into `src/Apto.Api/wwwroot`, then `dotnet publish` so Kestrel serves the React shell at `/` on the same port as `/api/*`.
 
 Health gate: `GET /api/health` JSON `buildId` = `github.sha`.
 

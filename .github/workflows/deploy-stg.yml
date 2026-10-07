@@ -23,12 +23,23 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Build publish bundle
         env:
           BUILD_ID: ${{ github.sha }}
         run: |
           set -euo pipefail
+          if [ -f apps/web/package.json ]; then
+            (cd apps/web && npm ci --no-audit --no-fund && npm run build)
+            mkdir -p src/Apto.Api/wwwroot
+            rm -rf src/Apto.Api/wwwroot/*
+            cp -R apps/web/dist/. src/Apto.Api/wwwroot/
+          fi
           dotnet publish src/Apto.Api/Apto.Api.csproj -c Release -o deploy/publish
+          printf '%s' "$BUILD_ID" > deploy/publish/BUILD_ID
           printf '%s' "$BUILD_ID" > deploy/BUILD_ID
 
       - name: Rsync + restart
