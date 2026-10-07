@@ -27,6 +27,7 @@ public static class AssetEndpoints
             .OrderBy(a => a.CreatedAtUtc)
             .ToListAsync(ct);
 
+        // List omits change logs; clients load GET /api/assets/{id} after row select.
         var responses = assets.Select(a => ToResponse(a, [])).ToList();
         return Results.Ok(responses);
     }

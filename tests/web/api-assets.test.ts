@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createJobAsset,
+  getAsset,
   listJobAssets,
   searchPartNumbers,
   updateAsset,
@@ -53,6 +54,20 @@ test("listJobAssets throws on non-OK", async () => {
   globalThis.fetch = async () => ({ ok: false, status: 404 }) as Response;
 
   await assert.rejects(() => listJobAssets("missing"), /list assets failed: 404/);
+
+  globalThis.fetch = original;
+});
+
+test("getAsset requests asset URL and throws on non-OK", async () => {
+  const original = globalThis.fetch;
+  let requested = "";
+  globalThis.fetch = async (input: RequestInfo | URL) => {
+    requested = typeof input === "string" ? input : input.toString();
+    return { ok: false, status: 404 } as Response;
+  };
+
+  await assert.rejects(() => getAsset("asset-99"), /get asset failed: 404/);
+  assert.ok(requested.endsWith("/api/assets/asset-99"));
 
   globalThis.fetch = original;
 });

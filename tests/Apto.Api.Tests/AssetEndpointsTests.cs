@@ -238,6 +238,18 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Create_asset_for_missing_job_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{Guid.NewGuid()}/assets",
+            new AssetWriteRequest(null, null, "PN-MISSING-JOB"));
+        Assert.Equal(HttpStatusCode.NotFound, post.StatusCode);
+    }
+
+    [Fact]
     public async Task Get_missing_asset_returns_not_found()
     {
         await using var factory = new AptoWebApplicationFactory();
