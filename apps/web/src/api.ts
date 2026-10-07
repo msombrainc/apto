@@ -1,3 +1,5 @@
+import { DEMO_USER } from "./demoAuth";
+
 export type Account = {
   id: string;
   name: string;
@@ -120,12 +122,10 @@ export type AssetWrite = {
   newPartNumber?: string | null;
 };
 
-const demoUser = "demo";
-
 function apiHeaders(): HeadersInit {
   return {
     "Content-Type": "application/json",
-    "X-Apto-User": demoUser,
+    "X-Apto-User": DEMO_USER,
   };
 }
 
