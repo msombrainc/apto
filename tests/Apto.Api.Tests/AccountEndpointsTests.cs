@@ -73,14 +73,40 @@ public class AccountEndpointsTests
     }
 
     [Fact]
-    public async Task Post_invalid_returns_bad_request()
+    public async Task Post_invalid_name_returns_bad_request()
     {
         await using var factory = new AptoWebApplicationFactory();
         var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync(
             "/api/accounts",
-            new AccountWriteRequest("", "X", -1, 0, 0));
+            new AccountWriteRequest("", "X", 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_invalid_code_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "  ", 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_negative_sla_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "CODE", 0, -1, 0));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

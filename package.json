@@ -4,12 +4,13 @@
   "private": true,
   "description": "Apto — Sombrainc product (factory greenfield)",
   "scripts": {
-    "test": "node --test tests/smoke.test.mjs tests/web/*.test.mjs",
+    "test": "node --test tests/smoke.test.mjs && npx tsx --test tests/web/*.test.ts",
     "gate:mr": "bash scripts/local_mr_gate.sh",
     "spec": "openspec"
   },
   "devDependencies": {
-    "@fission-ai/openspec": "^0.17.2"
+    "@fission-ai/openspec": "^0.17.2",
+    "tsx": "^4.19.2"
   },
   "engines": { "node": ">=20" }
 }
