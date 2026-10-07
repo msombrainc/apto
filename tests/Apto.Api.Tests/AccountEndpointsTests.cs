@@ -1,0 +1,87 @@
+using System.Net;
+using System.Net.Http.Json;
+using Apto.Api.Accounts;
+
+namespace Apto.Api.Tests;
+
+public class AccountEndpointsTests
+{
+    [Fact]
+    public async Task Post_then_get_lists_account()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var create = new AccountWriteRequest("Acme Corp", "ACME-01", 1, 2, 3);
+        var post = await client.PostAsJsonAsync("/api/accounts", create);
+        Assert.Equal(HttpStatusCode.Created, post.StatusCode);
+
+        var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts");
+        Assert.NotNull(listed);
+        Assert.Contains(listed, a => a.Code == "ACME-01" && a.Name == "Acme Corp");
+    }
+
+    [Fact]
+    public async Task Duplicate_code_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/accounts", new AccountWriteRequest("One", "DUP", 0, 0, 0));
+        var second = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Two", "DUP", 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task Search_filters_by_code()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/accounts", new AccountWriteRequest("Beta LLC", "BETA", 0, 0, 0));
+        await client.PostAsJsonAsync("/api/accounts", new AccountWriteRequest("Gamma Inc", "GAMMA", 0, 0, 0));
+
+        var results = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?q=beta");
+        Assert.NotNull(results);
+        Assert.Single(results);
+        Assert.Equal("BETA", results[0].Code);
+    }
+
+    [Fact]
+    public async Task Put_updates_account()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Old Name", "OLD", 1, 1, 1));
+        var body = await created.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(body);
+
+        var updated = await client.PutAsJsonAsync(
+            $"/api/accounts/{body.Id}",
+            new AccountWriteRequest("New Name", "OLD", 2, 3, 4));
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+
+        var fetched = await updated.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.Equal("New Name", fetched!.Name);
+        Assert.Equal(2, fetched.SlaReceivingDays);
+    }
+
+    [Fact]
+    public async Task Put_missing_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.PutAsJsonAsync(
+            $"/api/accounts/{Guid.NewGuid()}",
+            new AccountWriteRequest("X", "Y", 0, 0, 0));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+}
