@@ -98,3 +98,26 @@ td {
 .error {
   color: #b91c1c;
 }
+
+.header-actions {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+tr.sla-on-track {
+  background: #ecfdf5;
+}
+
+tr.sla-at-risk {
+  background: #fef9c3;
+}
+
+tr.sla-overdue {
+  background: #fee2e2;
+}
