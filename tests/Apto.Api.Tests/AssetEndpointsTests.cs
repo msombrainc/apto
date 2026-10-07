@@ -92,6 +92,41 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Update_asset_via_new_part_number_string_appends_change_log()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Str Co", "ST-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "TX", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "SN-STR", "PN-ORIG"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        Assert.Equal("PN-ORIG", asset.PartNumber);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, "PN-VIA-STRING"));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var updated = await put.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("PN-VIA-STRING", updated.PartNumber);
+    }
+
+    [Fact]
     public async Task Update_asset_part_number_appends_change_log()
     {
         await using var factory = new AptoWebApplicationFactory();
