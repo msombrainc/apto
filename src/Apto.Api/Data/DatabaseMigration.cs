@@ -36,5 +36,6 @@ public static class DatabaseStartup
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
         db.Database.EnsureCreated();
+        SqliteStgSchemaPatcher.PatchIfNeeded(db);
     }
 }

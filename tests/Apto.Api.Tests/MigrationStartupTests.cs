@@ -80,6 +80,50 @@ public class MigrationStartupTests
     }
 
     [Fact]
+    public async Task Startup_with_legacy_sqlite_without_jobs_table_serves_accounts()
+    {
+        var dbPath = Path.Combine(Path.GetTempPath(), $"apto-legacy-{Guid.NewGuid():N}.db");
+        try
+        {
+            var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}");
+            await conn.OpenAsync();
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText =
+                    """
+                    CREATE TABLE "Accounts" (
+                        "Id" TEXT NOT NULL PRIMARY KEY,
+                        "Name" TEXT NOT NULL,
+                        "Code" TEXT NOT NULL,
+                        "SlaReceivingDays" INTEGER NOT NULL,
+                        "SlaProcessingDays" INTEGER NOT NULL,
+                        "SlaShippingDays" INTEGER NOT NULL,
+                        "CreatedAtUtc" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX "IX_Accounts_Code" ON "Accounts" ("Code");
+                    """;
+                await cmd.ExecuteNonQueryAsync();
+            }
+            await conn.CloseAsync();
+
+            await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting(WebHostDefaults.EnvironmentKey, Environments.Production);
+                builder.UseSetting("ConnectionStrings:Default", $"Data Source={dbPath}");
+            });
+
+            using var client = factory.CreateClient();
+            var accounts = await client.GetAsync("/api/accounts");
+            accounts.EnsureSuccessStatusCode();
+        }
+        finally
+        {
+            if (File.Exists(dbPath))
+                File.Delete(dbPath);
+        }
+    }
+
+    [Fact]
     public async Task Startup_serves_health_without_connection_string()
     {
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
