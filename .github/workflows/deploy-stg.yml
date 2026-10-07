@@ -74,7 +74,14 @@ jobs:
               "$STG_ENV_FILE" "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:.config/apto/stg.env"
             rm -f "$STG_ENV_FILE"
           else
-            echo "APTO_STG_CONNECTION_STRING not set — STG runs health-only (no /api/accounts)." >&2
+            echo "APTO_STG_CONNECTION_STRING not set — using SQLite demo DB on droplet." >&2
+            STG_ENV_FILE="$(mktemp)"
+            chmod 600 "$STG_ENV_FILE"
+            printf '%s\n' "ConnectionStrings__Default=Data Source=/home/deploy/opt/apto-data/apto.db" > "$STG_ENV_FILE"
+            $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "mkdir -p /home/deploy/opt/apto-data ~/.config/apto"
+            scp -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o IdentitiesOnly=yes \
+              "$STG_ENV_FILE" "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:.config/apto/stg.env"
+            rm -f "$STG_ENV_FILE"
           fi
           $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "bash -s" < deploy/droplet/bootstrap-deploy.sh
           $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" bash -s <<REMOTE

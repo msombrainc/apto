@@ -17,10 +17,17 @@ builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationAppl
 var connectionString = builder.Configuration.GetConnectionString("Default");
 var useDatabase = !isTesting && !string.IsNullOrWhiteSpace(connectionString);
 
+var useSqlite = useDatabase && DatabaseProvider.IsSqlite(connectionString);
+
 if (useDatabase)
 {
     builder.Services.AddDbContext<AptoDbContext>(options =>
-        options.UseSqlServer(connectionString!));
+    {
+        if (useSqlite)
+            options.UseSqlite(connectionString!);
+        else
+            options.UseSqlServer(connectionString!);
+    });
 }
 
 var app = builder.Build();
@@ -28,7 +35,12 @@ var app = builder.Build();
 app.UseCors();
 
 if (useDatabase)
-    DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
+{
+    if (useSqlite)
+        DatabaseStartup.EnsureSqliteSchemaIfNeeded(app.Services, app.Environment);
+    else
+        DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
+}
 
 static string ResolveBuildId(string contentRoot)
 {
