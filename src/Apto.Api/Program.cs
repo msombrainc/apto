@@ -70,6 +70,7 @@ app.MapGet("/api/build-id", () => Results.Text(buildId, "text/plain"));
 if (useDatabase || isTesting)
     app.MapAccountEndpoints();
 
+app.Map("/api/{**rest}", () => Results.NotFound());
 app.MapFallbackToFile("index.html");
 
 app.Run();
