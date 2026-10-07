@@ -17,6 +17,7 @@ import {
   updateAsset,
   AssetInventoryRow,
 } from "./api";
+import { AssetChangeLogTable } from "./AssetChangeLogTable";
 import { DEMO_PASSWORD, DEMO_USER, isDemoLogin } from "./demoAuth";
 
 type View = "accounts" | "jobs" | "inventory";
@@ -280,14 +281,20 @@ export function App() {
           <button
             type="button"
             className={view === "accounts" ? "" : "link"}
-            onClick={() => setView("accounts")}
+            onClick={() => {
+              setView("accounts");
+              setSelectedAsset(null);
+            }}
           >
             Accounts
           </button>
           <button
             type="button"
             className={view === "jobs" ? "" : "link"}
-            onClick={() => setView("jobs")}
+            onClick={() => {
+              setView("jobs");
+              setSelectedAsset(null);
+            }}
           >
             Jobs
           </button>
@@ -581,7 +588,8 @@ export function App() {
             </section>
           )}
 
-          {selectedAsset && (
+          {selectedAsset &&
+            jobAssets.some((a) => a.id === selectedAsset.id) && (
             <section className="card">
               <h2>Edit asset</h2>
               <form className="grid" onSubmit={onSaveAssetEdit}>
@@ -599,31 +607,7 @@ export function App() {
                 <button type="submit">Save changes</button>
               </form>
               <h3>Change log</h3>
-              <table className="change-log-table" aria-label="Asset change log">
-                <thead>
-                  <tr>
-                    <th>Field</th>
-                    <th>Old</th>
-                    <th>New</th>
-                    <th>User</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedAsset.changeLog.map((e, i) => (
-                    <tr key={`${e.fieldName}-${e.changedAtUtc}-${i}`}>
-                      <td>{e.fieldName}</td>
-                      <td>{e.oldValue ?? "—"}</td>
-                      <td>{e.newValue ?? "—"}</td>
-                      <td>{e.changedBy}</td>
-                      <td>{new Date(e.changedAtUtc).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {selectedAsset.changeLog.length === 0 && (
-                <p className="muted">No changes logged yet.</p>
-              )}
+              <AssetChangeLogTable entries={selectedAsset.changeLog} />
             </section>
           )}
         </>
@@ -715,9 +699,6 @@ export function App() {
                 ))}
               </tbody>
             </table>
-            {inventoryRows.length === 0 && (
-              <p className="muted">No assets match these filters.</p>
-            )}
           </section>
 
           {selectedAsset && (
@@ -727,28 +708,7 @@ export function App() {
                 Job {selectedAsset.jobId.slice(0, 8)}… — change log (FR-37).
               </p>
               <h3>Change log</h3>
-              <table className="change-log-table" aria-label="Asset change log">
-                <thead>
-                  <tr>
-                    <th>Field</th>
-                    <th>Old</th>
-                    <th>New</th>
-                    <th>User</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedAsset.changeLog.map((e, i) => (
-                    <tr key={`${e.fieldName}-${e.changedAtUtc}-${i}`}>
-                      <td>{e.fieldName}</td>
-                      <td>{e.oldValue ?? "—"}</td>
-                      <td>{e.newValue ?? "—"}</td>
-                      <td>{e.changedBy}</td>
-                      <td>{new Date(e.changedAtUtc).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <AssetChangeLogTable entries={selectedAsset.changeLog} />
             </section>
           )}
         </>
