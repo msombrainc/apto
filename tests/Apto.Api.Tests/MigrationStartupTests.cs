@@ -50,6 +50,36 @@ public class MigrationStartupTests
     }
 
     [Fact]
+    public async Task Startup_skips_migration_applier_for_sqlite_stg_connection()
+    {
+        var recorder = new RecordingMigrationApplier();
+        var dbPath = Path.Combine(Path.GetTempPath(), $"apto-stg-{Guid.NewGuid():N}.db");
+        try
+        {
+            await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting(WebHostDefaults.EnvironmentKey, Environments.Production);
+                builder.UseSetting("ConnectionStrings:Default", $"Data Source={dbPath}");
+                builder.ConfigureTestServices(services =>
+                {
+                    services.RemoveAll<IDatabaseMigrationApplier>();
+                    services.AddSingleton<IDatabaseMigrationApplier>(recorder);
+                });
+            });
+
+            using var client = factory.CreateClient();
+            var accounts = await client.GetAsync("/api/accounts");
+            accounts.EnsureSuccessStatusCode();
+            Assert.False(recorder.WasCalled);
+        }
+        finally
+        {
+            if (File.Exists(dbPath))
+                File.Delete(dbPath);
+        }
+    }
+
+    [Fact]
     public async Task Startup_serves_health_without_connection_string()
     {
         await using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>

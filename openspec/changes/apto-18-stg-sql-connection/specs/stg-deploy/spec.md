@@ -15,5 +15,5 @@ The STG systemd unit SHALL load optional environment from `/home/deploy/.config/
 #### Scenario: SQLite demo when secret unset
 
 - **WHEN** `APTO_STG_CONNECTION_STRING` is unset
-- **THEN** deploy writes `stg.env` with a SQLite file path under `/home/deploy/opt/apto-data/`
+- **THEN** deploy runs `write-stg-sqlite-env.sh` and writes `stg.env` with a SQLite file under `$HOME/opt/apto-data/`
 - **AND** `/api/accounts` works against that demo database (no SQL Server on the droplet)
