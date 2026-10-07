@@ -290,6 +290,18 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Update_missing_asset_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{Guid.NewGuid()}",
+            new AssetWriteRequest(null, "SN", null));
+        Assert.Equal(HttpStatusCode.NotFound, put.StatusCode);
+    }
+
+    [Fact]
     public async Task Part_number_search_returns_matches()
     {
         await using var factory = new AptoWebApplicationFactory();

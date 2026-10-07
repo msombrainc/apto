@@ -98,6 +98,23 @@ test("updateAsset sends X-Apto-User header", async () => {
   globalThis.fetch = original;
 });
 
+test("createJobAsset surfaces API error message", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
+    ({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "part number is required." }),
+    }) as Response;
+
+  await assert.rejects(
+    () => createJobAsset("job-1", { serialNumber: "x" }),
+    /part number is required/,
+  );
+
+  globalThis.fetch = original;
+});
+
 test("updateAsset surfaces API error message", async () => {
   const original = globalThis.fetch;
   globalThis.fetch = async () =>
