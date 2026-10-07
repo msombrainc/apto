@@ -350,4 +350,49 @@ public class AssetEndpointsTests
         Assert.Contains(results, p => p.Number == "ABC-123");
         Assert.DoesNotContain(results, p => p.Number == "XYZ-999");
     }
+
+    [Fact]
+    public async Task Create_part_number_with_empty_number_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("", null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(body);
+        Assert.Equal("number is required.", body["error"]);
+    }
+
+    [Fact]
+    public async Task Create_part_number_with_whitespace_number_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("   ", null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(body);
+        Assert.Equal("number is required.", body["error"]);
+    }
+
+    [Fact]
+    public async Task Create_part_number_over_max_length_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest(new string('N', 101), null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(body);
+        Assert.Equal("number must be at most 100 characters.", body["error"]);
+    }
 }
