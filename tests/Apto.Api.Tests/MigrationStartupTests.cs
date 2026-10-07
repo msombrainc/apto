@@ -115,6 +115,9 @@ public class MigrationStartupTests
             using var client = factory.CreateClient();
             var accounts = await client.GetAsync("/api/accounts");
             accounts.EnsureSuccessStatusCode();
+
+            var jobs = await client.GetAsync("/api/jobs");
+            jobs.EnsureSuccessStatusCode();
         }
         finally
         {
