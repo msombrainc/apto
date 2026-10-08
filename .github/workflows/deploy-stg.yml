@@ -84,7 +84,7 @@ jobs:
           STG_ENV_FILE="$(mktemp)"
           chmod 600 "$STG_ENV_FILE"
           bash deploy/droplet/render-stg-env.sh > "$STG_ENV_FILE"
-          $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "mkdir -p ~/.config/apto"
+          $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "mkdir -p ~/.config/apto /home/deploy/opt/apto-data"
           scp -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o IdentitiesOnly=yes \
             "$STG_ENV_FILE" "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:.config/apto/stg.env"
           rm -f "$STG_ENV_FILE"
