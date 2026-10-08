@@ -45,3 +45,16 @@ test("render-stg-env fails when CLIENT_ID set without CLIENT_SECRET", () => {
     /APTO_STG_QBO_CLIENT_SECRET required/,
   );
 });
+
+test("render-stg-env fails when CLIENT_ID set without REDIRECT_URI", () => {
+  assert.throws(
+    () =>
+      renderEnv({
+        PATH: process.env.PATH,
+        APTO_DATA_DIR: "/tmp/apto-data",
+        APTO_STG_QBO_CLIENT_ID: "cid",
+        APTO_STG_QBO_CLIENT_SECRET: "sec",
+      }),
+    /APTO_STG_QBO_REDIRECT_URI must be set/,
+  );
+});
