@@ -14,7 +14,7 @@ Same host pattern as Pantheon / Kudos / Lab RM.
 
 GitHub Actions secrets: `DO_DEPLOY_HOST`, `DO_DEPLOY_USER`, `DO_SSH_KEY`, `DO_KNOWN_HOSTS` (copy from pantheon/hackaton).
 
-**Account API / EF on STG (demo):** if `APTO_STG_CONNECTION_STRING` is **unset**, CI renders `deploy/droplet/render-stg-env.sh` (SQLite under `/home/deploy/opt/apto-data/apto.db`) and `scp`s `~/.config/apto/stg.env`. Optional QBO: `APTO_STG_QBO_*` GitHub secrets. For production-like STG, set `APTO_STG_CONNECTION_STRING` to SQL Server instead.
+**Account API / EF on STG (demo):** if `APTO_STG_CONNECTION_STRING` is **unset**, CI resolves the droplet SQLite path (`$HOME/opt/apto-data/apto.db` for the deploy user), runs `deploy/droplet/render-stg-env.sh`, and `scp`s `~/.config/apto/stg.env`. Optional QBO: `APTO_STG_QBO_*` GitHub secrets. For production-like STG, set `APTO_STG_CONNECTION_STRING` to SQL Server instead.
 
 Local dev / CI tests still use **SQL Server** via `docker compose` or test factories.
 

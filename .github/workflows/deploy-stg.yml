@@ -83,8 +83,9 @@ jobs:
           rsync -az --delete -e "$SSHC" deploy/publish/ "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:$REMOTE/"
           STG_ENV_FILE="$(mktemp)"
           chmod 600 "$STG_ENV_FILE"
+          export APTO_DATA_DIR="$($SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" 'printf %s "$HOME/opt/apto-data"')"
+          $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "mkdir -p ~/.config/apto ~/opt/apto-data"
           bash deploy/droplet/render-stg-env.sh > "$STG_ENV_FILE"
-          $SSHC "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}" "mkdir -p ~/.config/apto /home/deploy/opt/apto-data"
           scp -i "$HOME/.ssh/id_ed25519" -o BatchMode=yes -o IdentitiesOnly=yes \
             "$STG_ENV_FILE" "${DO_DEPLOY_USER}@${DO_DEPLOY_HOST}:.config/apto/stg.env"
           rm -f "$STG_ENV_FILE"

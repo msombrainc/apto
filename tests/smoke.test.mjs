@@ -14,6 +14,7 @@ function renderEnv(env) {
 test("render-stg-env emits QuickBooks keys when QBO secrets present", () => {
   const out = renderEnv({
     PATH: process.env.PATH,
+    APTO_DATA_DIR: "/tmp/apto-data",
     APTO_STG_QBO_CLIENT_ID: "cid",
     APTO_STG_QBO_CLIENT_SECRET: "sec",
     APTO_STG_QBO_REALM_ID: "realm",
@@ -37,6 +38,7 @@ test("render-stg-env fails when CLIENT_ID set without CLIENT_SECRET", () => {
     () =>
       renderEnv({
         PATH: process.env.PATH,
+        APTO_DATA_DIR: "/tmp/apto-data",
         APTO_STG_QBO_CLIENT_ID: "cid",
       }),
     /APTO_STG_QBO_CLIENT_SECRET required/,

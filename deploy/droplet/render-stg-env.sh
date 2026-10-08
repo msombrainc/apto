@@ -2,11 +2,10 @@
 # Print ~/.config/apto/stg.env lines for CI (secrets via env vars only).
 set -euo pipefail
 
-DATA_DIR="${APTO_DATA_DIR:-/home/deploy/opt/apto-data}"
-
 if [[ -n "${APTO_STG_CONNECTION_STRING:-}" ]]; then
   printf '%s\n' "ConnectionStrings__Default=${APTO_STG_CONNECTION_STRING}"
 else
+  DATA_DIR="${APTO_DATA_DIR:?APTO_DATA_DIR required for SQLite STG path (use droplet \$HOME/opt/apto-data)}"
   printf '%s\n' "ConnectionStrings__Default=Data Source=${DATA_DIR}/apto.db"
 fi
 
