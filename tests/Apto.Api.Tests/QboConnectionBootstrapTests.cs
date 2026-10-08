@@ -30,6 +30,34 @@ public class QboConnectionBootstrapTests
     }
 
     [Fact]
+    public async Task Bootstrap_noops_when_bootstrap_tokens_missing()
+    {
+        var services = BuildServices("qbo-boot-missing", "realm-1", "rt-abc", configureBootstrap: false);
+        await using var sp = services.BuildServiceProvider();
+        await EnsureDb(sp);
+
+        await QboConnectionBootstrap.SeedFromConfigurationIfNeededAsync(sp);
+
+        await using var scope = sp.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        Assert.False(await db.QboConnections.AnyAsync());
+    }
+
+    [Fact]
+    public async Task Bootstrap_noops_in_Testing_environment()
+    {
+        var services = BuildServices("qbo-boot-testing", "realm-1", "rt-abc", environment: "Testing");
+        await using var sp = services.BuildServiceProvider();
+        await EnsureDb(sp);
+
+        await QboConnectionBootstrap.SeedFromConfigurationIfNeededAsync(sp);
+
+        await using var scope = sp.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        Assert.False(await db.QboConnections.AnyAsync());
+    }
+
+    [Fact]
     public async Task Bootstrap_skips_when_row_already_exists()
     {
         var services = BuildServices("qbo-boot-2", "new-realm", "new-rt");
@@ -62,7 +90,12 @@ public class QboConnectionBootstrapTests
         await db.Database.EnsureCreatedAsync();
     }
 
-    private static ServiceCollection BuildServices(string dbName, string realm, string refresh)
+    private static ServiceCollection BuildServices(
+        string dbName,
+        string realm,
+        string refresh,
+        bool configureBootstrap = true,
+        string environment = "Development")
     {
         var services = new ServiceCollection();
         services.AddDbContext<AptoDbContext>(o => o.UseInMemoryDatabase(dbName));
@@ -70,10 +103,13 @@ public class QboConnectionBootstrapTests
         {
             o.ClientId = "cid";
             o.ClientSecret = "sec";
-            o.BootstrapRealmId = realm;
-            o.BootstrapRefreshToken = refresh;
+            if (configureBootstrap)
+            {
+                o.BootstrapRealmId = realm;
+                o.BootstrapRefreshToken = refresh;
+            }
         });
-        services.AddSingleton<IWebHostEnvironment>(new TestWebHostEnvironment(Environments.Development));
+        services.AddSingleton<IWebHostEnvironment>(new TestWebHostEnvironment(environment));
         services.AddOptions();
         return services;
     }

@@ -5,19 +5,40 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const script = join(root, "deploy/droplet/render-stg-env.sh");
+
+function renderEnv(env) {
+  return execFileSync("bash", [script], { env, encoding: "utf8" });
+}
 
 test("render-stg-env emits QuickBooks keys when QBO secrets present", () => {
-  const out = execFileSync("bash", [join(root, "deploy/droplet/render-stg-env.sh")], {
-    env: {
-      ...process.env,
-      APTO_STG_QBO_CLIENT_ID: "cid",
-      APTO_STG_QBO_CLIENT_SECRET: "sec",
-      APTO_STG_QBO_REALM_ID: "realm",
-      APTO_STG_QBO_REFRESH_TOKEN: "rt",
-    },
-    encoding: "utf8",
+  const out = renderEnv({
+    PATH: process.env.PATH,
+    APTO_STG_QBO_CLIENT_ID: "cid",
+    APTO_STG_QBO_CLIENT_SECRET: "sec",
+    APTO_STG_QBO_REALM_ID: "realm",
+    APTO_STG_QBO_REFRESH_TOKEN: "rt",
   });
   assert.match(out, /QuickBooks__ClientId=cid/);
   assert.match(out, /QuickBooks__BootstrapRealmId=realm/);
   assert.match(out, /ConnectionStrings__Default=Data Source=/);
+});
+
+test("render-stg-env uses APTO_STG_CONNECTION_STRING when set", () => {
+  const out = renderEnv({
+    PATH: process.env.PATH,
+    APTO_STG_CONNECTION_STRING: "Server=stg;Database=apto;",
+  });
+  assert.equal(out.trim(), "ConnectionStrings__Default=Server=stg;Database=apto;");
+});
+
+test("render-stg-env fails when CLIENT_ID set without CLIENT_SECRET", () => {
+  assert.throws(
+    () =>
+      renderEnv({
+        PATH: process.env.PATH,
+        APTO_STG_QBO_CLIENT_ID: "cid",
+      }),
+    /APTO_STG_QBO_CLIENT_SECRET required/,
+  );
 });
