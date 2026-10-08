@@ -19,6 +19,7 @@ test("render-stg-env emits QuickBooks keys when QBO secrets present", () => {
     APTO_STG_QBO_CLIENT_SECRET: "sec",
     APTO_STG_QBO_REALM_ID: "realm",
     APTO_STG_QBO_REFRESH_TOKEN: "rt",
+    APTO_STG_QBO_REDIRECT_URI: "http://example.test/api/qbo/oauth/callback",
   });
   assert.match(out, /QuickBooks__ClientId=cid/);
   assert.match(out, /QuickBooks__BootstrapRealmId=realm/);

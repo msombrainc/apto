@@ -11,7 +11,7 @@ fi
 
 if [[ -n "${APTO_STG_QBO_CLIENT_ID:-}" ]]; then
   : "${APTO_STG_QBO_CLIENT_SECRET:?APTO_STG_QBO_CLIENT_SECRET required when CLIENT_ID set}"
-  redirect="${APTO_STG_QBO_REDIRECT_URI:-http://64.225.115.88:3012/api/qbo/oauth/callback}"
+  redirect="${APTO_STG_QBO_REDIRECT_URI:?APTO_STG_QBO_REDIRECT_URI must be set when QBO client id is set}"
   printf '%s\n' "QuickBooks__ClientId=${APTO_STG_QBO_CLIENT_ID}"
   printf '%s\n' "QuickBooks__ClientSecret=${APTO_STG_QBO_CLIENT_SECRET}"
   printf '%s\n' "QuickBooks__RedirectUri=${redirect}"
