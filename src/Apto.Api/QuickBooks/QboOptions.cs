@@ -16,6 +16,11 @@ public sealed class QboOptions
 
     public string ApiBaseUrl { get; set; } = "https://sandbox-quickbooks.api.intuit.com";
 
+    /// <summary>STG/demo: seed <see cref="QboConnection"/> when empty (from CI secret, never commit).</summary>
+    public string? BootstrapRealmId { get; set; }
+
+    public string? BootstrapRefreshToken { get; set; }
+
     public bool IsConfigured =>
         !string.IsNullOrWhiteSpace(ClientId) && !string.IsNullOrWhiteSpace(ClientSecret);
 }

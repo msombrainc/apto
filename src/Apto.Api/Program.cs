@@ -50,6 +50,8 @@ if (useDatabase)
 
     if (useSqlite && !app.Environment.IsEnvironment("Testing"))
         await DemoJobSeeder.SeedIfEmptyAsync(app.Services);
+
+    await QboConnectionBootstrap.SeedFromConfigurationIfNeededAsync(app.Services);
 }
 
 static string ResolveBuildId(string contentRoot)
