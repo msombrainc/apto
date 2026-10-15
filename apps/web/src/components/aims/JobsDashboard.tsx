@@ -8,6 +8,7 @@ import { EmptyState } from "./EmptyState";
 import { FacilityPills } from "./FacilityPills";
 import { IconAlert, IconBriefcase, IconCheckCircle, IconClock, IconPlus, IconPin, IconRefresh } from "./icons";
 import { Modal } from "./Modal";
+import { countJobsBySla } from "../../jobFilters";
 import { StatCard } from "./StatCard";
 
 type JobFormState = {
@@ -93,9 +94,7 @@ export function JobsDashboard({
   onSaveAssetEdit,
   onLoadAssetDetail,
 }: JobsDashboardProps) {
-  const onTrack = jobs.filter((j) => j.slaStatus === "on-track").length;
-  const atRisk = jobs.filter((j) => j.slaStatus === "at-risk").length;
-  const overdue = jobs.filter((j) => j.slaStatus === "overdue").length;
+  const { onTrack, atRisk, overdue } = countJobsBySla(filteredJobs);
 
   return (
     <div className="dashboard-stack">
@@ -114,7 +113,7 @@ export function JobsDashboard({
       </div>
 
       <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
-        <StatCard label="All jobs" value={jobs.length} icon={<IconBriefcase />} />
+        <StatCard label="All jobs" value={filteredJobs.length} icon={<IconBriefcase />} />
         <StatCard label="On track" value={onTrack} icon={<IconCheckCircle />} />
         <StatCard label="At risk" value={atRisk} icon={<IconAlert />} />
         <StatCard label="Overdue" value={overdue} icon={<IconClock />} />

@@ -7,6 +7,7 @@ import { EmptyState } from "./EmptyState";
 import { FacilityPills } from "./FacilityPills";
 import { FilterBar } from "./FilterBar";
 import { IconBox, IconClock, IconPart, IconRefresh, IconUsers } from "./icons";
+import { isCreatedTodayUtc } from "../../inventoryDates";
 import { StatCard } from "./StatCard";
 
 type InventoryDashboardProps = {
@@ -24,16 +25,6 @@ type InventoryDashboardProps = {
   selectedAsset: Asset | null;
   onSelectAsset: (id: string) => void;
 };
-
-function isCreatedTodayUtc(iso: string): boolean {
-  const d = new Date(iso);
-  const now = new Date();
-  return (
-    d.getUTCFullYear() === now.getUTCFullYear() &&
-    d.getUTCMonth() === now.getUTCMonth() &&
-    d.getUTCDate() === now.getUTCDate()
-  );
-}
 
 export function InventoryDashboard({
   accounts,

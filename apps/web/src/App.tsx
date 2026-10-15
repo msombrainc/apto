@@ -20,6 +20,8 @@ import {
 import { AppShell, type AppView } from "./AppShell";
 import { LoginPage } from "./LoginPage";
 import { isDemoLogin } from "./demoAuth";
+import { buildInventoryListParams } from "./inventoryListParams";
+import { filterJobs } from "./jobFilters";
 import { useDebounced } from "./useDebounced";
 import { AccountsDashboard } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
@@ -118,11 +120,13 @@ export function App() {
     setError(null);
     setInventoryLoading(true);
     try {
-      const rows = await listInventoryAssets({
-        q: debouncedInventoryQuery,
-        accountId: inventoryAccountId || undefined,
-        facilityCode: inventoryFacility || undefined,
-      });
+      const rows = await listInventoryAssets(
+        buildInventoryListParams(
+          debouncedInventoryQuery,
+          inventoryAccountId,
+          inventoryFacility,
+        ),
+      );
       setInventoryRows(rows);
       setSelectedAsset((current) =>
         current && !rows.some((r) => r.id === current.id) ? null : current,
@@ -182,16 +186,15 @@ export function App() {
     }
   }, [accounts, jobForm.accountId]);
 
-  const filteredJobs = useMemo(() => {
-    const q = jobSearch.trim().toLowerCase();
-    return jobs.filter((j) => {
-      if (jobAccountFilter && j.accountId !== jobAccountFilter) return false;
-      if (jobFacilityFilter && (j.facilityCode ?? "") !== jobFacilityFilter) return false;
-      if (!q) return true;
-      const hay = `${j.accountName} ${j.opsStatus ?? ""} ${j.facilityCode ?? ""}`.toLowerCase();
-      return hay.includes(q);
-    });
-  }, [jobs, jobSearch, jobAccountFilter, jobFacilityFilter]);
+  const filteredJobs = useMemo(
+    () =>
+      filterJobs(jobs, {
+        search: jobSearch,
+        accountId: jobAccountFilter,
+        facilityCode: jobFacilityFilter,
+      }),
+    [jobs, jobSearch, jobAccountFilter, jobFacilityFilter],
+  );
 
   function onLogin(e: FormEvent) {
     e.preventDefault();
