@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
+import { IconMoon, IconSun } from "./components/aims/icons";
 
 export type AppView = "accounts" | "jobs" | "inventory";
 
@@ -45,26 +46,30 @@ export function AppShell({
               aria-current={view === key ? "page" : undefined}
               onClick={() => onViewChange(key)}
             >
+              {view === key && <span className="sidebar-nav-dot" aria-hidden />}
               {VIEW_LABELS[key]}
             </button>
           ))}
         </nav>
         <div className="sidebar-theme" role="group" aria-label="Theme">
-          {(["dark", "light"] as Theme[]).map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={`theme-btn${theme === t ? " is-pressed" : ""}`}
-              aria-pressed={theme === t}
-              onClick={() => setTheme(t)}
-            >
-              {t === "dark" ? "Dark" : "Light"}
-            </button>
-          ))}
+          <div className="theme-segment">
+            {(["dark", "light"] as Theme[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className={`theme-segment-btn${theme === t ? " is-pressed" : ""}`}
+                aria-pressed={theme === t}
+                aria-label={t === "dark" ? "Dark theme" : "Light theme"}
+                onClick={() => setTheme(t)}
+              >
+                {t === "dark" ? <IconMoon /> : <IconSun />}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="sidebar-footer">
-          <div className="sidebar-user" aria-hidden>
-            <span className="user-avatar">DE</span>
+          <div className="sidebar-user">
+            <span className="user-avatar" aria-hidden>DE</span>
             <div>
               <strong>Demo operator</strong>
               <span>demo@aptosolutions.com</span>
