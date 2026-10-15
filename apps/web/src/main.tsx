@@ -1,16 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { ThemeProvider } from "./theme";
+import { ThemeProvider, bootstrapDocumentTheme } from "./theme";
 import "./styles.css";
 
-try {
-  const stored = localStorage.getItem("apto-aims-theme");
-  document.documentElement.dataset.theme =
-    stored === "light" ? "light" : "dark";
-} catch {
-  document.documentElement.dataset.theme = "dark";
-}
+bootstrapDocumentTheme();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
