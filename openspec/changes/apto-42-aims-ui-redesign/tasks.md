@@ -4,7 +4,7 @@
 
 ## 2. Implementation
 
-- [ ] Theme tokens + toggle
-- [ ] Login split layout
-- [ ] App shell + restyled views
+- [x] Theme tokens + toggle
+- [x] Login split layout
+- [x] App shell + restyled views
 - [ ] `npm run gate:mr` green
