@@ -1,4 +1,5 @@
 using System.Data;
+using Apto.Api.ReferenceData;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,6 +34,9 @@ public static class SqliteStgSchemaPatcher
             EnsurePartNumbersTable(sqlite);
             EnsureAssetsTable(sqlite);
             EnsureAssetChangeLogsTable(sqlite);
+            EnsureReferenceItemsTable(sqlite);
+            EnsureCategoriesIsActiveColumn(sqlite);
+            ReferenceDataSeeder.SeedIfEmptyAsync(db).GetAwaiter().GetResult();
         }
         finally
         {
@@ -181,6 +185,48 @@ public static class SqliteStgSchemaPatcher
             );
             """);
         Execute(connection, """CREATE INDEX "IX_AssetChangeLogs_AssetId" ON "AssetChangeLogs" ("AssetId");""");
+    }
+
+    private static void EnsureReferenceItemsTable(SqliteConnection connection)
+    {
+        if (TableExists(connection, "ReferenceItems"))
+            return;
+
+        Execute(
+            connection,
+            """
+            CREATE TABLE "ReferenceItems" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_ReferenceItems" PRIMARY KEY,
+                "Type" TEXT NOT NULL,
+                "Code" TEXT NOT NULL,
+                "Name" TEXT NOT NULL,
+                "ParentId" TEXT NULL,
+                "Group" TEXT NULL,
+                "CertificateGroup" TEXT NULL,
+                "SortOrder" INTEGER NOT NULL,
+                "IsActive" INTEGER NOT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "UpdatedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_ReferenceItems_ReferenceItems_ParentId" FOREIGN KEY ("ParentId") REFERENCES "ReferenceItems" ("Id")
+            );
+            """);
+        Execute(connection, """CREATE INDEX "IX_ReferenceItems_Type_Code" ON "ReferenceItems" ("Type", "Code");""");
+        Execute(
+            connection,
+            """CREATE INDEX "IX_ReferenceItems_Type_ParentId_Code" ON "ReferenceItems" ("Type", "ParentId", "Code");""");
+    }
+
+    private static void EnsureCategoriesIsActiveColumn(SqliteConnection connection)
+    {
+        if (!TableExists(connection, "Categories"))
+            return;
+
+        if (!ColumnExists(connection, "Categories", "IsActive"))
+        {
+            Execute(
+                connection,
+                "ALTER TABLE \"Categories\" ADD COLUMN \"IsActive\" INTEGER NOT NULL DEFAULT 1;");
+        }
     }
 
     private static bool TableExists(SqliteConnection connection, string table)

@@ -6,5 +6,7 @@ public class Category
 
     public required string Name { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     public ICollection<PartNumber> PartNumbers { get; set; } = new List<PartNumber>();
 }

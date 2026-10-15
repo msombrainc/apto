@@ -168,6 +168,11 @@ namespace Apto.Api.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -179,6 +184,59 @@ namespace Apto.Api.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Apto.Api.Data.Entities.ReferenceItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CertificateGroup")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Group")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type", "Code");
+
+                    b.HasIndex("Type", "ParentId", "Code");
+
+                    b.ToTable("ReferenceItems");
                 });
 
             modelBuilder.Entity("Apto.Api.Data.Entities.Job", b =>
@@ -277,6 +335,16 @@ namespace Apto.Api.Data.Migrations
                     b.Navigation("Account");
                 });
 
+            modelBuilder.Entity("Apto.Api.Data.Entities.ReferenceItem", b =>
+                {
+                    b.HasOne("Apto.Api.Data.Entities.ReferenceItem", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("Apto.Api.Data.Entities.PartNumber", b =>
                 {
                     b.HasOne("Apto.Api.Data.Entities.Category", "Category")
@@ -304,6 +372,11 @@ namespace Apto.Api.Data.Migrations
             modelBuilder.Entity("Apto.Api.Data.Entities.PartNumber", b =>
                 {
                     b.Navigation("Assets");
+                });
+
+            modelBuilder.Entity("Apto.Api.Data.Entities.ReferenceItem", b =>
+                {
+                    b.Navigation("Children");
                 });
 #pragma warning restore 612, 618
         }

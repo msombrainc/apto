@@ -4,8 +4,6 @@ namespace Apto.Api.Jobs;
 
 public static class SlaStatusCalculator
 {
-    public static readonly string[] AllowedFacilities = ["GA", "TX", "CA"];
-
     public static int TotalSlaDays(Account account) =>
         account.SlaReceivingDays + account.SlaProcessingDays + account.SlaShippingDays;
 

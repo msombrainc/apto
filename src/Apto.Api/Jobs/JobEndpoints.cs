@@ -1,5 +1,6 @@
 using Apto.Api.Data;
 using Apto.Api.Data.Entities;
+using Apto.Api.ReferenceData;
 using Microsoft.EntityFrameworkCore;
 
 namespace Apto.Api.Jobs;
@@ -10,13 +11,19 @@ public static class JobEndpoints
     {
         var group = routes.MapGroup("/api/jobs");
 
-        group.MapGet("/facilities", () => Results.Ok(SlaStatusCalculator.AllowedFacilities));
+        group.MapGet("/facilities", ListFacilities);
         group.MapGet("/", ListJobs);
         group.MapGet("/{id:guid}", GetJob);
         group.MapPost("/", CreateJob);
         group.MapPut("/{id:guid}", UpdateJob);
 
         return group;
+    }
+
+    private static async Task<IResult> ListFacilities(AptoDbContext db, CancellationToken ct)
+    {
+        var codes = await ReferenceItemEndpoints.GetActiveFacilityCodesAsync(db, ct);
+        return Results.Ok(codes);
     }
 
     private static async Task<IResult> ListJobs(
@@ -61,7 +68,8 @@ public static class JobEndpoints
         AptoDbContext db,
         CancellationToken ct)
     {
-        if (!JobValidation.TryValidate(request, out var error))
+        var facilityCodes = await ReferenceItemEndpoints.GetActiveFacilityCodesAsync(db, ct);
+        if (!JobValidation.TryValidate(request, facilityCodes, out var error))
             return Results.BadRequest(new { error });
 
         var account = await db.Accounts.AsNoTracking()
@@ -95,7 +103,8 @@ public static class JobEndpoints
         AptoDbContext db,
         CancellationToken ct)
     {
-        if (!JobValidation.TryValidate(request, out var error))
+        var facilityCodes = await ReferenceItemEndpoints.GetActiveFacilityCodesAsync(db, ct);
+        if (!JobValidation.TryValidate(request, facilityCodes, out var error))
             return Results.BadRequest(new { error });
 
         var job = await db.Jobs.Include(j => j.Account).FirstOrDefaultAsync(j => j.Id == id, ct);

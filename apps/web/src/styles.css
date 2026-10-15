@@ -1113,3 +1113,87 @@ tr.row-selected {
   font-weight: 700;
   flex-shrink: 0;
 }
+
+.sidebar-nav--admin {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.sidebar-nav-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aims-text-muted);
+  margin: 0 0 0.35rem 0.75rem;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-pill--active {
+  background: var(--sla-pill-on-track-bg);
+  color: var(--sla-pill-on-track-text);
+}
+
+.status-pill--inactive {
+  border: 1px solid var(--aims-border);
+  color: var(--aims-text-muted);
+  background: transparent;
+}
+
+.th-sort {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.paging-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  align-items: center;
+}
+
+.ref-admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  align-items: flex-end;
+}
+
+.filter-field select,
+.filter-check {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.filter-check {
+  flex-direction: row;
+  align-items: center;
+}
+
+.data-table td.num,
+.data-table th.num {
+  text-align: right;
+}
