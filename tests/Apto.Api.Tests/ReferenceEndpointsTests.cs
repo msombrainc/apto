@@ -176,4 +176,61 @@ public class ReferenceEndpointsTests
         var second = await client.PostAsJsonAsync("/api/categories", new { name = "UniqueCat-46" });
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
     }
+
+    [Fact]
+    public async Task Put_reference_item_updates_persisted_fields()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/reference/grade",
+            new ReferenceWriteRequest("PUT-GRD", "Before rename", 10, null, null, null, null));
+        Assert.Equal(HttpStatusCode.Created, post.StatusCode);
+        var created = await post.Content.ReadFromJsonAsync<ReferenceItemResponse>();
+        Assert.NotNull(created);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/reference/grade/{created.Id}",
+            new ReferenceWriteRequest("PUT-GRD", "After rename", 42, null, null, null, false));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+        var updated = await put.Content.ReadFromJsonAsync<ReferenceItemResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("After rename", updated.Name);
+        Assert.Equal(42, updated.SortOrder);
+        Assert.False(updated.IsActive);
+
+        var listed = await client.GetFromJsonAsync<ReferenceListResponse>(
+            "/api/reference/grade?includeInactive=true");
+        Assert.NotNull(listed);
+        var row = listed.Items.Single(i => i.Id == created.Id);
+        Assert.Equal("After rename", row.Name);
+        Assert.Equal(42, row.SortOrder);
+        Assert.False(row.IsActive);
+    }
+
+    [Fact]
+    public async Task Put_category_duplicate_name_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var alpha = await client.PostAsJsonAsync("/api/categories", new { name = "CatAlpha-46" });
+        Assert.Equal(HttpStatusCode.Created, alpha.StatusCode);
+        var alphaBody = await alpha.Content.ReadFromJsonAsync<CategoryResponse>();
+        Assert.NotNull(alphaBody);
+
+        var beta = await client.PostAsJsonAsync("/api/categories", new { name = "CatBeta-46" });
+        Assert.Equal(HttpStatusCode.Created, beta.StatusCode);
+        var betaBody = await beta.Content.ReadFromJsonAsync<CategoryResponse>();
+        Assert.NotNull(betaBody);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/categories/{betaBody.Id}",
+            new CategoryWriteRequest("CatAlpha-46", null));
+        Assert.Equal(HttpStatusCode.Conflict, put.StatusCode);
+        var err = await put.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(err);
+        Assert.Contains("already exists", err["error"], StringComparison.OrdinalIgnoreCase);
+    }
 }
