@@ -7,6 +7,7 @@ import {
 } from "react";
 import {
   readStoredTheme,
+  STORAGE_KEY,
   type Theme,
 } from "./themeStorage";
 
