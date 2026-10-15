@@ -180,6 +180,19 @@ public static class ReferenceItemEndpoints
         if (!await IsCodeUniqueAsync(db, normalizedType, code, request.ParentId, excludeId: id, ct))
             return Results.BadRequest(new { error = "code already exists for this type." });
 
+        var normalizedNewCode = normalizedType == ReferenceTypes.Facility
+            ? code.ToUpperInvariant()
+            : code;
+        var normalizedOldCode = normalizedType == ReferenceTypes.Facility
+            ? entity.Code.Trim().ToUpperInvariant()
+            : entity.Code.Trim();
+        if (!string.Equals(normalizedNewCode, normalizedOldCode, StringComparison.Ordinal))
+        {
+            var inUseBefore = await ReferenceInUseCounter.CountAsync(db, entity, ct);
+            if (inUseBefore > 0)
+                return Results.BadRequest(new { error = "code cannot change while reference is in use." });
+        }
+
         if (normalizedType == ReferenceTypes.Location)
         {
             var parentOk = await db.ReferenceItems.AsNoTracking()

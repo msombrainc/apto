@@ -531,6 +531,12 @@ export function ReferenceDataAdmin() {
                 required
                 maxLength={32}
                 value={form.code}
+                readOnly={Boolean(editingRef && editingRef.inUseCount > 0)}
+                title={
+                  editingRef && editingRef.inUseCount > 0
+                    ? `Code is locked while ${editingRef.inUseCount} job(s) reference this facility.`
+                    : undefined
+                }
                 onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
               />
             </label>

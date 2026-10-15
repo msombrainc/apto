@@ -85,6 +85,54 @@ public class ReferenceEndpointsTests
     }
 
     [Fact]
+    public async Task Asset_status_rejects_invalid_certificate_group()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/reference/asset-status",
+            new ReferenceWriteRequest("TST-CERT", "Test Status", 1, null, "WIP", "NOT-A-CERT", null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(body);
+        Assert.Contains("certificateGroup", body["error"], StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Put_rejects_facility_code_change_when_in_use()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Ref Co 3", "REF-CO-3", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(
+                createdAccount.Id,
+                "GA",
+                "open",
+                DateTime.UtcNow,
+                null));
+
+        var facilities = await client.GetFromJsonAsync<ReferenceListResponse>("/api/reference/facility");
+        var ga = facilities!.Items.First(i => i.Code == "GA");
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/reference/facility/{ga.Id}",
+            new ReferenceWriteRequest("GA2", ga.Name, ga.SortOrder, null, null, null, ga.IsActive));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+        var err = await put.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(err);
+        Assert.Contains("in use", err["error"], StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Delete_in_use_facility_deactivates()
     {
         await using var factory = new AptoWebApplicationFactory();
