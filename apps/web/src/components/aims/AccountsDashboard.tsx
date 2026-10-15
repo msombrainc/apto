@@ -6,7 +6,7 @@ import { CodePill } from "./CodePill";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
 import { FilterBar } from "./FilterBar";
-import { IconPlus, IconRefresh, IconUsers } from "./icons";
+import { IconClock, IconPlus, IconRefresh, IconUsers } from "./icons";
 import { Modal } from "./Modal";
 import { SlaSegmentBar, slaTotalDays } from "./SlaSegmentBar";
 import { StatCard } from "./StatCard";
@@ -58,7 +58,7 @@ export function AccountsDashboard({
         </AimsButton>
       </div>
 
-      <div className="kpi-row kpi-row--2">
+      <div className="kpi-row kpi-row--2" role="region" aria-label="Accounts summary">
         <StatCard
           label="Accounts"
           value={accounts.length}
@@ -69,7 +69,7 @@ export function AccountsDashboard({
           label="Average SLA"
           value={accounts.length === 0 ? "—" : `${avg}d`}
           sublabel="Receiving + processing + shipping"
-          icon={<IconUsers />}
+          icon={<IconClock />}
         />
       </div>
 

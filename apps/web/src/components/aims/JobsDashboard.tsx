@@ -113,7 +113,7 @@ export function JobsDashboard({
         </AimsButton>
       </div>
 
-      <div className="kpi-row kpi-row--4">
+      <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
         <StatCard label="All jobs" value={jobs.length} icon={<IconBriefcase />} />
         <StatCard label="On track" value={onTrack} icon={<IconCheckCircle />} />
         <StatCard label="At risk" value={atRisk} icon={<IconAlert />} />
@@ -122,18 +122,20 @@ export function JobsDashboard({
 
       <section className="dashboard-panel">
         <div className="jobs-filters">
-          <label className="jobs-filters__search">
+          <label className="jobs-filters__search" htmlFor="jobs-filter-search">
             <span className="sr-only">Search jobs</span>
             <input
+              id="jobs-filter-search"
               type="search"
               placeholder="Search by job or account"
               value={jobSearch}
               onChange={(e) => onJobSearchChange(e.target.value)}
             />
           </label>
-          <label>
+          <label htmlFor="jobs-account-filter">
             Account
             <select
+              id="jobs-account-filter"
               value={jobAccountFilter}
               onChange={(e) => onJobAccountFilterChange(e.target.value)}
             >
@@ -203,7 +205,10 @@ export function JobsDashboard({
               id: "sla",
               header: "SLA",
               cell: (j) => (
-                <span className={`sla-pill sla-pill--${j.slaStatus}`}>{j.slaStatus}</span>
+                <span className={`sla-pill sla-pill--${j.slaStatus}`}>
+                  <span className="sr-only">SLA status: </span>
+                  {j.slaStatus.replace(/-/g, " ")}
+                </span>
               ),
             },
           ]}
@@ -212,8 +217,8 @@ export function JobsDashboard({
       </section>
 
       {selectedJobId && (
-        <section className="dashboard-panel assets-panel">
-          <h2 className="panel-title">Assets on job</h2>
+        <section className="dashboard-panel assets-panel" aria-labelledby="jobs-assets-panel-title">
+          <h2 className="panel-title" id="jobs-assets-panel-title">Assets on job</h2>
           <p className="muted panel-lede">Select a job row above, then add assets (FR-29, FR-35).</p>
           <form className="grid" onSubmit={onCreateAsset}>
             <label>
@@ -296,8 +301,8 @@ export function JobsDashboard({
       )}
 
       {selectedAsset && jobAssets.some((a) => a.id === selectedAsset.id) && (
-        <section className="dashboard-panel">
-          <h2 className="panel-title">Edit asset</h2>
+        <section className="dashboard-panel" aria-labelledby="jobs-edit-asset-title">
+          <h2 className="panel-title" id="jobs-edit-asset-title">Edit asset</h2>
           <form className="grid" onSubmit={onSaveAssetEdit}>
             <label>
               Part number

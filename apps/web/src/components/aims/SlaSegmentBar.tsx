@@ -40,7 +40,6 @@ export function SlaSegmentBar({ receivingDays, processingDays, shippingDays }: S
         ))}
       </div>
       <span className="sla-summary">{label}</span>
-      <span className="sr-only">{`SLA ${label}`}</span>
     </div>
   );
 }

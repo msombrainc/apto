@@ -53,8 +53,13 @@ export function DataTable<T>({
         <tbody>
           {loading && (
             <tr>
-              <td colSpan={columns.length + (interactive ? 1 : 0)} className="data-table__loading">
-                <span className="inline-spinner" aria-hidden />
+              <td
+                colSpan={columns.length + (interactive ? 1 : 0)}
+                className="data-table__loading"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="inline-spinner" aria-hidden="true" />
                 Loading…
               </td>
             </tr>

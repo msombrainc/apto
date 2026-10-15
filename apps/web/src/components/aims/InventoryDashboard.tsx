@@ -61,7 +61,7 @@ export function InventoryDashboard({
         </AimsButton>
       </div>
 
-      <div className="kpi-row kpi-row--3">
+      <div className="kpi-row kpi-row--3" role="region" aria-label="Inventory summary">
         <StatCard label="Assets" value={inventoryRows.length} icon={<IconBox />} />
         <StatCard label="Created today" value={createdToday} icon={<IconClock />} />
         <StatCard label="Accounts" value={accountCount} icon={<IconUsers />} />
@@ -76,9 +76,10 @@ export function InventoryDashboard({
             countLabel={`${inventoryRows.length} asset${inventoryRows.length === 1 ? "" : "s"}`}
             searchId="inventory-filter"
           />
-          <label className="inventory-account-select">
+          <label className="inventory-account-select" htmlFor="inventory-account-filter">
             Account
             <select
+              id="inventory-account-filter"
               value={inventoryAccountId}
               onChange={(e) => onInventoryAccountIdChange(e.target.value)}
             >
@@ -157,12 +158,12 @@ export function InventoryDashboard({
       </section>
 
       {selectedAsset && (
-        <section className="dashboard-panel">
-          <h2 className="panel-title">Asset detail</h2>
-          <p className="muted">
+        <section className="dashboard-panel" aria-labelledby="inventory-asset-detail-title">
+          <h2 className="panel-title" id="inventory-asset-detail-title">Asset detail</h2>
+          <p className="muted panel-lede">
             Job {selectedAsset.jobId.slice(0, 8)}… — change log (FR-37).
           </p>
-          <h3>Change log</h3>
+          <h3 className="panel-subtitle">Change log</h3>
           <AssetChangeLogTable entries={selectedAsset.changeLog} />
         </section>
       )}

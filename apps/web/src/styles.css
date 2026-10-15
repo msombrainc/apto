@@ -20,6 +20,12 @@
   --sla-on-track-bg: rgba(34, 197, 94, 0.12);
   --sla-at-risk-bg: rgba(234, 179, 8, 0.14);
   --sla-overdue-bg: rgba(239, 68, 68, 0.14);
+  --sla-pill-on-track-bg: rgba(34, 197, 94, 0.22);
+  --sla-pill-on-track-text: #86efac;
+  --sla-pill-at-risk-bg: rgba(234, 179, 8, 0.22);
+  --sla-pill-at-risk-text: #fde047;
+  --sla-pill-overdue-bg: rgba(239, 68, 68, 0.22);
+  --sla-pill-overdue-text: #fca5a5;
 }
 
 [data-theme="light"] {
@@ -43,6 +49,12 @@
   --sla-on-track-bg: #ecfdf5;
   --sla-at-risk-bg: #fef9c3;
   --sla-overdue-bg: #fee2e2;
+  --sla-pill-on-track-bg: #bbf7d0;
+  --sla-pill-on-track-text: #14532d;
+  --sla-pill-at-risk-bg: #fde047;
+  --sla-pill-at-risk-text: #713f12;
+  --sla-pill-overdue-bg: #fecaca;
+  --sla-pill-overdue-text: #7f1d1d;
 }
 
 * {
@@ -572,18 +584,18 @@ tr.sla-overdue {
 }
 
 .sla-pill--on-track {
-  background: #bbf7d0;
-  color: #14532d;
+  background: var(--sla-pill-on-track-bg);
+  color: var(--sla-pill-on-track-text);
 }
 
 .sla-pill--at-risk {
-  background: #fde047;
-  color: #713f12;
+  background: var(--sla-pill-at-risk-bg);
+  color: var(--sla-pill-at-risk-text);
 }
 
 .sla-pill--overdue {
-  background: #fecaca;
-  color: #7f1d1d;
+  background: var(--sla-pill-overdue-bg);
+  color: var(--sla-pill-overdue-text);
 }
 
 .row-selectable {
@@ -648,6 +660,12 @@ tr.row-selected {
 
 .panel-lede {
   margin: 0 0 1rem;
+}
+
+.panel-subtitle {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .kpi-row {
@@ -931,6 +949,16 @@ tr.row-selected {
   border-color: var(--aims-accent);
   background: rgba(232, 93, 43, 0.12);
   color: var(--aims-accent);
+}
+
+.facility-pill:focus-visible {
+  outline: 2px solid var(--aims-accent);
+  outline-offset: 2px;
+}
+
+.aims-btn:focus-visible {
+  outline: 2px solid var(--aims-accent);
+  outline-offset: 2px;
 }
 
 .jobs-filters {
