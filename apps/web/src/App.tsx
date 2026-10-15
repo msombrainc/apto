@@ -18,9 +18,11 @@ import {
   AssetInventoryRow,
 } from "./api";
 import { AssetChangeLogTable } from "./AssetChangeLogTable";
-import { DEMO_PASSWORD, DEMO_USER, isDemoLogin } from "./demoAuth";
+import { AppShell, type AppView } from "./AppShell";
+import { LoginPage } from "./LoginPage";
+import { isDemoLogin } from "./demoAuth";
 
-type View = "accounts" | "jobs" | "inventory";
+type View = AppView;
 
 function slaRowClass(status: Job["slaStatus"]): string {
   if (status === "overdue") return "sla-overdue";
@@ -249,73 +251,33 @@ export function App() {
   }
 
   if (!loggedIn) {
-    return (
-      <main className="page">
-        <h1>Apto — Demo login</h1>
-        <p className="muted">Week-1 stub: single hardcoded user (see README).</p>
-        <form className="card" onSubmit={onLogin}>
-          <label>
-            User
-            <input name="user" defaultValue={DEMO_USER} />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" defaultValue={DEMO_PASSWORD} />
-          </label>
-          <button type="submit">Sign in</button>
-        </form>
-        {error && <p className="error">{error}</p>}
-      </main>
-    );
+    return <LoginPage error={error} onLogin={onLogin} />;
   }
 
-  return (
-    <main className="page">
-      <header className="header">
-        <h1>
-          {view === "accounts"
-            ? "Customer accounts"
-            : view === "jobs"
-              ? "Jobs & SLA"
-              : "Inventory browse"}
-        </h1>
-        <div className="row header-actions">
-          <button
-            type="button"
-            className={view === "accounts" ? "" : "link"}
-            onClick={() => {
-              setView("accounts");
-              setSelectedAsset(null);
-            }}
-          >
-            Accounts
-          </button>
-          <button
-            type="button"
-            className={view === "jobs" ? "" : "link"}
-            onClick={() => {
-              setView("jobs");
-              setSelectedAsset(null);
-            }}
-          >
-            Jobs
-          </button>
-          <button
-            type="button"
-            className={view === "inventory" ? "" : "link"}
-            onClick={() => {
-              setView("inventory");
-              setSelectedAsset(null);
-            }}
-          >
-            Inventory
-          </button>
-          <button type="button" className="link" onClick={() => setLoggedIn(false)}>
-            Sign out
-          </button>
-        </div>
-      </header>
+  const pageTitle =
+    view === "accounts"
+      ? "Customer accounts"
+      : view === "jobs"
+        ? "Jobs & SLA"
+        : "Inventory browse";
+  const pageSubtitle =
+    view === "accounts"
+      ? "Every customer Apto collects equipment from, with the SLA they're promised."
+      : view === "jobs"
+        ? "Track facility jobs and SLA countdown from intake through shipping."
+        : "Search assets across jobs with account and facility filters.";
 
+  return (
+    <AppShell
+      view={view}
+      onViewChange={(next) => {
+        setView(next);
+        setSelectedAsset(null);
+      }}
+      onSignOut={() => setLoggedIn(false)}
+      title={pageTitle}
+      subtitle={pageSubtitle}
+    >
       {view === "accounts" && (
         <>
           <section className="card">
@@ -716,7 +678,7 @@ export function App() {
         </>
       )}
 
-      {error && <p className="error">{error}</p>}
-    </main>
+      {error && <p className="error page-error" role="alert">{error}</p>}
+    </AppShell>
   );
 }
