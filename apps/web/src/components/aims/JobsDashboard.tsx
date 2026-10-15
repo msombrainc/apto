@@ -95,6 +95,9 @@ export function JobsDashboard({
   onLoadAssetDetail,
 }: JobsDashboardProps) {
   const { onTrack, atRisk, overdue } = countJobsBySla(filteredJobs);
+  const filtersActive = Boolean(
+    jobSearch.trim() || jobAccountFilter || jobFacilityFilter,
+  );
 
   return (
     <div className="dashboard-stack">
@@ -113,7 +116,11 @@ export function JobsDashboard({
       </div>
 
       <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
-        <StatCard label="All jobs" value={filteredJobs.length} icon={<IconBriefcase />} />
+        <StatCard
+          label={filtersActive ? "Matching" : "All jobs"}
+          value={filteredJobs.length}
+          icon={<IconBriefcase />}
+        />
         <StatCard label="On track" value={onTrack} icon={<IconCheckCircle />} />
         <StatCard label="At risk" value={atRisk} icon={<IconAlert />} />
         <StatCard label="Overdue" value={overdue} icon={<IconClock />} />

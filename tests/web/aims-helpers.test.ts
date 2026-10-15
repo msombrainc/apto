@@ -35,7 +35,9 @@ test("filterJobs applies account, facility, and search haystack", () => {
       slaStatus: "on-track",
       startDateUtc: "2026-01-01",
       dueDateUtc: null,
-      daysLeft: 5,
+      slaTotalDays: 10,
+      daysRemaining: 5,
+      createdAtUtc: "2026-01-01T00:00:00Z",
     },
     {
       id: "j2",
@@ -46,7 +48,9 @@ test("filterJobs applies account, facility, and search haystack", () => {
       slaStatus: "overdue",
       startDateUtc: "2026-01-01",
       dueDateUtc: null,
-      daysLeft: -1,
+      slaTotalDays: 10,
+      daysRemaining: -1,
+      createdAtUtc: "2026-01-01T00:00:00Z",
     },
   ];
   assert.equal(
@@ -74,7 +78,9 @@ test("countJobsBySla uses same job set as KPI cards", () => {
       slaStatus: "on-track",
       startDateUtc: "",
       dueDateUtc: null,
-      daysLeft: 1,
+      slaTotalDays: 7,
+      daysRemaining: 1,
+      createdAtUtc: "2026-01-01T00:00:00Z",
     },
     {
       id: "2",
@@ -85,7 +91,9 @@ test("countJobsBySla uses same job set as KPI cards", () => {
       slaStatus: "overdue",
       startDateUtc: "",
       dueDateUtc: null,
-      daysLeft: -1,
+      slaTotalDays: 7,
+      daysRemaining: -1,
+      createdAtUtc: "2026-01-01T00:00:00Z",
     },
   ];
   const filtered = filterJobs(jobs, { search: "", accountId: "a", facilityCode: "GA" });
