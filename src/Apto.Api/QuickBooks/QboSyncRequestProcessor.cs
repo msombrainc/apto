@@ -64,7 +64,7 @@ public sealed class QboSyncRequestProcessor(
         {
             if (!_options.IsConfigured)
             {
-                await FailAttemptAsync(row, "QuickBooks integration is not configured.", now, ct);
+                await DeferPendingWithoutAttemptAsync(row, "QuickBooks integration is not configured.", now, ct);
                 return;
             }
 
@@ -84,7 +84,7 @@ public sealed class QboSyncRequestProcessor(
 
             if (!hasConnection)
             {
-                await FailAttemptAsync(row, "QuickBooks not connected", now, ct);
+                await DeferPendingWithoutAttemptAsync(row, "QuickBooks not connected", now, ct);
                 return;
             }
 
@@ -178,6 +178,24 @@ public sealed class QboSyncRequestProcessor(
         }
 
         await FailAttemptAsync(row, result.Error ?? "QBO sync failed.", now, ct);
+    }
+
+    /// <summary>
+    /// FR-1213: no QBO connection — do not call QBO or consume retry budget; row stays Pending.
+    /// </summary>
+    private async Task DeferPendingWithoutAttemptAsync(
+        QboSyncRequest row,
+        string error,
+        DateTime now,
+        CancellationToken ct)
+    {
+        if (row.Attempts > 0)
+            row.Attempts -= 1;
+
+        row.Status = QboSyncRequestStatus.Pending;
+        row.LastError = error.Length > 2000 ? error[..2000] : error;
+        row.UpdatedAtUtc = now;
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task FailAttemptAsync(QboSyncRequest row, string error, DateTime now, CancellationToken ct)

@@ -37,6 +37,53 @@ public class QboSyncProcessorTests
     }
 
     [Fact]
+    public async Task ProcessNext_stays_pending_when_quickbooks_not_connected()
+    {
+        await using var factory = CreateFactory((_, _) =>
+            Task.FromResult(new QboSyncResult(QboSyncStatus.Synced, "qbo-1", null)));
+
+        var rowId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        db.Accounts.Add(new Account
+        {
+            Id = accountId,
+            Name = "Queued",
+            Code = "Q-01",
+            QboSyncStatus = QboSyncStatus.Pending,
+            CreatedAtUtc = DateTime.UtcNow,
+        });
+        var baseTime = DateTime.UtcNow.AddMinutes(-10);
+        db.QboSyncRequests.Add(new QboSyncRequest
+        {
+            Id = rowId,
+            Operation = QboSyncOperations.CreateCustomer,
+            EntityType = QboSyncEntityTypes.Account,
+            EntityId = accountId,
+            PayloadJson = """{"DisplayName":"Queued","CompanyName":"Q Co"}""",
+            Status = QboSyncRequestStatus.Pending,
+            Attempts = 0,
+            CreatedAtUtc = baseTime,
+            UpdatedAtUtc = baseTime,
+        });
+        await db.SaveChangesAsync();
+
+        var processor = scope.ServiceProvider.GetRequiredService<QboSyncRequestProcessor>();
+        for (var i = 0; i < 6; i++)
+        {
+            Assert.True(await processor.ProcessNextAsync(CancellationToken.None));
+            var row = await db.QboSyncRequests.AsNoTracking().SingleAsync(r => r.Id == rowId);
+            Assert.Equal(QboSyncRequestStatus.Pending, row.Status);
+            Assert.Equal(0, row.Attempts);
+            Assert.Contains("not connected", row.LastError!, StringComparison.OrdinalIgnoreCase);
+            var account = await db.Accounts.AsNoTracking().SingleAsync(a => a.Id == accountId);
+            Assert.Equal(QboSyncStatus.Pending, account.QboSyncStatus);
+            Assert.NotEqual(QboSyncStatus.Failed, account.QboSyncStatus);
+        }
+    }
+
+    [Fact]
     public async Task ProcessNext_marks_failed_after_five_attempts()
     {
         await using var factory = CreateFactory((_, _) =>

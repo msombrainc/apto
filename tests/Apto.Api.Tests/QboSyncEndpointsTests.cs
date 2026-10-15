@@ -181,6 +181,75 @@ public class QboSyncEndpointsTests
     }
 
     [Fact]
+    public async Task Manual_qbo_sync_returns_accepted_with_request_id()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+            o.RedirectUri = "http://localhost/callback";
+        });
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var accountId = Guid.NewGuid();
+        db.Accounts.Add(new Account
+        {
+            Id = accountId,
+            Name = "Manual",
+            Code = "MAN-01",
+            QboSyncStatus = QboSyncStatus.Synced,
+            QboCustomerId = "qbo-1",
+            CreatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var post = await client.PostAsync($"/api/accounts/{accountId}/qbo-sync", null);
+        Assert.Equal(HttpStatusCode.Accepted, post.StatusCode);
+
+        var body = await post.Content.ReadFromJsonAsync<ManualSyncResponse>();
+        Assert.NotNull(body);
+        Assert.NotEqual(Guid.Empty, body.RequestId);
+
+        var row = await db.QboSyncRequests.AsNoTracking().SingleAsync(r => r.Id == body.RequestId);
+        Assert.Equal(QboSyncRequestStatus.Pending, row.Status);
+    }
+
+    [Fact]
+    public async Task Manual_qbo_sync_returns_not_found_for_missing_account()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+        });
+        var client = factory.CreateClient();
+        var post = await client.PostAsync($"/api/accounts/{Guid.NewGuid()}/qbo-sync", null);
+        Assert.Equal(HttpStatusCode.NotFound, post.StatusCode);
+    }
+
+    [Fact]
+    public async Task Manual_qbo_sync_returns_503_when_not_configured()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var accountId = Guid.NewGuid();
+        db.Accounts.Add(new Account
+        {
+            Id = accountId,
+            Name = "No QBO",
+            Code = "NQ",
+            CreatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var post = await client.PostAsync($"/api/accounts/{accountId}/qbo-sync", null);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, post.StatusCode);
+    }
+
+    [Fact]
     public async Task Create_invoice_without_customer_fails_with_clear_error()
     {
         await using var factory = new AptoWebApplicationFactory(o =>
@@ -229,6 +298,8 @@ public class QboSyncEndpointsTests
         Assert.Equal(QboSyncRequestStatus.Failed, done.Status);
         Assert.Contains("not synced", done.LastError!, StringComparison.OrdinalIgnoreCase);
     }
+
+    private sealed record ManualSyncResponse(Guid RequestId);
 
     private sealed record QboStatusDto(bool Connected, string? ConnectUrl);
 
