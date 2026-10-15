@@ -4,6 +4,7 @@ using Apto.Api.Data;
 using Apto.Api.Jobs;
 using Apto.Api.PartNumbers;
 using Apto.Api.QuickBooks;
+using Apto.Api.ReferenceData;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,8 +49,17 @@ if (useDatabase)
     else
         DatabaseStartup.ApplyMigrationsIfNeeded(app.Services, app.Environment);
 
-    if (useSqlite && !app.Environment.IsEnvironment("Testing"))
-        await DemoJobSeeder.SeedIfEmptyAsync(app.Services);
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        await using (var scope = app.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+            await ReferenceDataSeeder.SeedIfEmptyAsync(db);
+        }
+
+        if (useSqlite)
+            await DemoJobSeeder.SeedIfEmptyAsync(app.Services);
+    }
 
     await QboConnectionBootstrap.SeedFromConfigurationIfNeededAsync(app.Services);
 }
@@ -83,6 +93,8 @@ if (useDatabase || isTesting)
     app.MapJobEndpoints();
     app.MapAssetEndpoints();
     app.MapPartNumberEndpoints();
+    app.MapReferenceItemEndpoints();
+    app.MapCategoryEndpoints();
     app.MapQboOAuthEndpoints();
 }
 

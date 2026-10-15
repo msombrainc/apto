@@ -194,6 +194,189 @@ export async function createJobAsset(jobId: string, body: AssetWrite): Promise<A
   return res.json();
 }
 
+export type ReferenceItem = {
+  id: string;
+  type: string;
+  code: string;
+  name: string;
+  parentId: string | null;
+  parentCode: string | null;
+  parentName: string | null;
+  group: string | null;
+  certificateGroup: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  inUseCount: number;
+};
+
+export type ReferenceListResult = {
+  items: ReferenceItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export type ReferenceWrite = {
+  code: string;
+  name: string;
+  sortOrder: number;
+  parentId?: string | null;
+  group?: string | null;
+  certificateGroup?: string | null;
+  isActive?: boolean | null;
+};
+
+export type CategoryRow = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  partNumberCount: number;
+};
+
+export type CategoryListResult = {
+  items: CategoryRow[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export type ReferenceListParams = {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  includeInactive?: boolean;
+  facilityId?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+};
+
+function buildQuery(params: Record<string, string | number | boolean | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === "") continue;
+    search.set(key, String(value));
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export async function listReferenceItems(
+  type: string,
+  params: ReferenceListParams = {},
+): Promise<ReferenceListResult> {
+  const qs = buildQuery({
+    q: params.q,
+    page: params.page,
+    pageSize: params.pageSize,
+    includeInactive: params.includeInactive ? "true" : undefined,
+    facilityId: params.facilityId,
+    sortBy: params.sortBy,
+    sortDir: params.sortDir,
+  });
+  const res = await fetch(`${base}/api/reference/${type}${qs}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `reference list failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function createReferenceItem(
+  type: string,
+  body: ReferenceWrite,
+): Promise<ReferenceItem> {
+  const res = await fetch(`${base}/api/reference/${type}`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `create reference failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function updateReferenceItem(
+  type: string,
+  id: string,
+  body: ReferenceWrite,
+): Promise<ReferenceItem> {
+  const res = await fetch(`${base}/api/reference/${type}/${id}`, {
+    method: "PUT",
+    headers: apiHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `update reference failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteReferenceItem(
+  type: string,
+  id: string,
+): Promise<ReferenceItem | null> {
+  const res = await fetch(`${base}/api/reference/${type}/${id}`, {
+    method: "DELETE",
+    headers: apiHeaders(),
+  });
+  if (res.status === 204) return null;
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `delete reference failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function listCategories(
+  params: ReferenceListParams = {},
+): Promise<CategoryListResult> {
+  const qs = buildQuery({
+    q: params.q,
+    page: params.page,
+    pageSize: params.pageSize,
+    includeInactive: params.includeInactive ? "true" : undefined,
+  });
+  const res = await fetch(`${base}/api/categories${qs}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `categories list failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function createCategory(name: string): Promise<CategoryRow> {
+  const res = await fetch(`${base}/api/categories`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `create category failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function updateCategory(
+  id: string,
+  name: string,
+  isActive?: boolean,
+): Promise<CategoryRow> {
+  const res = await fetch(`${base}/api/categories/${id}`, {
+    method: "PUT",
+    headers: apiHeaders(),
+    body: JSON.stringify({ name, isActive }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `update category failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function updateAsset(id: string, body: AssetWrite): Promise<Asset> {
   const res = await fetch(`${base}/api/assets/${id}`, {
     method: "PUT",

@@ -2,6 +2,7 @@ using Apto.Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -42,6 +43,10 @@ public class MigrationStartupTests
             {
                 services.RemoveAll<IDatabaseMigrationApplier>();
                 services.AddSingleton<IDatabaseMigrationApplier>(recorder);
+                // Startup seeds reference data when not Testing; avoid live SQL Server in CI.
+                services.RemoveAll<DbContextOptions<AptoDbContext>>();
+                services.AddDbContext<AptoDbContext>(options =>
+                    options.UseInMemoryDatabase($"apto-migration-test-{Guid.NewGuid():N}"));
             });
         });
 

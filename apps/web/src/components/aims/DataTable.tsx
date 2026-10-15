@@ -3,7 +3,7 @@ import { IconChevronRight } from "./icons";
 
 type Column<T> = {
   id: string;
-  header: string;
+  header: ReactNode;
   cell: (row: T) => ReactNode;
   className?: string;
 };

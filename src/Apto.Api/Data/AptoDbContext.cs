@@ -12,6 +12,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<QboConnection> QboConnections => Set<QboConnection>();
     public DbSet<AssetChangeLog> AssetChangeLogs => Set<AssetChangeLog>();
+    public DbSet<ReferenceItem> ReferenceItems => Set<ReferenceItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,6 +50,22 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
         {
             e.HasIndex(x => x.Name).IsUnique();
             e.Property(x => x.Name).HasMaxLength(100);
+            e.Property(x => x.IsActive).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<ReferenceItem>(e =>
+        {
+            e.Property(x => x.Type).HasMaxLength(64);
+            e.Property(x => x.Code).HasMaxLength(32);
+            e.Property(x => x.Name).HasMaxLength(128);
+            e.Property(x => x.Group).HasMaxLength(32);
+            e.Property(x => x.CertificateGroup).HasMaxLength(32);
+            e.HasIndex(x => new { x.Type, x.Code });
+            e.HasIndex(x => new { x.Type, x.ParentId, x.Code });
+            e.HasOne(x => x.Parent)
+                .WithMany(x => x.Children)
+                .HasForeignKey(x => x.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PartNumber>(e =>

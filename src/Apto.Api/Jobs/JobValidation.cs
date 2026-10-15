@@ -2,7 +2,10 @@ namespace Apto.Api.Jobs;
 
 public static class JobValidation
 {
-    public static bool TryValidate(JobWriteRequest request, out string? error)
+    public static bool TryValidate(
+        JobWriteRequest request,
+        IReadOnlyCollection<string> allowedFacilityCodes,
+        out string? error)
     {
         if (request.AccountId == Guid.Empty)
         {
@@ -19,9 +22,9 @@ public static class JobValidation
         if (!string.IsNullOrWhiteSpace(request.FacilityCode))
         {
             var code = request.FacilityCode.Trim().ToUpperInvariant();
-            if (!SlaStatusCalculator.AllowedFacilities.Contains(code))
+            if (!allowedFacilityCodes.Contains(code, StringComparer.OrdinalIgnoreCase))
             {
-                error = "facility must be GA, TX, or CA.";
+                error = "facility is not an active reference code.";
                 return false;
             }
         }

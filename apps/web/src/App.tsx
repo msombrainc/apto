@@ -27,6 +27,7 @@ import { AccountsDashboard } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobsDashboard } from "./components/aims/JobsDashboard";
+import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 
 type View = AppView;
 
@@ -36,9 +37,16 @@ function slaRowClass(status: Job["slaStatus"]): string {
   return "sla-on-track";
 }
 
+function initialView(): View {
+  if (typeof window !== "undefined" && window.location.pathname === "/admin/reference-data") {
+    return "reference-data";
+  }
+  return "accounts";
+}
+
 export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [view, setView] = useState<View>("accounts");
+  const [view, setView] = useState<View>(initialView);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounced(query, 300);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -296,13 +304,17 @@ export function App() {
       ? "Customer accounts"
       : view === "jobs"
         ? "Jobs & SLA"
-        : "Inventory browse";
+        : view === "reference-data"
+          ? "Reference data"
+          : "Inventory browse";
   const pageSubtitle =
     view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
       : view === "jobs"
         ? "Track facility jobs and SLA countdown from intake through shipping."
-        : "Search assets across jobs with account and facility filters.";
+        : view === "reference-data"
+          ? "Maintain facilities, locations, statuses, grades, damages, and categories used across AIMS."
+          : "Search assets across jobs with account and facility filters.";
 
   return (
     <AppShell
@@ -310,6 +322,11 @@ export function App() {
       onViewChange={(next) => {
         setView(next);
         setSelectedAsset(null);
+        if (next === "reference-data") {
+          window.history.replaceState(null, "", "/admin/reference-data");
+        } else if (window.location.pathname.startsWith("/admin/")) {
+          window.history.replaceState(null, "", "/");
+        }
       }}
       onSignOut={() => setLoggedIn(false)}
       title={pageTitle}
@@ -367,6 +384,8 @@ export function App() {
           onLoadAssetDetail={(id) => void loadAssetDetail(id)}
         />
       )}
+
+      {view === "reference-data" && <ReferenceDataAdmin />}
 
       {view === "inventory" && (
         <InventoryDashboard

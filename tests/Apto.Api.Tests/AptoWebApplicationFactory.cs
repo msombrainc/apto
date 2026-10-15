@@ -1,11 +1,13 @@
 using Apto.Api.Data;
 using Apto.Api.QuickBooks;
+using Apto.Api.ReferenceData;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Apto.Api.Tests;
 
@@ -31,5 +33,15 @@ public sealed class AptoWebApplicationFactory : WebApplicationFactory<Program>
             if (_configureQbo is not null)
                 services.PostConfigure(_configureQbo);
         });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        db.Database.EnsureCreated();
+        ReferenceDataSeeder.SeedIfEmptyAsync(db).GetAwaiter().GetResult();
+        return host;
     }
 }
