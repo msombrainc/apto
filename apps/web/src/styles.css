@@ -1148,6 +1148,36 @@ tr.row-selected {
   background: transparent;
 }
 
+.status-pill--pending {
+  border: 1px solid var(--aims-border);
+  color: var(--aims-text);
+  background: transparent;
+}
+
+.status-pill--processing {
+  border: 1px solid var(--aims-accent);
+  color: var(--aims-text);
+  background: transparent;
+}
+
+.status-pill--failed {
+  background: var(--sla-pill-overdue-bg);
+  color: var(--sla-pill-overdue-text);
+}
+
+.qbo-sync-error-cell {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 16rem;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+}
+
 .th-sort {
   background: none;
   border: none;

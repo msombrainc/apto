@@ -14,6 +14,7 @@ public static class AccountEndpoints
         group.MapGet("/", ListAccounts);
         group.MapPost("/", CreateAccount);
         group.MapPut("/{id:guid}", UpdateAccount);
+        group.MapPost("/{id:guid}/qbo-sync", ManualQboSync);
 
         return group;
     }
@@ -40,7 +41,7 @@ public static class AccountEndpoints
     private static async Task<IResult> CreateAccount(
         AccountWriteRequest request,
         AptoDbContext db,
-        IQboCustomerSyncService qboSync,
+        IQboSyncEnqueueService enqueue,
         CancellationToken ct)
     {
         if (!AccountValidation.TryValidate(request, out var error))
@@ -64,10 +65,10 @@ public static class AccountEndpoints
         db.Accounts.Add(account);
         await db.SaveChangesAsync(ct);
 
-        var sync = await qboSync.SyncAccountCustomerAsync(account, ct);
-        account.QboSyncStatus = sync.Status;
-        account.QboCustomerId = sync.CustomerId;
-        account.QboSyncError = sync.Error;
+        var enqueued = await enqueue.EnqueueAccountCustomerAsync(account, isCreate: true, ct);
+        if (enqueued is null)
+            account.QboSyncStatus = QboSyncStatus.Skipped;
+
         await db.SaveChangesAsync(ct);
 
         return Results.Created($"/api/accounts/{account.Id}", ToResponse(account));
@@ -77,6 +78,7 @@ public static class AccountEndpoints
         Guid id,
         AccountWriteRequest request,
         AptoDbContext db,
+        IQboSyncEnqueueService enqueue,
         CancellationToken ct)
     {
         if (!AccountValidation.TryValidate(request, out var error))
@@ -90,6 +92,9 @@ public static class AccountEndpoints
         if (await db.Accounts.AnyAsync(a => a.Id != id && a.Code == normalizedCode, ct))
             return Results.Conflict(new { error = "account code already exists." });
 
+        var nameChanged = !string.Equals(account.Name, request.Name.Trim(), StringComparison.Ordinal);
+        var codeChanged = !string.Equals(account.Code, normalizedCode, StringComparison.Ordinal);
+
         account.Name = request.Name.Trim();
         account.Code = normalizedCode;
         account.SlaReceivingDays = request.SlaReceivingDays;
@@ -98,7 +103,27 @@ public static class AccountEndpoints
 
         await db.SaveChangesAsync(ct);
 
+        if (nameChanged || codeChanged)
+            await enqueue.EnqueueAccountCustomerAsync(account, isCreate: false, ct);
+
         return Results.Ok(ToResponse(account));
+    }
+
+    private static async Task<IResult> ManualQboSync(
+        Guid id,
+        AptoDbContext db,
+        IQboSyncEnqueueService enqueue,
+        CancellationToken ct)
+    {
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == id, ct);
+        if (account is null)
+            return Results.NotFound();
+
+        var row = await enqueue.EnqueueManualAccountSyncAsync(account, ct);
+        if (row is null)
+            return Results.Json(new { error = "QuickBooks is not configured." }, statusCode: 503);
+
+        return Results.Accepted($"/api/qbo/requests/{row.Id}", new { requestId = row.Id });
     }
 
     private static AccountResponse ToResponse(Account account) =>
