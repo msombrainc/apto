@@ -64,7 +64,7 @@ export function InventoryDashboard({
             searchPlaceholder="Search serial or part number"
             searchValue={inventoryQuery}
             onSearchChange={onInventoryQueryChange}
-            countLabel={`${inventoryRows.length} asset${inventoryRows.length === 1 ? "" : "s"}`}
+            countLabel={`${inventoryRows.length} asset${inventoryRows.length === 1 ? "" : "s"} shown (API max 200)`}
             searchId="inventory-filter"
           />
           <label className="inventory-account-select" htmlFor="inventory-account-filter">

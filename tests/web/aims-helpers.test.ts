@@ -102,6 +102,41 @@ test("countJobsBySla uses same job set as KPI cards", () => {
   assert.equal(counts.overdue, 1);
 });
 
+test("countJobsBySla counts at-risk and ignores unknown slaStatus", () => {
+  const jobs: Job[] = [
+    {
+      id: "a",
+      accountId: "1",
+      accountName: "A",
+      facilityCode: "GA",
+      opsStatus: "",
+      slaStatus: "at-risk",
+      startDateUtc: "",
+      dueDateUtc: null,
+      slaTotalDays: 5,
+      daysRemaining: 1,
+      createdAtUtc: "2026-01-01T00:00:00Z",
+    },
+    {
+      id: "b",
+      accountId: "1",
+      accountName: "A",
+      facilityCode: "GA",
+      opsStatus: "",
+      slaStatus: "on-track",
+      startDateUtc: "",
+      dueDateUtc: null,
+      slaTotalDays: 5,
+      daysRemaining: 3,
+      createdAtUtc: "2026-01-01T00:00:00Z",
+    },
+  ];
+  const counts = countJobsBySla(jobs);
+  assert.equal(counts.atRisk, 1);
+  assert.equal(counts.onTrack, 1);
+  assert.equal(counts.overdue, 0);
+});
+
 test("isCreatedTodayUtc respects UTC day boundary", () => {
   const now = new Date("2026-10-15T23:00:00Z");
   assert.equal(isCreatedTodayUtc("2026-10-15T01:00:00Z", now), true);
