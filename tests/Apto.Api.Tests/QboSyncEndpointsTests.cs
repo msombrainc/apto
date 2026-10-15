@@ -100,6 +100,87 @@ public class QboSyncEndpointsTests
     }
 
     [Fact]
+    public async Task List_requests_filters_by_status()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        db.QboSyncRequests.AddRange(
+            new QboSyncRequest
+            {
+                Id = Guid.NewGuid(),
+                Operation = QboSyncOperations.CreateCustomer,
+                EntityType = QboSyncEntityTypes.Account,
+                EntityId = Guid.NewGuid(),
+                PayloadJson = "{}",
+                Status = QboSyncRequestStatus.Failed,
+                Attempts = 5,
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+            },
+            new QboSyncRequest
+            {
+                Id = Guid.NewGuid(),
+                Operation = QboSyncOperations.CreateCustomer,
+                EntityType = QboSyncEntityTypes.Account,
+                EntityId = Guid.NewGuid(),
+                PayloadJson = "{}",
+                Status = QboSyncRequestStatus.Pending,
+                Attempts = 0,
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+            });
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var list = await client.GetFromJsonAsync<QboListDto>("/api/qbo/requests?status=Failed");
+        Assert.NotNull(list);
+        Assert.Equal(1, list.Total);
+        Assert.Single(list.Items);
+        Assert.Equal(QboSyncRequestStatus.Failed, list.Items[0].Status);
+    }
+
+    [Fact]
+    public async Task Update_account_enqueues_update_customer_when_name_changes()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+            o.RedirectUri = "http://localhost/callback";
+        });
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var accountId = Guid.NewGuid();
+        db.Accounts.Add(new Account
+        {
+            Id = accountId,
+            Name = "Before",
+            Code = "BEF-01",
+            QboCustomerId = "qbo-99",
+            QboSyncStatus = QboSyncStatus.Synced,
+            CreatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var put = await client.PutAsJsonAsync(
+            $"/api/accounts/{accountId}",
+            new AccountWriteRequest("After", "BEF-01", 1, 1, 1));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var updated = await put.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal(QboSyncStatus.Pending, updated.QboSyncStatus);
+
+        var row = await db.QboSyncRequests.AsNoTracking()
+            .OrderByDescending(r => r.CreatedAtUtc)
+            .FirstAsync(r => r.EntityId == accountId);
+        Assert.Equal(QboSyncOperations.UpdateCustomer, row.Operation);
+        Assert.Equal(QboSyncRequestStatus.Pending, row.Status);
+    }
+
+    [Fact]
     public async Task Create_invoice_without_customer_fails_with_clear_error()
     {
         await using var factory = new AptoWebApplicationFactory(o =>
@@ -150,6 +231,14 @@ public class QboSyncEndpointsTests
     }
 
     private sealed record QboStatusDto(bool Connected, string? ConnectUrl);
+
+    private sealed record QboListDto(
+        IReadOnlyList<QboListItemDto> Items,
+        int Page,
+        int PageSize,
+        int Total);
+
+    private sealed record QboListItemDto(string Status);
 
     private sealed class CountingHttpClientFactory(Func<HttpResponseMessage> responder) : IHttpClientFactory
     {
