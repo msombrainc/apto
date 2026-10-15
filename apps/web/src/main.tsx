@@ -1,7 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
-import { ThemeProvider, bootstrapDocumentTheme } from "./theme";
+import { ThemeProvider } from "./theme";
+import { bootstrapDocumentTheme } from "./themeStorage";
 import "./styles.css";
 
 bootstrapDocumentTheme();

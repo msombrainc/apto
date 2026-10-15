@@ -5,10 +5,18 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  readStoredTheme,
+  type Theme,
+} from "./themeStorage";
 
-export type Theme = "light" | "dark";
-
-export const STORAGE_KEY = "apto-aims-theme";
+export type { Theme } from "./themeStorage";
+export {
+  STORAGE_KEY,
+  bootstrapDocumentTheme,
+  readStoredTheme,
+  resolveThemeFromStorageValue,
+} from "./themeStorage";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -16,26 +24,6 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-/** Pure: map persisted value to theme (invalid / missing → dark). */
-export function resolveThemeFromStorageValue(stored: string | null): Theme {
-  return stored === "light" ? "light" : "dark";
-}
-
-export function readStoredTheme(
-  getItem: () => string | null = () => localStorage.getItem(STORAGE_KEY),
-): Theme {
-  try {
-    return resolveThemeFromStorageValue(getItem());
-  } catch {
-    return "dark";
-  }
-}
-
-/** Set `data-theme` on `<html>` before React paint (matches ThemeProvider default). */
-export function bootstrapDocumentTheme(doc: Document = document): void {
-  doc.documentElement.dataset.theme = readStoredTheme();
-}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(readStoredTheme);

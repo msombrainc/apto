@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   readStoredTheme,
   resolveThemeFromStorageValue,
-} from "../../apps/web/src/theme.tsx";
+} from "../../apps/web/src/themeStorage.ts";
 
 test("resolveThemeFromStorageValue maps light only when stored is light", () => {
   assert.equal(resolveThemeFromStorageValue("light"), "light");
