@@ -49,6 +49,17 @@ Baselines: `docs/ux/screenshots/apto-42-*-{light,dark}.png`
 
 Preview-only sections: “Future · AI”, preview state radiogroup, integrations nav, mock counts on nav badges.
 
+## Admin surfaces (Demo 2)
+
+Admin lives in the **same shell** as Operations: `sidebar-nav--admin` with label **Admin**, `aria-label="Administration"`. Each admin feature is a sidebar item with the same active dot pattern as Operations nav.
+
+| Screen | Charter | Route (when wired) |
+|--------|---------|-------------------|
+| Reference Data | `docs/ux/apto-46-f13-reference-data-admin-charter.md` | `/admin/reference-data` |
+| QuickBooks Sync | `docs/ux/apto-47-f12-qbo-sync-queue-charter.md` | `/admin/qbo-sync` |
+
+Shared patterns: `.dashboard-panel`, `.dashboard-stack`, `.filter-bar`, `DataTable`, `AimsButton`, `AlertBanner`, `EmptyState`, status pills (active/inactive from apto#46; queue-specific pending/processing/failed per apto#47 charter). **No new global tokens** — extend CSS pill variants only as named in each charter.
+
 ## Implement checklist
 
 - [ ] CSS variables + theme toggle
