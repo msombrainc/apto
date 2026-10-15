@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
 
 export type AppView = "accounts" | "jobs" | "inventory";
@@ -32,11 +33,7 @@ export function AppShell({
     <div className="aims-app">
       <aside className="aims-sidebar" aria-label="Main menu">
         <div className="sidebar-brand">
-          <div className="brand-mark" aria-label="Apto Solutions">
-            <span className="brand-dot" aria-hidden />
-            <span className="brand-name">Apto</span>
-            <span className="brand-suffix">Solutions</span>
-          </div>
+          <BrandMark />
           <span className="sidebar-product">AIMS</span>
         </div>
         <nav className="sidebar-nav" aria-label="Operations">

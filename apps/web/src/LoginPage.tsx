@@ -1,4 +1,5 @@
 import { FormEvent } from "react";
+import { BrandMark } from "./BrandMark";
 import { DEMO_PASSWORD, DEMO_USER } from "./demoAuth";
 
 type LoginPageProps = {
@@ -9,13 +10,9 @@ type LoginPageProps = {
 export function LoginPage({ error, onLogin }: LoginPageProps) {
   return (
     <div className="login-split">
-      <section className="login-hero" aria-hidden={false}>
+      <section className="login-hero">
         <div className="login-hero-inner">
-          <div className="brand-mark" aria-label="Apto Solutions">
-            <span className="brand-dot" aria-hidden />
-            <span className="brand-name">Apto</span>
-            <span className="brand-suffix">Solutions</span>
-          </div>
+          <BrandMark />
           <h2 className="login-headline">
             Custom ITAD.
             <br />

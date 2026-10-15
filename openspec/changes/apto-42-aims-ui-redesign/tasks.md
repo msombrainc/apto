@@ -7,4 +7,4 @@
 - [x] Theme tokens + toggle
 - [x] Login split layout
 - [x] App shell + restyled views
-- [ ] `npm run gate:mr` green
+- [x] `npm run gate:mr` green

@@ -41,7 +41,7 @@ Baseline: `docs/ux/screenshots/apto-42-login-{light,dark}.png`
 
 - **Sidebar** (`aria-label="Main menu"`): logo, “AIMS”, primary nav buttons (Accounts, Jobs & SLA, Inventory), theme toggle (Dark | Light), sign out.
 - **Main:** page title, optional subtitle, cards for forms/tables; max-width ~1200px content column.
-- **Accounts / Jobs / Inventory:** preserve existing data-test flows and API wiring; restyle only.
+- **Accounts / Jobs / Inventory:** preserve existing form field names, routes, and API wiring; restyle only (no `data-testid` on main today — add only if a factory STG scenario needs them).
 
 Baselines: `docs/ux/screenshots/apto-42-*-{light,dark}.png`
 
