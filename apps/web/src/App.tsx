@@ -158,6 +158,21 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname;
+      if (path === "/admin/reference-data") {
+        setView("reference-data");
+      } else if (path === "/" || path === "") {
+        setView((current) =>
+          current === "reference-data" ? "accounts" : current,
+        );
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
     if (!loggedIn) return;
     if (view === "accounts") {
       void refreshAccounts(debouncedQuery);

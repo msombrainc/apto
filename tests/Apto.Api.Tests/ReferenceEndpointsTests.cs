@@ -136,4 +136,44 @@ public class ReferenceEndpointsTests
         var res = await client.GetAsync("/api/reference/not-a-type");
         Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
     }
+
+    [Fact]
+    public async Task Location_list_without_facilityId_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var res = await client.GetAsync("/api/reference/location");
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_unused_grade_returns_no_content()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/reference/grade",
+            new ReferenceWriteRequest("DEL-GRD", "Delete me grade", 99, null, null, null, null));
+        Assert.Equal(HttpStatusCode.Created, post.StatusCode);
+        var created = await post.Content.ReadFromJsonAsync<ReferenceItemResponse>();
+        Assert.NotNull(created);
+
+        var del = await client.DeleteAsync($"/api/reference/grade/{created.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, del.StatusCode);
+    }
+
+    [Fact]
+    public async Task Duplicate_category_name_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var first = await client.PostAsJsonAsync("/api/categories", new { name = "UniqueCat-46" });
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+
+        var second = await client.PostAsJsonAsync("/api/categories", new { name = "UniqueCat-46" });
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+    }
 }
