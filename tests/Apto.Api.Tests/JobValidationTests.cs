@@ -37,4 +37,37 @@ public class JobValidationTests
         Assert.False(ok);
         Assert.Contains("dueDateUtc", error, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Rejects_unknown_facility_code()
+    {
+        var ok = JobValidation.TryValidate(
+            new JobWriteRequest(Guid.NewGuid(), "ZZ", "x", DateTime.UtcNow, null),
+            ["GA", "TX", "CA"],
+            out var error);
+        Assert.False(ok);
+        Assert.Equal("facility is not an active reference code.", error);
+    }
+
+    [Fact]
+    public void Rejects_inactive_facility_not_in_allowed_list()
+    {
+        var ok = JobValidation.TryValidate(
+            new JobWriteRequest(Guid.NewGuid(), "ga", "x", DateTime.UtcNow, null),
+            ["TX", "CA"],
+            out var error);
+        Assert.False(ok);
+        Assert.Equal("facility is not an active reference code.", error);
+    }
+
+    [Fact]
+    public void Accepts_active_facility_case_insensitive()
+    {
+        var ok = JobValidation.TryValidate(
+            new JobWriteRequest(Guid.NewGuid(), "tx", "x", DateTime.UtcNow, null),
+            ["GA", "TX", "CA"],
+            out var error);
+        Assert.True(ok);
+        Assert.Null(error);
+    }
 }
