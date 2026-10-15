@@ -117,6 +117,71 @@ public class ReferenceEndpointsTests
     }
 
     [Fact]
+    public async Task Job_create_rejects_deactivated_facility_code()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Ref Co 2", "REF-CO-2", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(
+                createdAccount.Id,
+                "GA",
+                "open",
+                DateTime.UtcNow,
+                null));
+
+        var facilities = await client.GetFromJsonAsync<ReferenceListResponse>("/api/reference/facility");
+        var ga = facilities!.Items.First(i => i.Code == "GA");
+
+        var del = await client.DeleteAsync($"/api/reference/facility/{ga.Id}");
+        Assert.Equal(HttpStatusCode.OK, del.StatusCode);
+
+        var reject = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(
+                createdAccount.Id,
+                "GA",
+                "open",
+                DateTime.UtcNow,
+                null));
+        Assert.Equal(HttpStatusCode.BadRequest, reject.StatusCode);
+        var err = await reject.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+        Assert.NotNull(err);
+        Assert.Contains("facility", err["error"], StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Seeded_job_statuses_and_locations_match_contract()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var jobStatuses = await client.GetFromJsonAsync<ReferenceListResponse>("/api/reference/job-status");
+        Assert.NotNull(jobStatuses);
+        Assert.Equal(9, jobStatuses.Items.Count);
+        Assert.Equal(
+            new[] { "PICKUP-SCHED", "IN-TRANSIT", "RECEIVED", "WIP", "WIP-INPUT-DONE", "OPS-EXC", "OPS-COMPLETE", "COMPLETED", "CANCELED" },
+            jobStatuses.Items.OrderBy(i => i.SortOrder).Select(i => i.Code).ToArray());
+
+        var facilities = await client.GetFromJsonAsync<ReferenceListResponse>("/api/reference/facility");
+        var ga = facilities!.Items.First(i => i.Code == "GA");
+        var locations = await client.GetFromJsonAsync<ReferenceListResponse>(
+            $"/api/reference/location?facilityId={ga.Id}");
+        Assert.NotNull(locations);
+        Assert.Equal(6, locations.Items.Count);
+        Assert.Equal(
+            new[] { "RECEIVING", "AUDIT-BENCH", "WIPE-ROOM", "SHRED-CAGE", "RECYCLE-BAY", "SELLABLE" },
+            locations.Items.OrderBy(i => i.SortOrder).Select(i => i.Code).ToArray());
+    }
+
+    [Fact]
     public async Task Categories_list_returns_part_number_counts()
     {
         await using var factory = new AptoWebApplicationFactory();

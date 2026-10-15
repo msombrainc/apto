@@ -24,5 +24,7 @@ inventory browse cap in Demo 2 plan §4).
 
 ## ASSUMPTION-465 Admin auth
 
-Only authenticated demo users (existing cookie/session) MAY call mutating reference endpoints;
-no role matrix in Demo 2.
+Mutating reference and category endpoints follow the same Demo 2 pattern as jobs/accounts:
+the SPA requires demo login before navigation, but the API does not enforce server-side
+session or role checks in this slice. A later auth slice MAY add middleware; until then,
+requirements treat “authenticated demo user” as a client/UI gate only.
