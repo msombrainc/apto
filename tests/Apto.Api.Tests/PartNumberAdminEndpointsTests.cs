@@ -110,6 +110,106 @@ public class PartNumberAdminEndpointsTests
     }
 
     [Fact]
+    public async Task List_sorts_by_category_name_asc_and_desc()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var catA = await client.PostAsJsonAsync("/api/categories", new { name = "SortCat-Alpha" });
+        var catABody = await catA.Content.ReadFromJsonAsync<CategoryStub>();
+        Assert.NotNull(catABody);
+        var catZ = await client.PostAsJsonAsync("/api/categories", new { name = "SortCat-Zulu" });
+        var catZBody = await catZ.Content.ReadFromJsonAsync<CategoryStub>();
+        Assert.NotNull(catZBody);
+
+        await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-SORT-CAT-Z", catZBody.Id));
+        await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-SORT-CAT-A", catABody.Id));
+
+        var asc = await client.GetFromJsonAsync<PartNumberListResponse>(
+            "/api/part-numbers?page=1&pageSize=50&q=PN-SORT-CAT&sortBy=categoryName&sortDir=asc");
+        Assert.NotNull(asc);
+        var ascNames = asc.Items.Select(i => i.CategoryName ?? "").ToList();
+        Assert.Equal(2, ascNames.Count);
+        Assert.True(string.Compare(ascNames[0], ascNames[1], StringComparison.Ordinal) <= 0);
+
+        var desc = await client.GetFromJsonAsync<PartNumberListResponse>(
+            "/api/part-numbers?page=1&pageSize=50&q=PN-SORT-CAT&sortBy=categoryName&sortDir=desc");
+        Assert.NotNull(desc);
+        var descNames = desc.Items.Select(i => i.CategoryName ?? "").ToList();
+        Assert.Equal(2, descNames.Count);
+        Assert.True(string.Compare(descNames[0], descNames[1], StringComparison.Ordinal) >= 0);
+    }
+
+    [Fact]
+    public async Task List_sorts_by_asset_count_asc_and_desc()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var heavy = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-SORT-AC-HEAVY", null));
+        var heavyBody = await heavy.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(heavyBody);
+        var light = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-SORT-AC-LIGHT", null));
+        var lightBody = await light.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(lightBody);
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Sort AC Co", "SORTAC", 1, 1, 1));
+        var acct = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(acct);
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(acct.Id, "GA", "Receiving", DateTime.UtcNow, null));
+        var jobBody = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(jobBody);
+
+        for (var i = 0; i < 2; i++)
+        {
+            var asset = await client.PostAsJsonAsync(
+                $"/api/jobs/{jobBody.Id}/assets",
+                new AssetWriteRequest(heavyBody.Id, $"SN-HEAVY-{i}", null));
+            Assert.Equal(HttpStatusCode.Created, asset.StatusCode);
+        }
+
+        var asc = await client.GetFromJsonAsync<PartNumberListResponse>(
+            "/api/part-numbers?page=1&pageSize=50&q=PN-SORT-AC&sortBy=assetCount&sortDir=asc");
+        Assert.NotNull(asc);
+        Assert.Equal(2, asc.Items.Count);
+        Assert.Equal("PN-SORT-AC-LIGHT", asc.Items[0].Number);
+        Assert.Equal(0, asc.Items[0].AssetCount);
+        Assert.Equal("PN-SORT-AC-HEAVY", asc.Items[1].Number);
+        Assert.Equal(2, asc.Items[1].AssetCount);
+
+        var desc = await client.GetFromJsonAsync<PartNumberListResponse>(
+            "/api/part-numbers?page=1&pageSize=50&q=PN-SORT-AC&sortBy=assetCount&sortDir=desc");
+        Assert.NotNull(desc);
+        Assert.Equal(2, desc.Items.Count);
+        Assert.Equal("PN-SORT-AC-HEAVY", desc.Items[0].Number);
+        Assert.Equal(2, desc.Items[0].AssetCount);
+    }
+
+    [Fact]
+    public async Task Admin_create_invalid_category_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var bad = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-BAD-CAT-POST", Guid.NewGuid()));
+        Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode);
+    }
+
+    [Fact]
     public async Task Admin_create_duplicate_returns_conflict()
     {
         await using var factory = new AptoWebApplicationFactory();
