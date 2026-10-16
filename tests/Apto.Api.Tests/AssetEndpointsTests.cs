@@ -2,8 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using Apto.Api.Accounts;
 using Apto.Api.Assets;
+using Apto.Api.Data;
 using Apto.Api.Jobs;
 using Apto.Api.PartNumbers;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Apto.Api.Tests;
 
@@ -763,6 +766,58 @@ public class AssetEndpointsTests
             new AssetWriteRequest(null, "dup-serial", "PN-DUP-B"));
 
         var response = await client.GetAsync("/api/assets/lookup?code=DUP-SERIAL");
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<LookupConflictBody>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.AmbiguousCount);
+    }
+
+    [Fact]
+    public async Task Lookup_ambiguous_apto_id_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Dup Apto Co", "DAP-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobA = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var jobB = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "TX", null, DateTime.UtcNow, null));
+        var createdA = await jobA.Content.ReadFromJsonAsync<JobResponse>();
+        var createdB = await jobB.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdA);
+        Assert.NotNull(createdB);
+
+        var postA = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdA.Id}/assets",
+            new AssetWriteRequest(null, "SN-A-DUP", "PN-DUP-A"));
+        var postB = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdB.Id}/assets",
+            new AssetWriteRequest(null, "SN-B-DUP", "PN-DUP-B"));
+        var assetA = await postA.Content.ReadFromJsonAsync<AssetResponse>();
+        var assetB = await postB.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(assetA);
+        Assert.NotNull(assetB);
+
+        const string sharedAptoId = "A9999999";
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+            var rowA = await db.Assets.SingleAsync(a => a.Id == assetA.Id);
+            var rowB = await db.Assets.SingleAsync(a => a.Id == assetB.Id);
+            rowA.AptoId = sharedAptoId;
+            rowB.AptoId = sharedAptoId;
+            await db.SaveChangesAsync();
+        }
+
+        var response = await client.GetAsync($"/api/assets/lookup?code={sharedAptoId}");
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<LookupConflictBody>();
         Assert.NotNull(body);
