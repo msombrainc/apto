@@ -659,6 +659,37 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Lookup_by_serial_returns_asset_case_insensitive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Ser Co", "SER-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "Ser-Lookup-99", "PN-SER"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var lookup = await client.GetFromJsonAsync<AssetLookupResponse>(
+            "/api/assets/lookup?code=ser-lookup-99");
+        Assert.NotNull(lookup);
+        Assert.Equal(asset.Id, lookup.Id);
+        Assert.Equal("Ser-Lookup-99", lookup.SerialNumber);
+    }
+
+    [Fact]
     public async Task Lookup_ambiguous_serial_returns_conflict()
     {
         await using var factory = new AptoWebApplicationFactory();
@@ -745,6 +776,60 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Update_invalid_grade_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var asset = await CreateMinimalAssetAsync(client);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, "NOT-A-REAL-GRADE", null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+        var body = await put.Content.ReadAsStringAsync();
+        Assert.Contains("grade is invalid or inactive", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Update_invalid_status_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var asset = await CreateMinimalAssetAsync(client);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, null, "NOT-A-REAL-STATUS", null));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+        var body = await put.Content.ReadAsStringAsync();
+        Assert.Contains("status is invalid or inactive", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Create_asset_with_invalid_grade_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Cg Co", "CG-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "CG-SN", "PN-CG", "FAKE-GRADE", null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+    }
+
+    [Fact]
     public async Task Update_location_outside_facility_returns_bad_request()
     {
         await using var factory = new AptoWebApplicationFactory();
@@ -784,4 +869,26 @@ public class AssetEndpointsTests
     }
 
     private sealed record LookupConflictBody(int AmbiguousCount);
+
+    private static async Task<AssetResponse> CreateMinimalAssetAsync(HttpClient client)
+    {
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Min Co", "MIN-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "MIN-SN", "PN-MIN"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        return asset;
+    }
 }
