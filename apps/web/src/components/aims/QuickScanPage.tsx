@@ -10,27 +10,19 @@ import { DEMO_USER } from "../../demoAuth";
 import { AlertBanner } from "./AlertBanner";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
+import {
+  buildScanApplyBody,
+  buildScanUndoBody,
+  formatScanFieldChange,
+  scanPresetNeedsAsk,
+  type FieldMode,
+  type PresetFields,
+  type ScanPreset,
+} from "../../quickScanLogic";
 
 const PRESET_STORAGE_KEY = "apto.f8Scan.presets.v1";
 
-type FieldMode = "fixed" | "ask";
-
-type PresetFields = {
-  grade?: string;
-  status?: string;
-  locationId?: string;
-  gradeMode?: FieldMode;
-  statusMode?: FieldMode;
-  locationMode?: FieldMode;
-};
-
-export type ScanPreset = {
-  id: string;
-  name: string;
-  isGlobal: boolean;
-  fields: PresetFields;
-  createdBy: string;
-};
+export type { ScanPreset } from "../../quickScanLogic";
 
 type SessionLogRow = {
   id: string;
@@ -84,16 +76,6 @@ function playTone(freq: number, durationMs: number) {
   } catch {
     /* visual-only when audio blocked */
   }
-}
-
-function formatFieldChange(
-  label: string,
-  oldVal: string | null | undefined,
-  newVal: string | null | undefined,
-): string {
-  const o = oldVal?.trim() ? oldVal : "—";
-  const n = newVal?.trim() ? newVal : "—";
-  return `${label}: ${o} → ${n}`;
 }
 
 export function QuickScanPage() {
@@ -228,37 +210,6 @@ export function QuickScanPage() {
     ]);
   };
 
-  const resolvePayload = (
-    preset: ScanPreset,
-    lookup: AssetLookupResult,
-    ask?: { grade: string; status: string; locationId: string },
-  ) => {
-    const fields = preset.fields;
-    const grade =
-      fields.gradeMode === "fixed"
-        ? fields.grade ?? null
-        : ask?.grade || null;
-    const status =
-      fields.statusMode === "fixed"
-        ? fields.status ?? null
-        : ask?.status || null;
-    const locationId =
-      fields.locationMode === "fixed"
-        ? fields.locationId ?? null
-        : ask?.locationId || null;
-
-    return { grade, status, locationId };
-  };
-
-  const needsAsk = (preset: ScanPreset) => {
-    const f = preset.fields;
-    return (
-      f.gradeMode === "ask"
-      || f.statusMode === "ask"
-      || f.locationMode === "ask"
-    );
-  };
-
   const applyUpdate = async (
     lookup: AssetLookupResult,
     preset: ScanPreset,
@@ -270,13 +221,9 @@ export function QuickScanPage() {
       status: lookup.status,
       locationId: lookup.locationId,
     };
-    const payload = resolvePayload(preset, lookup, ask);
-    const body: Record<string, string | null> = {};
-    if (payload.grade !== null) body.grade = payload.grade;
-    if (payload.status !== null) body.status = payload.status;
-    if (payload.locationId !== null) body.locationId = payload.locationId;
+    const { body, empty } = buildScanApplyBody(preset, ask);
 
-    if (Object.keys(body).length === 0) {
+    if (empty) {
       setFailureMsg("Preset has no fields to apply.");
       playTone(220, 120);
       return;
@@ -292,12 +239,12 @@ export function QuickScanPage() {
 
     const changes: string[] = [];
     if (body.grade !== undefined)
-      changes.push(formatFieldChange("grade", before.grade, updated.grade));
+      changes.push(formatScanFieldChange("grade", before.grade, updated.grade));
     if (body.status !== undefined)
-      changes.push(formatFieldChange("status", before.status, updated.status));
+      changes.push(formatScanFieldChange("status", before.status, updated.status));
     if (body.locationId !== undefined)
       changes.push(
-        formatFieldChange("location", lookup.locationName, updated.locationName),
+        formatScanFieldChange("location", lookup.locationName, updated.locationName),
       );
 
     const summary = `${updated.aptoId} · ${updated.partNumber ?? "asset"} — ${changes.join(", ")}`;
@@ -326,7 +273,7 @@ export function QuickScanPage() {
     const scanned = code.trim();
     try {
       const lookup = await lookupAssetByCode(scanned);
-      if (needsAsk(selectedPreset)) {
+      if (scanPresetNeedsAsk(selectedPreset)) {
         await loadLocationsForFacility(lookup.facilityCode);
         setPendingAsk({ code: scanned, lookup });
         setAskGrade(lookup.grade ?? "");
@@ -378,11 +325,7 @@ export function QuickScanPage() {
     if (!undo || busy) return;
     setBusy(true);
     try {
-      await updateAsset(undo.assetId, {
-        grade: undo.grade ?? "",
-        status: undo.status ?? "",
-        locationId: undo.locationId ?? "00000000-0000-0000-0000-000000000000",
-      });
+      await updateAsset(undo.assetId, buildScanUndoBody(undo));
       appendLog({
         code: "—",
         aptoId: "—",
