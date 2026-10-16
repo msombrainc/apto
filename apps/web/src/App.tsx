@@ -24,7 +24,7 @@ import {
   viewFromPathname,
   type AppView,
 } from "./routing/moduleMap";
-import { ROUTES } from "./routing/paths";
+import { ROUTES, inventoryAssetPath } from "./routing/paths";
 import { LoginPage } from "./LoginPage";
 import { isDemoLogin } from "./demoAuth";
 import { buildInventoryListParams } from "./inventoryListParams";
@@ -220,7 +220,10 @@ export function App() {
     if (isDemoLogin(user, pass)) {
       setLoggedIn(true);
       setError(null);
-      navigate(ROUTES.accounts, { replace: true });
+      const path = location.pathname;
+      if (path === "/" || path === "") {
+        navigate(ROUTES.accounts, { replace: true });
+      }
     } else {
       setError("Invalid demo credentials (use demo / demo).");
     }
@@ -309,6 +312,17 @@ export function App() {
   }
 
   if (location.pathname === "/" || location.pathname === "") {
+    return <Navigate to={ROUTES.accounts} replace />;
+  }
+
+  const onKnownRoute =
+    location.pathname.startsWith("/accounts")
+    || location.pathname.startsWith("/jobs")
+    || location.pathname.startsWith("/inventory")
+    || location.pathname.startsWith("/operations/scan")
+    || location.pathname.startsWith("/admin/reference-data")
+    || location.pathname.startsWith("/admin/qbo-sync");
+  if (!onKnownRoute) {
     return <Navigate to={ROUTES.accounts} replace />;
   }
 
@@ -421,7 +435,10 @@ export function App() {
           loading={inventoryLoading}
           onRefresh={() => void refreshInventory()}
           selectedAsset={selectedAsset}
-          onSelectAsset={(id) => void loadAssetDetail(id)}
+          onSelectAsset={(id) => {
+            navigate(inventoryAssetPath(id));
+            void loadAssetDetail(id);
+          }}
         />
       )}
 

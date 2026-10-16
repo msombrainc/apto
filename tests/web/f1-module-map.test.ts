@@ -6,6 +6,7 @@ import {
   parseInventoryAssetId,
   viewFromPathname,
 } from "../../apps/web/src/routing/moduleMap.ts";
+import { inventoryAssetPath } from "../../apps/web/src/routing/paths.ts";
 
 test("module map includes Demo 2 Operations entries", () => {
   const jobs = AIMS_MODULE_MAP.find((e) => e.id === "jobs");
@@ -35,6 +36,13 @@ test("viewFromPathname maps deep links", () => {
   assert.equal(viewFromPathname("/operations/scan"), "scan");
   assert.equal(viewFromPathname("/inventory/assets/abc"), "inventory");
   assert.equal(viewFromPathname("/accounts"), "accounts");
+  assert.equal(viewFromPathname("/jobs"), "jobs");
+});
+
+test("inventoryAssetPath round-trips with parseInventoryAssetId", () => {
+  const id = "asset/with space";
+  const path = inventoryAssetPath(id);
+  assert.equal(parseInventoryAssetId(path), id);
 });
 
 test("parseInventoryAssetId decodes asset segment", () => {
