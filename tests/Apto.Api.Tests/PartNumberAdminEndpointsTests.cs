@@ -31,6 +31,85 @@ public class PartNumberAdminEndpointsTests
     }
 
     [Fact]
+    public async Task Put_updates_number_and_category()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var cat = await client.PostAsJsonAsync(
+            "/api/categories",
+            new { name = "PutTestCat" });
+        var catBody = await cat.Content.ReadFromJsonAsync<CategoryStub>();
+        Assert.NotNull(catBody);
+
+        var created = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-PUT-1", catBody.Id));
+        var body = await created.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(body);
+
+        var updated = await client.PutAsJsonAsync(
+            $"/api/part-numbers/{body.Id}",
+            new PartNumberAdminWriteRequest("PN-PUT-1-RENAMED", null));
+        Assert.Equal(HttpStatusCode.OK, updated.StatusCode);
+        var row = await updated.Content.ReadFromJsonAsync<PartNumberRowResponse>();
+        Assert.NotNull(row);
+        Assert.Equal("PN-PUT-1-RENAMED", row.Number);
+        Assert.Null(row.CategoryName);
+    }
+
+    [Fact]
+    public async Task Put_not_found_returns_404()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var missing = await client.PutAsJsonAsync(
+            $"/api/part-numbers/{Guid.NewGuid()}",
+            new PartNumberAdminWriteRequest("PN-MISSING", null));
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_invalid_category_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-BAD-CAT", null));
+        var body = await created.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(body);
+
+        var bad = await client.PutAsJsonAsync(
+            $"/api/part-numbers/{body.Id}",
+            new PartNumberAdminWriteRequest("PN-BAD-CAT", Guid.NewGuid()));
+        Assert.Equal(HttpStatusCode.BadRequest, bad.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_duplicate_number_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-DUP-A", null));
+        var second = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-DUP-B", null));
+        var b = await second.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(b);
+
+        var conflict = await client.PutAsJsonAsync(
+            $"/api/part-numbers/{b.Id}",
+            new PartNumberAdminWriteRequest("PN-DUP-A", null));
+        Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+    }
+
+    [Fact]
     public async Task Admin_create_duplicate_returns_conflict()
     {
         await using var factory = new AptoWebApplicationFactory();
@@ -121,4 +200,5 @@ public class PartNumberAdminEndpointsTests
         Assert.DoesNotContain(list.Items, i => i.Id == body.Id);
     }
 
+    private sealed record CategoryStub(Guid Id, string Name);
 }
