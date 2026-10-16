@@ -20,6 +20,7 @@ import {
 } from "./api";
 import { AppShell } from "./AppShell";
 import {
+  isKnownAppPath,
   parseInventoryAssetId,
   viewFromPathname,
   type AppView,
@@ -164,6 +165,11 @@ export function App() {
     if (!loggedIn || !routeAssetId) return;
     void loadAssetDetail(routeAssetId);
   }, [loggedIn, routeAssetId, loadAssetDetail]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    if (!routeAssetId) setSelectedAsset(null);
+  }, [loggedIn, routeAssetId]);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -315,14 +321,7 @@ export function App() {
     return <Navigate to={ROUTES.accounts} replace />;
   }
 
-  const onKnownRoute =
-    location.pathname.startsWith("/accounts")
-    || location.pathname.startsWith("/jobs")
-    || location.pathname.startsWith("/inventory")
-    || location.pathname.startsWith("/operations/scan")
-    || location.pathname.startsWith("/admin/reference-data")
-    || location.pathname.startsWith("/admin/qbo-sync");
-  if (!onKnownRoute) {
+  if (!isKnownAppPath(location.pathname)) {
     return <Navigate to={ROUTES.accounts} replace />;
   }
 

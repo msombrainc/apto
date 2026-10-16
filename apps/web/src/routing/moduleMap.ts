@@ -195,3 +195,15 @@ export function parseInventoryAssetId(pathname: string): string | null {
   const match = /^\/inventory\/assets\/([^/]+)/.exec(pathname);
   return match ? decodeURIComponent(match[1]) : null;
 }
+
+export function isKnownAppPath(pathname: string): boolean {
+  if (pathname === "/" || pathname === "") return true;
+  return (
+    pathname.startsWith("/accounts")
+    || pathname.startsWith("/jobs")
+    || pathname.startsWith("/inventory")
+    || pathname.startsWith("/operations/scan")
+    || pathname.startsWith("/admin/reference-data")
+    || pathname.startsWith("/admin/qbo-sync")
+  );
+}

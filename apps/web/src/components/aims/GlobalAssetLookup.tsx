@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { lookupAssetByCode } from "../../api";
-import { inventoryAssetPath } from "../../routing/paths";
+import { resolveGlobalAssetLookup } from "../../routing/globalAssetLookup";
 
 type GlobalAssetLookupProps = {
   onError: (message: string | null) => void;
@@ -19,11 +19,14 @@ export function GlobalAssetLookup({ onError }: GlobalAssetLookupProps) {
     setBusy(true);
     onError(null);
     try {
-      const result = await lookupAssetByCode(trimmed);
-      navigate(inventoryAssetPath(result.id));
+      const outcome = await resolveGlobalAssetLookup(code, lookupAssetByCode);
+      if (outcome.kind === "noop") return;
+      if (outcome.kind === "error") {
+        onError(outcome.message);
+        return;
+      }
+      navigate(outcome.path);
       setCode("");
-    } catch (err) {
-      onError(err instanceof Error ? err.message : "Asset lookup failed");
     } finally {
       setBusy(false);
     }

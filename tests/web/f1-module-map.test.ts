@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   AIMS_MODULE_MAP,
   moduleGroups,
+  isKnownAppPath,
   parseInventoryAssetId,
   viewFromPathname,
 } from "../../apps/web/src/routing/moduleMap.ts";
@@ -43,6 +44,12 @@ test("inventoryAssetPath round-trips with parseInventoryAssetId", () => {
   const id = "asset/with space";
   const path = inventoryAssetPath(id);
   assert.equal(parseInventoryAssetId(path), id);
+});
+
+test("isKnownAppPath accepts registered routes and rejects typos", () => {
+  assert.equal(isKnownAppPath("/jobs"), true);
+  assert.equal(isKnownAppPath("/inventory/assets/x"), true);
+  assert.equal(isKnownAppPath("/typo"), false);
 });
 
 test("parseInventoryAssetId decodes asset segment", () => {
