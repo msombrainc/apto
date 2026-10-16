@@ -273,8 +273,11 @@ export function JobsDashboard({
           <table aria-label="Assets on selected job" className="data-table">
             <thead>
               <tr>
+                <th scope="col">Apto ID</th>
                 <th scope="col">Part #</th>
                 <th scope="col">Serial</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Status</th>
                 <th scope="col">Created</th>
               </tr>
             </thead>
@@ -293,8 +296,11 @@ export function JobsDashboard({
                   }}
                   aria-selected={selectedAsset?.id === a.id}
                 >
+                  <td>{a.aptoId ?? "—"}</td>
                   <td>{a.partNumber ?? "—"}</td>
                   <td>{a.serialNumber ?? "—"}</td>
+                  <td>{a.grade ?? "—"}</td>
+                  <td>{a.status ?? "—"}</td>
                   <td>{new Date(a.createdAtUtc).toLocaleString()}</td>
                 </tr>
               ))}

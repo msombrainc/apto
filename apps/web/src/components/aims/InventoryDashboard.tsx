@@ -106,9 +106,29 @@ export function InventoryDashboard({
               ),
             },
             {
+              id: "apto",
+              header: "Apto ID",
+              cell: (r) => r.aptoId ?? "—",
+            },
+            {
               id: "serial",
               header: "Serial",
               cell: (r) => r.serialNumber ?? "—",
+            },
+            {
+              id: "grade",
+              header: "Grade",
+              cell: (r) => r.grade ?? "—",
+            },
+            {
+              id: "status",
+              header: "Status",
+              cell: (r) => r.status ?? "—",
+            },
+            {
+              id: "location",
+              header: "Location",
+              cell: (r) => r.locationName ?? "—",
             },
             {
               id: "account",

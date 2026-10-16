@@ -29,6 +29,7 @@ import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobsDashboard } from "./components/aims/JobsDashboard";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
+import { QuickScanPage } from "./components/aims/QuickScanPage";
 
 type View = AppView;
 
@@ -42,6 +43,7 @@ function initialView(): View {
   if (typeof window !== "undefined") {
     if (window.location.pathname === "/admin/reference-data") return "reference-data";
     if (window.location.pathname === "/admin/qbo-sync") return "qbo-sync";
+    if (window.location.pathname === "/operations/scan") return "scan";
   }
   return "accounts";
 }
@@ -164,9 +166,11 @@ export function App() {
       const path = window.location.pathname;
       if (path === "/admin/reference-data") {
         setView("reference-data");
+      } else if (path === "/operations/scan") {
+        setView("scan");
       } else if (path === "/" || path === "") {
         setView((current) =>
-          current === "reference-data" ? "accounts" : current,
+          current === "reference-data" || current === "scan" ? "accounts" : current,
         );
       }
     };
@@ -321,21 +325,25 @@ export function App() {
       ? "Customer accounts"
       : view === "jobs"
         ? "Jobs & SLA"
-        : view === "reference-data"
-          ? "Reference data"
-          : view === "qbo-sync"
-            ? "QuickBooks sync"
-            : "Inventory browse";
+        : view === "scan"
+          ? "Warehouse scan"
+          : view === "reference-data"
+            ? "Reference data"
+            : view === "qbo-sync"
+              ? "QuickBooks sync"
+              : "Inventory browse";
   const pageSubtitle =
     view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
       : view === "jobs"
         ? "Track facility jobs and SLA countdown from intake through shipping."
-        : view === "reference-data"
-          ? "Maintain facilities, locations, statuses, grades, damages, and categories used across AIMS."
-          : view === "qbo-sync"
-            ? "Connection status, outbound queue, and retries for QuickBooks Online (sandbox)."
-            : "Search assets across jobs with account and facility filters.";
+        : view === "scan"
+          ? "Scan Apto IDs or serials to apply grade, status, and location presets with instant feedback."
+          : view === "reference-data"
+            ? "Maintain facilities, locations, statuses, grades, damages, and categories used across AIMS."
+            : view === "qbo-sync"
+              ? "Connection status, outbound queue, and retries for QuickBooks Online (sandbox)."
+              : "Search assets across jobs with account and facility filters.";
 
   return (
     <AppShell
@@ -347,7 +355,12 @@ export function App() {
           window.history.replaceState(null, "", "/admin/reference-data");
         } else if (next === "qbo-sync") {
           window.history.replaceState(null, "", "/admin/qbo-sync");
-        } else if (window.location.pathname.startsWith("/admin/")) {
+        } else if (next === "scan") {
+          window.history.replaceState(null, "", "/operations/scan");
+        } else if (
+          window.location.pathname.startsWith("/admin/")
+          || window.location.pathname.startsWith("/operations/")
+        ) {
           window.history.replaceState(null, "", "/");
         }
       }}
@@ -407,6 +420,8 @@ export function App() {
           onLoadAssetDetail={(id) => void loadAssetDetail(id)}
         />
       )}
+
+      {view === "scan" && <QuickScanPage />}
 
       {view === "reference-data" && <ReferenceDataAdmin />}
 

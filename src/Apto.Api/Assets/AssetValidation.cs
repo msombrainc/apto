@@ -22,6 +22,18 @@ public static class AssetValidation
             return false;
         }
 
+        if (request.Grade is { Length: > 32 })
+        {
+            error = "grade must be at most 32 characters.";
+            return false;
+        }
+
+        if (request.Status is { Length: > 64 })
+        {
+            error = "status must be at most 64 characters.";
+            return false;
+        }
+
         error = null;
         return true;
     }
@@ -30,7 +42,10 @@ public static class AssetValidation
     {
         if (request.PartNumberId is null
             && string.IsNullOrWhiteSpace(request.NewPartNumber)
-            && request.SerialNumber is null)
+            && request.SerialNumber is null
+            && request.Grade is null
+            && request.Status is null
+            && request.LocationId is null)
         {
             error = "no changes supplied.";
             return false;
@@ -45,6 +60,18 @@ public static class AssetValidation
         if (request.SerialNumber is { Length: > 100 })
         {
             error = "serial number must be at most 100 characters.";
+            return false;
+        }
+
+        if (request.Grade is { Length: > 32 })
+        {
+            error = "grade must be at most 32 characters.";
+            return false;
+        }
+
+        if (request.Status is { Length: > 64 })
+        {
+            error = "status must be at most 64 characters.";
             return false;
         }
 

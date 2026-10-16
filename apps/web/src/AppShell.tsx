@@ -3,7 +3,7 @@ import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
 import { IconMoon, IconSun } from "./components/aims/icons";
 
-export type AppView = "accounts" | "jobs" | "inventory" | "reference-data" | "qbo-sync";
+export type AppView = "accounts" | "jobs" | "inventory" | "scan" | "reference-data" | "qbo-sync";
 
 type AppShellProps = {
   view: AppView;
@@ -14,12 +14,13 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-const OPERATIONS_VIEWS: AppView[] = ["accounts", "jobs", "inventory"];
+const OPERATIONS_VIEWS: AppView[] = ["accounts", "jobs", "inventory", "scan"];
 
 const VIEW_LABELS: Record<AppView, string> = {
   accounts: "Accounts",
   jobs: "Jobs & SLA",
   inventory: "Inventory",
+  scan: "Warehouse scan",
   "reference-data": "Reference Data",
   "qbo-sync": "QuickBooks Sync",
 };
