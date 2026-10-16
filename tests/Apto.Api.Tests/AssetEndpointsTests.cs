@@ -650,6 +650,38 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Lookup_by_apto_id_is_case_insensitive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Lk Case Co", "LKC-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "LKC-SN", "PN-LKC"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        Assert.False(string.IsNullOrWhiteSpace(asset.AptoId));
+
+        var lookup = await client.GetFromJsonAsync<AssetLookupResponse>(
+            $"/api/assets/lookup?code={asset.AptoId.ToLowerInvariant()}");
+        Assert.NotNull(lookup);
+        Assert.Equal(asset.Id, lookup.Id);
+        Assert.Equal(asset.AptoId, lookup.AptoId);
+    }
+
+    [Fact]
     public async Task Lookup_unknown_code_returns_not_found()
     {
         await using var factory = new AptoWebApplicationFactory();
