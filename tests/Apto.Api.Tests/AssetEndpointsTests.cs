@@ -786,6 +786,78 @@ public class AssetEndpointsTests
         Assert.Contains(updated.ChangeLog, e => e.FieldName == "location");
     }
 
+    /// <summary>
+    /// Quick Scan undo uses buildScanUndoBody: empty grade/status strings and
+    /// 00000000-0000-0000-0000-000000000000 locationId to clear fields (acceptance: undo).
+    /// </summary>
+    [Fact]
+    public async Task Update_asset_scan_undo_payload_clears_grade_status_location()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Undo Co", "UND-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "UNDO-SN", "PN-UNDO"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        Assert.Null(asset.Grade);
+        Assert.Null(asset.Status);
+        Assert.Null(asset.LocationId);
+
+        var facilities = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            "/api/reference/facility?pageSize=10");
+        Assert.NotNull(facilities);
+        var gaFacility = facilities.Items.First(f => f.Code == "GA");
+
+        var locations = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            $"/api/reference/location?facilityId={gaFacility.Id}&pageSize=50");
+        Assert.NotNull(locations);
+        var location = locations.Items.First();
+
+        var apply = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, "B", "IN-AUDIT", location.Id));
+        Assert.Equal(HttpStatusCode.OK, apply.StatusCode);
+        var scanned = await apply.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(scanned);
+        Assert.Equal("B", scanned.Grade);
+        Assert.Equal("IN-AUDIT", scanned.Status);
+        Assert.Equal(location.Id, scanned.LocationId);
+
+        var undo = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(
+                null,
+                null,
+                null,
+                string.Empty,
+                string.Empty,
+                Guid.Empty));
+        Assert.Equal(HttpStatusCode.OK, undo.StatusCode);
+
+        var restored = await undo.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(restored);
+        Assert.Null(restored.Grade);
+        Assert.Null(restored.Status);
+        Assert.Null(restored.LocationId);
+        Assert.Contains(restored.ChangeLog, e => e.FieldName == "grade" && e.NewValue == null);
+        Assert.Contains(restored.ChangeLog, e => e.FieldName == "status" && e.NewValue == null);
+        Assert.Contains(restored.ChangeLog, e => e.FieldName == "location" && e.NewValue == null);
+    }
+
     [Fact]
     public async Task Update_invalid_grade_returns_bad_request()
     {
