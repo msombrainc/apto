@@ -25,6 +25,16 @@ Runbook: `dev-agent/docs/NEW-PRODUCT-FACTORY.md`.
 | `human-required` | Human |
 | `factory-pause` | Human |
 
+
+## Design SoT (UI)
+
+Until Figma MCP is available, factory UI work **must** use the interactive preview:
+
+- https://apto-aims-preview.vercel.app — `apto-inventory` / `apto2026`
+- Details: `docs/ux/README.md`, `DESIGN.md`, apto#72
+
+Athena opens it via browser MCP; Hephaestus implements to those baselines.
+
 ## PR hygiene
 
 - `Related: #N` until Argus PASS — not `Fixes #N` on implement PRs.
