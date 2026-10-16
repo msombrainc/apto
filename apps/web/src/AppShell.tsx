@@ -1,39 +1,58 @@
 import type { ReactNode } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
 import { IconMoon, IconSun } from "./components/aims/icons";
-
-export type AppView = "accounts" | "jobs" | "inventory" | "scan" | "reference-data" | "qbo-sync";
+import { GlobalAssetLookup } from "./components/aims/GlobalAssetLookup";
+import { ModuleMapNav } from "./components/aims/ModuleMapNav";
+import { ROUTES } from "./routing/paths";
+import type { AppView } from "./routing/moduleMap";
 
 type AppShellProps = {
   view: AppView;
-  onViewChange: (view: AppView) => void;
   onSignOut: () => void;
+  onGlobalLookupError: (message: string | null) => void;
   title: string;
   subtitle?: string;
   children: ReactNode;
 };
 
-const OPERATIONS_VIEWS: AppView[] = ["accounts", "jobs", "inventory", "scan"];
+const PRIMARY_NAV: {
+  view: AppView;
+  label: string;
+  to: string;
+  isActive?: (pathname: string) => boolean;
+}[] = [
+  { view: "accounts", label: "Accounts", to: ROUTES.accounts },
+  { view: "jobs", label: "Jobs & SLA", to: ROUTES.jobs },
+  {
+    view: "inventory",
+    label: "Inventory",
+    to: ROUTES.inventory,
+    isActive: (pathname: string) => pathname.startsWith("/inventory"),
+  },
+  { view: "scan", label: "Warehouse scan", to: ROUTES.scan },
+];
 
-const VIEW_LABELS: Record<AppView, string> = {
-  accounts: "Accounts",
-  jobs: "Jobs & SLA",
-  inventory: "Inventory",
-  scan: "Warehouse scan",
-  "reference-data": "Reference Data",
-  "qbo-sync": "QuickBooks Sync",
-};
+const ADMIN_NAV: { view: AppView; label: string; to: string }[] = [
+  { view: "reference-data", label: "Reference Data", to: ROUTES.referenceData },
+  { view: "qbo-sync", label: "QuickBooks Sync", to: ROUTES.qboSync },
+];
+
+function navClass(isActive: boolean): string {
+  return `sidebar-nav-btn${isActive ? " is-active" : ""}`;
+}
 
 export function AppShell({
   view,
-  onViewChange,
   onSignOut,
+  onGlobalLookupError,
   title,
   subtitle,
   children,
 }: AppShellProps) {
   const { theme, setTheme } = useTheme();
+  const { pathname } = useLocation();
 
   return (
     <div className="aims-app">
@@ -43,40 +62,35 @@ export function AppShell({
           <span className="sidebar-product">AIMS</span>
         </div>
         <nav className="sidebar-nav" aria-label="Operations">
-          {OPERATIONS_VIEWS.map((key) => (
-            <button
-              key={key}
-              type="button"
-              className={`sidebar-nav-btn${view === key ? " is-active" : ""}`}
-              aria-current={view === key ? "page" : undefined}
-              onClick={() => onViewChange(key)}
+          {PRIMARY_NAV.map((item) => (
+            <NavLink
+              key={item.view}
+              to={item.to}
+              className={() =>
+                navClass(item.isActive ? item.isActive(pathname) : pathname.startsWith(item.to))
+              }
+              aria-current={view === item.view ? "page" : undefined}
             >
-              {view === key && <span className="sidebar-nav-dot" aria-hidden />}
-              {VIEW_LABELS[key]}
-            </button>
+              {view === item.view && <span className="sidebar-nav-dot" aria-hidden />}
+              {item.label}
+            </NavLink>
           ))}
         </nav>
         <nav className="sidebar-nav sidebar-nav--admin" aria-label="Administration">
           <span className="sidebar-nav-label">Admin</span>
-          <button
-            type="button"
-            className={`sidebar-nav-btn${view === "reference-data" ? " is-active" : ""}`}
-            aria-current={view === "reference-data" ? "page" : undefined}
-            onClick={() => onViewChange("reference-data")}
-          >
-            {view === "reference-data" && <span className="sidebar-nav-dot" aria-hidden />}
-            {VIEW_LABELS["reference-data"]}
-          </button>
-          <button
-            type="button"
-            className={`sidebar-nav-btn${view === "qbo-sync" ? " is-active" : ""}`}
-            aria-current={view === "qbo-sync" ? "page" : undefined}
-            onClick={() => onViewChange("qbo-sync")}
-          >
-            {view === "qbo-sync" && <span className="sidebar-nav-dot" aria-hidden />}
-            {VIEW_LABELS["qbo-sync"]}
-          </button>
+          {ADMIN_NAV.map((item) => (
+            <NavLink
+              key={item.view}
+              to={item.to}
+              className={({ isActive }) => navClass(isActive)}
+              aria-current={view === item.view ? "page" : undefined}
+            >
+              {view === item.view && <span className="sidebar-nav-dot" aria-hidden />}
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
+        <ModuleMapNav />
         <div className="sidebar-theme" role="group" aria-label="Theme">
           <div className="theme-segment">
             {(["dark", "light"] as Theme[]).map((t) => (
@@ -108,10 +122,11 @@ export function AppShell({
       </aside>
       <main className="aims-main">
         <header className="page-header">
-          <div>
+          <div className="page-header-text">
             <h1>{title}</h1>
             {subtitle && <p className="page-subtitle muted">{subtitle}</p>}
           </div>
+          <GlobalAssetLookup onError={onGlobalLookupError} />
         </header>
         <div className="page-content">{children}</div>
       </main>

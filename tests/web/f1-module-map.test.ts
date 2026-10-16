@@ -1,0 +1,43 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  AIMS_MODULE_MAP,
+  moduleGroups,
+  parseInventoryAssetId,
+  viewFromPathname,
+} from "../../apps/web/src/routing/moduleMap.ts";
+
+test("module map includes Demo 2 Operations entries", () => {
+  const jobs = AIMS_MODULE_MAP.find((e) => e.id === "jobs");
+  assert.equal(jobs?.availability, "d2");
+  assert.equal(jobs?.path, "/jobs");
+});
+
+test("module map marks future screens with phase tags", () => {
+  const invoices = AIMS_MODULE_MAP.find((e) => e.id === "invoices");
+  assert.equal(invoices?.availability, "future");
+  assert.match(invoices?.phaseTag ?? "", /Phase 5/);
+});
+
+test("moduleGroups preserves group order", () => {
+  const groups = moduleGroups();
+  assert.deepEqual(groups.map((g) => g.group), [
+    "Operations",
+    "Inventory",
+    "Accounts & Sales",
+    "Admin",
+    "Dashboards",
+  ]);
+});
+
+test("viewFromPathname maps deep links", () => {
+  assert.equal(viewFromPathname("/admin/reference-data"), "reference-data");
+  assert.equal(viewFromPathname("/operations/scan"), "scan");
+  assert.equal(viewFromPathname("/inventory/assets/abc"), "inventory");
+  assert.equal(viewFromPathname("/accounts"), "accounts");
+});
+
+test("parseInventoryAssetId decodes asset segment", () => {
+  assert.equal(parseInventoryAssetId("/inventory/assets/asset%2F1"), "asset/1");
+  assert.equal(parseInventoryAssetId("/inventory"), null);
+});
