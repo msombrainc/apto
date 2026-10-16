@@ -1,7 +1,7 @@
 # Apto AIMS — UX charter (apto#42)
 
-**Status:** Frozen for implement (2026-10-15)  
-**Source of truth:** [Interactive preview](https://apto-aims-preview.vercel.app) (Figma-aligned; preview wins over legacy STG shell)
+**Status:** Active for Demo 2 UI (apto#72)  
+**Source of truth (mandatory for factory):** [Interactive preview](https://apto-aims-preview.vercel.app) — sign in `apto-inventory` / `apto2026`. Athena/Hephaestus must browser-review this preview (light + dark) before charter freeze and during polish. Figma cloud / `docs/ux/Apto-AIMS.fig` are secondary until Figma MCP is connected. Preview wins over legacy STG shell for look-and-feel.
 
 ## Product framing
 
@@ -33,7 +33,8 @@ Split viewport (~55% hero / ~45% form):
 
 - **Hero:** grid texture, Apto Solutions mark, headline “Custom ITAD. Total coverage. Transparent results.”, supporting copy, three pillars (Accounts / Jobs / Inventory).
 - **Panel:** “Sign in to AIMS”, username + password, cream/dark CTA “Sign in →”, footnote “Prototype · test data only”.
-- Demo credentials remain `demo` / `demo` (factory STG); preview password is not wired in product.
+- **STG product login:** `demo` / `demo` (not the preview password).
+- **Design preview login:** `apto-inventory` / `apto2026` (prototype only — do not wire into product auth).
 
 Baseline: `docs/ux/screenshots/apto-42-login-{light,dark}.png`
 
