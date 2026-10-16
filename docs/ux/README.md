@@ -1,10 +1,26 @@
 # Apto AIMS design SoT
 
-| Artifact | Path / URL |
-|----------|------------|
-| Figma local export (SoT) | [`Apto-AIMS.fig`](./Apto-AIMS.fig) — file name in Figma: **Apto AIMS** (owner: Oksana Plechii) |
-| Interactive preview | https://apto-aims-preview.vercel.app (password `apto2026`) |
+## Active SoT (factory — use this)
 
-Factory tickets that consume this library: **apto#42** (themes/shell redesign), **apto#43** (Demo 2 Dock to Invoice), **apto#44** (design parity audit / gap fill).
+| Artifact | Location |
+|----------|----------|
+| **Interactive preview (primary)** | https://apto-aims-preview.vercel.app |
+| Username | `apto-inventory` |
+| Password | `apto2026` |
 
-Open the `.fig` in Figma desktop (**File → Open from local** / import). Light and dark themes; components limited to current product scope on purpose.
+Athena and Hephaestus **must** open this preview in browser MCP (Playwright), sign in, and match light **and** dark screens for the ticket’s surfaces. Capture baselines under `docs/ux/screenshots/` or the UX run folder. Preview wins over legacy STG shell for look-and-feel.
+
+Product tokens / rules: repo root [`DESIGN.md`](../../DESIGN.md).
+
+## Secondary (until Figma MCP)
+
+| Artifact | Location |
+|----------|----------|
+| Cloud Figma | https://www.figma.com/design/RZCUc2Egsh0HnvLTuGKPVw/Apto-AIMS |
+| Local `.fig` export | [`Apto-AIMS.fig`](./Apto-AIMS.fig) |
+
+Do **not** invent layout from charter prose alone when the surface exists in the preview.
+
+## Factory tickets
+
+Demo 2 slices and UI work: see open `impl-dev` / `ux-charter-first` issues. Mandate tracking: **apto#72**.
