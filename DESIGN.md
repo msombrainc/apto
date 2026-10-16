@@ -39,7 +39,7 @@ Baseline: `docs/ux/screenshots/apto-42-login-{light,dark}.png`
 
 ## Authenticated shell
 
-- **Sidebar** (`aria-label="Main menu"`): logo, “AIMS”, primary nav buttons (Accounts, Jobs & SLA, Inventory), theme toggle (Dark | Light), sign out.
+- **Sidebar** (`aria-label="Main menu"`): logo, “AIMS”, primary nav buttons (Accounts, Jobs & SLA, Inventory, Warehouse scan per apto#48), theme toggle (Dark | Light), sign out.
 - **Main:** page title, optional subtitle, cards for forms/tables; max-width ~1200px content column.
 - **Accounts / Jobs / Inventory:** preserve existing form field names, routes, and API wiring; restyle only (no `data-testid` on main today — add only if a factory STG scenario needs them).
 
@@ -48,6 +48,16 @@ Baselines: `docs/ux/screenshots/apto-42-*-{light,dark}.png`
 ## Out of scope (this ticket)
 
 Preview-only sections: “Future · AI”, preview state radiogroup, integrations nav, mock counts on nav badges.
+
+## Operations surfaces (Demo 2)
+
+Operations nav (`aria-label="Operations"`) covers Accounts, Jobs & SLA, Inventory, and warehouse scan.
+
+| Screen | Charter | Route (when wired) |
+|--------|---------|-------------------|
+| Warehouse scan (F8) | `docs/ux/apto-48-f8-quick-scan-charter.md` | `/operations/scan` |
+
+Shared patterns: `.dashboard-panel`, `.dashboard-stack`, `DataTable`, `AimsButton`, scanner-first focus on the code input; result banners and session log per charter. **No new global tokens.**
 
 ## Admin surfaces (Demo 2)
 
