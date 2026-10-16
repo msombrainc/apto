@@ -265,6 +265,12 @@ public class PartNumberAdminEndpointsTests
         var missingReplacement = await client.DeleteAsync($"/api/part-numbers/{oldBody.Id}");
         Assert.Equal(HttpStatusCode.BadRequest, missingReplacement.StatusCode);
 
+        var selfReplacement = await client.DeleteAsync(
+            $"/api/part-numbers/{oldBody.Id}?replacementId={oldBody.Id}");
+        Assert.Equal(HttpStatusCode.BadRequest, selfReplacement.StatusCode);
+
+        client.DefaultRequestHeaders.Add("X-Apto-User", "pn-admin-del");
+
         var deleted = await client.DeleteAsync(
             $"/api/part-numbers/{oldBody.Id}?replacementId={newBody.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
@@ -276,7 +282,8 @@ public class PartNumberAdminEndpointsTests
             updated.ChangeLog,
             l => l.FieldName == "partNumber"
                  && l.OldValue == "PN-OLD-DEL"
-                 && l.NewValue == "PN-NEW-DEL");
+                 && l.NewValue == "PN-NEW-DEL"
+                 && l.ChangedBy == "pn-admin-del");
     }
 
     [Fact]
