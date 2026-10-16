@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<IDatabaseMigrationApplier, EfDatabaseMigrationApplier>();
-builder.Services.AddQuickBooksIntegration(builder.Configuration);
+builder.Services.AddQuickBooksIntegration(builder.Configuration, registerWorker: !isTesting);
 
 var connectionString = builder.Configuration.GetConnectionString("Default");
 var useDatabase = !isTesting && !string.IsNullOrWhiteSpace(connectionString);
@@ -96,6 +96,7 @@ if (useDatabase || isTesting)
     app.MapReferenceItemEndpoints();
     app.MapCategoryEndpoints();
     app.MapQboOAuthEndpoints();
+    app.MapQboSyncEndpoints();
 }
 
 // Keep all /api endpoint maps above this catch-all.

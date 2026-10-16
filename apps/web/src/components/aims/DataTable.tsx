@@ -18,6 +18,7 @@ type DataTableProps<T> = {
   selectedKey?: string | null;
   loading?: boolean;
   emptyState?: ReactNode;
+  tableTestId?: string;
 };
 
 export function DataTable<T>({
@@ -30,12 +31,13 @@ export function DataTable<T>({
   selectedKey,
   loading,
   emptyState,
+  tableTestId,
 }: DataTableProps<T>) {
   const interactive = Boolean(onRowClick);
 
   return (
     <div className="data-table-wrap">
-      <table className="data-table" aria-label={ariaLabel}>
+      <table className="data-table" aria-label={ariaLabel} data-testid={tableTestId}>
         <thead>
           <tr>
             {columns.map((col) => (

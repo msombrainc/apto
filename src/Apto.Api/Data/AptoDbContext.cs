@@ -11,6 +11,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<PartNumber> PartNumbers => Set<PartNumber>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<QboConnection> QboConnections => Set<QboConnection>();
+    public DbSet<QboSyncRequest> QboSyncRequests => Set<QboSyncRequest>();
     public DbSet<AssetChangeLog> AssetChangeLogs => Set<AssetChangeLog>();
     public DbSet<ReferenceItem> ReferenceItems => Set<ReferenceItem>();
 
@@ -30,6 +31,16 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.RealmId).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<QboSyncRequest>(e =>
+        {
+            e.Property(x => x.Operation).HasMaxLength(32);
+            e.Property(x => x.EntityType).HasMaxLength(32);
+            e.Property(x => x.Status).HasMaxLength(16);
+            e.Property(x => x.LastError).HasMaxLength(2000);
+            e.Property(x => x.QboId).HasMaxLength(64);
+            e.HasIndex(x => new { x.Status, x.CreatedAtUtc });
         });
 
         modelBuilder.Entity<Job>(e =>

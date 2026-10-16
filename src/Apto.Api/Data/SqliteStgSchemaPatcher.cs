@@ -35,6 +35,7 @@ public static class SqliteStgSchemaPatcher
             EnsureAssetsTable(sqlite);
             EnsureAssetChangeLogsTable(sqlite);
             EnsureReferenceItemsTable(sqlite);
+            EnsureQboSyncRequestsTable(sqlite);
             EnsureCategoriesIsActiveColumn(sqlite);
             ReferenceDataSeeder.SeedIfEmptyAsync(db).GetAwaiter().GetResult();
         }
@@ -214,6 +215,34 @@ public static class SqliteStgSchemaPatcher
         Execute(
             connection,
             """CREATE INDEX "IX_ReferenceItems_Type_ParentId_Code" ON "ReferenceItems" ("Type", "ParentId", "Code");""");
+    }
+
+    private static void EnsureQboSyncRequestsTable(SqliteConnection connection)
+    {
+        if (TableExists(connection, "QboSyncRequests"))
+            return;
+
+        Execute(
+            connection,
+            """
+            CREATE TABLE "QboSyncRequests" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_QboSyncRequests" PRIMARY KEY,
+                "Operation" TEXT NOT NULL,
+                "EntityType" TEXT NOT NULL,
+                "EntityId" TEXT NOT NULL,
+                "PayloadJson" TEXT NOT NULL,
+                "Status" TEXT NOT NULL,
+                "Attempts" INTEGER NOT NULL,
+                "LastError" TEXT NULL,
+                "QboId" TEXT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "UpdatedAtUtc" TEXT NOT NULL,
+                "SentAtUtc" TEXT NULL
+            );
+            """);
+        Execute(
+            connection,
+            """CREATE INDEX "IX_QboSyncRequests_Status_CreatedAtUtc" ON "QboSyncRequests" ("Status", "CreatedAtUtc");""");
     }
 
     private static void EnsureCategoriesIsActiveColumn(SqliteConnection connection)

@@ -3,7 +3,7 @@ import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
 import { IconMoon, IconSun } from "./components/aims/icons";
 
-export type AppView = "accounts" | "jobs" | "inventory" | "reference-data";
+export type AppView = "accounts" | "jobs" | "inventory" | "reference-data" | "qbo-sync";
 
 type AppShellProps = {
   view: AppView;
@@ -21,6 +21,7 @@ const VIEW_LABELS: Record<AppView, string> = {
   jobs: "Jobs & SLA",
   inventory: "Inventory",
   "reference-data": "Reference Data",
+  "qbo-sync": "QuickBooks Sync",
 };
 
 export function AppShell({
@@ -64,6 +65,15 @@ export function AppShell({
           >
             {view === "reference-data" && <span className="sidebar-nav-dot" aria-hidden />}
             {VIEW_LABELS["reference-data"]}
+          </button>
+          <button
+            type="button"
+            className={`sidebar-nav-btn${view === "qbo-sync" ? " is-active" : ""}`}
+            aria-current={view === "qbo-sync" ? "page" : undefined}
+            onClick={() => onViewChange("qbo-sync")}
+          >
+            {view === "qbo-sync" && <span className="sidebar-nav-dot" aria-hidden />}
+            {VIEW_LABELS["qbo-sync"]}
           </button>
         </nav>
         <div className="sidebar-theme" role="group" aria-label="Theme">

@@ -105,6 +105,73 @@ public class QboCustomerSyncServiceTests
     }
 
     [Fact]
+    public async Task CreateCustomer_surfaces_6240_duplicate_name_in_error()
+    {
+        await using var scope = await BuildScopeAsync(
+            configure: o =>
+            {
+                o.ClientId = "c";
+                o.ClientSecret = "s";
+                o.ApiBaseUrl = "https://qbo.test";
+                o.TokenUrl = "https://oauth.test/token";
+            },
+            handler: new StubHttpHandler(req =>
+            {
+                if (req.RequestUri!.AbsoluteUri.Contains("oauth.test"))
+                {
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(
+                            """{"access_token":"a","refresh_token":"r","expires_in":3600}""",
+                            Encoding.UTF8,
+                            "application/json"),
+                    };
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent(
+                        """
+                        {
+                          "Fault": {
+                            "Error": [
+                              {
+                                "code": "6240",
+                                "Message": "Duplicate Name Exists Error",
+                                "Detail": "The name supplied already exists."
+                              }
+                            ]
+                          }
+                        }
+                        """,
+                        Encoding.UTF8,
+                        "application/json"),
+                };
+            }));
+
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        db.QboConnections.Add(new QboConnection
+        {
+            Id = QboConnection.SingletonId,
+            RealmId = "realm",
+            RefreshToken = "r",
+            AccessToken = "stale",
+            AccessTokenExpiresAtUtc = DateTime.UtcNow.AddMinutes(-5),
+            UpdatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var sync = scope.ServiceProvider.GetRequiredService<IQboCustomerSyncService>();
+        var result = await sync.CreateCustomerAsync(
+            new QboCustomerPayload("Dup Co", "Dup Co"),
+            CancellationToken.None);
+
+        Assert.Equal(QboSyncStatus.Failed, result.Status);
+        Assert.NotNull(result.Error);
+        Assert.Contains("6240", result.Error);
+    }
+
+    [Fact]
     public async Task Sync_creates_customer_when_connected()
     {
         await using var scope = await BuildScopeAsync(

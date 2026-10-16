@@ -377,6 +377,70 @@ export async function updateCategory(
   return res.json();
 }
 
+export type QboStatus = {
+  connected: boolean;
+  companyName?: string | null;
+  realmId?: string | null;
+  connectUrl?: string;
+};
+
+export type QboRequestRow = {
+  id: string;
+  operation: string;
+  entityType: string;
+  entityId: string;
+  entityLabel: string;
+  status: string;
+  attempts: number;
+  lastError: string | null;
+  qboId: string | null;
+  createdAtUtc: string;
+  sentAtUtc: string | null;
+};
+
+export type QboRequestListResult = {
+  items: QboRequestRow[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export async function getQboStatus(): Promise<QboStatus> {
+  const res = await fetch(`${base}/api/qbo/status`);
+  if (!res.ok) throw new Error(`qbo status failed: ${res.status}`);
+  return res.json();
+}
+
+export async function listQboRequests(
+  params: {
+    status?: string;
+    type?: string;
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<QboRequestListResult> {
+  const qs = buildQuery({
+    status: params.status,
+    type: params.type,
+    page: params.page,
+    pageSize: params.pageSize,
+  });
+  const res = await fetch(`${base}/api/qbo/requests${qs}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `qbo requests failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function retryQboRequest(id: string): Promise<void> {
+  const res = await fetch(`${base}/api/qbo/requests/${id}/retry`, { method: "POST" });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `qbo retry failed: ${res.status}`);
+  }
+}
+
 export async function updateAsset(id: string, body: AssetWrite): Promise<Asset> {
   const res = await fetch(`${base}/api/assets/${id}`, {
     method: "PUT",

@@ -15,10 +15,14 @@ public sealed class AptoWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _inMemoryDatabaseName = Guid.NewGuid().ToString("N");
     private readonly Action<QboOptions>? _configureQbo;
+    private readonly Action<IServiceCollection>? _onConfigureServices;
 
-    public AptoWebApplicationFactory(Action<QboOptions>? configureQbo = null)
+    public AptoWebApplicationFactory(
+        Action<QboOptions>? configureQbo = null,
+        Action<IServiceCollection>? onConfigureServices = null)
     {
         _configureQbo = configureQbo;
+        _onConfigureServices = onConfigureServices;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -32,6 +36,8 @@ public sealed class AptoWebApplicationFactory : WebApplicationFactory<Program>
 
             if (_configureQbo is not null)
                 services.PostConfigure(_configureQbo);
+
+            _onConfigureServices?.Invoke(services);
         });
     }
 

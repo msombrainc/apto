@@ -28,6 +28,7 @@ import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobsDashboard } from "./components/aims/JobsDashboard";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
+import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
 
 type View = AppView;
 
@@ -38,8 +39,9 @@ function slaRowClass(status: Job["slaStatus"]): string {
 }
 
 function initialView(): View {
-  if (typeof window !== "undefined" && window.location.pathname === "/admin/reference-data") {
-    return "reference-data";
+  if (typeof window !== "undefined") {
+    if (window.location.pathname === "/admin/reference-data") return "reference-data";
+    if (window.location.pathname === "/admin/qbo-sync") return "qbo-sync";
   }
   return "accounts";
 }
@@ -321,7 +323,9 @@ export function App() {
         ? "Jobs & SLA"
         : view === "reference-data"
           ? "Reference data"
-          : "Inventory browse";
+          : view === "qbo-sync"
+            ? "QuickBooks sync"
+            : "Inventory browse";
   const pageSubtitle =
     view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
@@ -329,7 +333,9 @@ export function App() {
         ? "Track facility jobs and SLA countdown from intake through shipping."
         : view === "reference-data"
           ? "Maintain facilities, locations, statuses, grades, damages, and categories used across AIMS."
-          : "Search assets across jobs with account and facility filters.";
+          : view === "qbo-sync"
+            ? "Connection status, outbound queue, and retries for QuickBooks Online (sandbox)."
+            : "Search assets across jobs with account and facility filters.";
 
   return (
     <AppShell
@@ -339,6 +345,8 @@ export function App() {
         setSelectedAsset(null);
         if (next === "reference-data") {
           window.history.replaceState(null, "", "/admin/reference-data");
+        } else if (next === "qbo-sync") {
+          window.history.replaceState(null, "", "/admin/qbo-sync");
         } else if (window.location.pathname.startsWith("/admin/")) {
           window.history.replaceState(null, "", "/");
         }
@@ -401,6 +409,8 @@ export function App() {
       )}
 
       {view === "reference-data" && <ReferenceDataAdmin />}
+
+      {view === "qbo-sync" && <QboSyncAdmin />}
 
       {view === "inventory" && (
         <InventoryDashboard
