@@ -1,4 +1,5 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Account,
   Asset,
@@ -17,7 +18,14 @@ import {
   updateAsset,
   AssetInventoryRow,
 } from "./api";
-import { AppShell, type AppView } from "./AppShell";
+import { AppShell } from "./AppShell";
+import {
+  isKnownAppPath,
+  parseInventoryAssetId,
+  viewFromPathname,
+  type AppView,
+} from "./routing/moduleMap";
+import { ROUTES, inventoryAssetPath } from "./routing/paths";
 import { LoginPage } from "./LoginPage";
 import { isDemoLogin } from "./demoAuth";
 import { buildInventoryListParams } from "./inventoryListParams";
@@ -31,26 +39,18 @@ import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
 import { QuickScanPage } from "./components/aims/QuickScanPage";
 
-type View = AppView;
-
 function slaRowClass(status: Job["slaStatus"]): string {
   if (status === "overdue") return "sla-overdue";
   if (status === "at-risk") return "sla-at-risk";
   return "sla-on-track";
 }
 
-function initialView(): View {
-  if (typeof window !== "undefined") {
-    if (window.location.pathname === "/admin/reference-data") return "reference-data";
-    if (window.location.pathname === "/admin/qbo-sync") return "qbo-sync";
-    if (window.location.pathname === "/operations/scan") return "scan";
-  }
-  return "accounts";
-}
-
 export function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [loggedIn, setLoggedIn] = useState(false);
-  const [view, setView] = useState<View>(initialView);
+  const view: AppView = viewFromPathname(location.pathname);
+  const routeAssetId = parseInventoryAssetId(location.pathname);
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounced(query, 300);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -162,21 +162,14 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const onPopState = () => {
-      const path = window.location.pathname;
-      if (path === "/admin/reference-data") {
-        setView("reference-data");
-      } else if (path === "/operations/scan") {
-        setView("scan");
-      } else if (path === "/" || path === "") {
-        setView((current) =>
-          current === "reference-data" || current === "scan" ? "accounts" : current,
-        );
-      }
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+    if (!loggedIn || !routeAssetId) return;
+    void loadAssetDetail(routeAssetId);
+  }, [loggedIn, routeAssetId, loadAssetDetail]);
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    if (!routeAssetId) setSelectedAsset(null);
+  }, [loggedIn, routeAssetId]);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -233,6 +226,10 @@ export function App() {
     if (isDemoLogin(user, pass)) {
       setLoggedIn(true);
       setError(null);
+      const path = location.pathname;
+      if (path === "/" || path === "") {
+        navigate(ROUTES.accounts, { replace: true });
+      }
     } else {
       setError("Invalid demo credentials (use demo / demo).");
     }
@@ -320,6 +317,14 @@ export function App() {
     return <LoginPage error={error} onLogin={onLogin} />;
   }
 
+  if (location.pathname === "/" || location.pathname === "") {
+    return <Navigate to={ROUTES.accounts} replace />;
+  }
+
+  if (!isKnownAppPath(location.pathname)) {
+    return <Navigate to={ROUTES.accounts} replace />;
+  }
+
   const pageTitle =
     view === "accounts"
       ? "Customer accounts"
@@ -348,23 +353,11 @@ export function App() {
   return (
     <AppShell
       view={view}
-      onViewChange={(next) => {
-        setView(next);
-        setSelectedAsset(null);
-        if (next === "reference-data") {
-          window.history.replaceState(null, "", "/admin/reference-data");
-        } else if (next === "qbo-sync") {
-          window.history.replaceState(null, "", "/admin/qbo-sync");
-        } else if (next === "scan") {
-          window.history.replaceState(null, "", "/operations/scan");
-        } else if (
-          window.location.pathname.startsWith("/admin/")
-          || window.location.pathname.startsWith("/operations/")
-        ) {
-          window.history.replaceState(null, "", "/");
-        }
+      onSignOut={() => {
+        setLoggedIn(false);
+        navigate("/", { replace: true });
       }}
-      onSignOut={() => setLoggedIn(false)}
+      onGlobalLookupError={setError}
       title={pageTitle}
       subtitle={pageSubtitle}
     >
@@ -441,7 +434,10 @@ export function App() {
           loading={inventoryLoading}
           onRefresh={() => void refreshInventory()}
           selectedAsset={selectedAsset}
-          onSelectAsset={(id) => void loadAssetDetail(id)}
+          onSelectAsset={(id) => {
+            navigate(inventoryAssetPath(id));
+            void loadAssetDetail(id);
+          }}
         />
       )}
 

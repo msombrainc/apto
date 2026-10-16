@@ -426,9 +426,131 @@ body {
   max-width: 1200px;
 }
 
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.page-header-text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
 .page-header h1 {
   margin: 0;
   font-size: 1.75rem;
+}
+
+.global-asset-lookup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 0 1 14rem;
+  min-width: 12rem;
+}
+
+.global-asset-lookup-label {
+  font-size: 0.75rem;
+  color: var(--aims-text-muted);
+}
+
+.global-asset-lookup-input {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--aims-border);
+  background: var(--aims-input-bg);
+  color: var(--aims-text);
+  font-size: 0.9rem;
+}
+
+.sidebar-module-map {
+  margin-top: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.sidebar-module-map-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--aims-sidebar-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+.sidebar-module-map-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-module-map-panel {
+  margin-top: 0.35rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.module-map-group {
+  margin-bottom: 0.65rem;
+}
+
+.module-map-group-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+  margin-bottom: 0.25rem;
+  padding-left: 0.35rem;
+}
+
+.module-map-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.module-map-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: var(--aims-sidebar-text);
+  text-decoration: none;
+}
+
+.module-map-link.is-active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.module-map-link.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.module-map-tag {
+  font-size: 0.6rem;
+  opacity: 0.75;
+  text-align: right;
+  max-width: 45%;
+  line-height: 1.2;
+}
+
+.module-map-tag--d2 {
+  color: #86efac;
 }
 
 .page-subtitle {
