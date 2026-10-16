@@ -37,6 +37,7 @@ const PRIMARY_NAV: {
 const ADMIN_NAV: { view: AppView; label: string; to: string }[] = [
   { view: "reference-data", label: "Reference Data", to: ROUTES.referenceData },
   { view: "qbo-sync", label: "QuickBooks Sync", to: ROUTES.qboSync },
+  { view: "part-numbers", label: "Part Numbers", to: ROUTES.partNumbers },
 ];
 
 function navClass(isActive: boolean): string {

@@ -36,6 +36,7 @@ import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobsDashboard } from "./components/aims/JobsDashboard";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
+import { PartNumbersAdmin } from "./components/aims/PartNumbersAdmin";
 import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
 import { QuickScanPage } from "./components/aims/QuickScanPage";
 
@@ -334,9 +335,11 @@ export function App() {
           ? "Warehouse scan"
           : view === "reference-data"
             ? "Reference data"
-            : view === "qbo-sync"
-              ? "QuickBooks sync"
-              : "Inventory browse";
+            : view === "part-numbers"
+              ? "Part numbers"
+              : view === "qbo-sync"
+                ? "QuickBooks sync"
+                : "Inventory browse";
   const pageSubtitle =
     view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
@@ -346,9 +349,11 @@ export function App() {
           ? "Scan Apto IDs or serials to apply grade, status, and location presets with instant feedback."
           : view === "reference-data"
             ? "Maintain facilities, locations, statuses, grades, damages, and categories used across AIMS."
-            : view === "qbo-sync"
-              ? "Connection status, outbound queue, and retries for QuickBooks Online (sandbox)."
-              : "Search assets across jobs with account and facility filters.";
+            : view === "part-numbers"
+              ? "Search, add, and maintain part numbers and categories used on assets."
+              : view === "qbo-sync"
+                ? "Connection status, outbound queue, and retries for QuickBooks Online (sandbox)."
+                : "Search assets across jobs with account and facility filters.";
 
   return (
     <AppShell
@@ -417,6 +422,8 @@ export function App() {
       {view === "scan" && <QuickScanPage />}
 
       {view === "reference-data" && <ReferenceDataAdmin />}
+
+      {view === "part-numbers" && <PartNumbersAdmin />}
 
       {view === "qbo-sync" && <QboSyncAdmin />}
 

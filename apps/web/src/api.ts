@@ -171,7 +171,105 @@ export async function searchPartNumbers(q: string): Promise<PartNumber[]> {
     : `${base}/api/part-numbers`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`part number search failed: ${res.status}`);
+  const data = await res.json();
+  if (Array.isArray(data)) return data;
+  return data.items ?? [];
+}
+
+export type PartNumberRow = {
+  id: string;
+  number: string;
+  categoryId: string | null;
+  categoryName: string | null;
+  assetCount: number;
+};
+
+export type PartNumberListResult = {
+  items: PartNumberRow[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export type PartNumberListParams = {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: "number" | "categoryName" | "assetCount";
+  sortDir?: "asc" | "desc";
+};
+
+export async function listPartNumbers(
+  params: PartNumberListParams = {},
+): Promise<PartNumberListResult> {
+  const qs = buildQuery({
+    q: params.q,
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 50,
+    sortBy: params.sortBy,
+    sortDir: params.sortDir,
+  });
+  const res = await fetch(`${base}/api/part-numbers${qs}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `part numbers list failed: ${res.status}`);
+  }
   return res.json();
+}
+
+export async function createPartNumberAdmin(
+  number: string,
+  categoryId: string | null,
+): Promise<PartNumberRow> {
+  const res = await fetch(`${base}/api/part-numbers`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify({ number, categoryId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `create part number failed: ${res.status}`);
+  }
+  const created = await res.json();
+  return {
+    id: created.id,
+    number: created.number,
+    categoryId: created.categoryId ?? null,
+    categoryName: created.categoryName ?? null,
+    assetCount: 0,
+  };
+}
+
+export async function updatePartNumberAdmin(
+  id: string,
+  number: string,
+  categoryId: string | null,
+): Promise<PartNumberRow> {
+  const res = await fetch(`${base}/api/part-numbers/${id}`, {
+    method: "PUT",
+    headers: apiHeaders(),
+    body: JSON.stringify({ number, categoryId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `update part number failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deletePartNumberAdmin(
+  id: string,
+  replacementId?: string | null,
+): Promise<void> {
+  const qs = replacementId ? `?replacementId=${encodeURIComponent(replacementId)}` : "";
+  const res = await fetch(`${base}/api/part-numbers/${id}${qs}`, {
+    method: "DELETE",
+    headers: apiHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `delete part number failed: ${res.status}`);
+  }
 }
 
 export type InventoryQuery = {

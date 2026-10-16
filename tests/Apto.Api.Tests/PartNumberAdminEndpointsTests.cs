@@ -1,0 +1,124 @@
+using System.Net;
+using System.Net.Http.Json;
+using Apto.Api.Accounts;
+using Apto.Api.Assets;
+using Apto.Api.Jobs;
+using Apto.Api.PartNumbers;
+
+namespace Apto.Api.Tests;
+
+public class PartNumberAdminEndpointsTests
+{
+    [Fact]
+    public async Task List_paged_returns_totals_and_asset_counts()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-LIST-1", null));
+        await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-LIST-2", null));
+
+        var res = await client.GetFromJsonAsync<PartNumberListResponse>(
+            "/api/part-numbers?page=1&pageSize=50&sortBy=number&sortDir=asc");
+        Assert.NotNull(res);
+        Assert.True(res.Total >= 2);
+        Assert.Contains(res.Items, i => i.Number == "PN-LIST-1");
+        Assert.All(res.Items, i => Assert.True(i.AssetCount >= 0));
+    }
+
+    [Fact]
+    public async Task Admin_create_duplicate_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("DUP-ADMIN-1", null));
+
+        var dup = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("DUP-ADMIN-1", null));
+        Assert.Equal(HttpStatusCode.Conflict, dup.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_with_assets_requires_replacement_and_logs()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var oldPart = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-OLD-DEL", null));
+        var oldBody = await oldPart.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(oldBody);
+
+        var newPart = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-NEW-DEL", null));
+        var newBody = await newPart.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(newBody);
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("PN Del Co", "PNDEL", 1, 1, 1));
+        var acct = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(acct);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(acct.Id, "GA", "Receiving", DateTime.UtcNow, null));
+        var jobBody = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(jobBody);
+
+        var asset = await client.PostAsJsonAsync(
+            $"/api/jobs/{jobBody.Id}/assets",
+            new AssetWriteRequest(oldBody.Id, "SN-PN-DEL", null));
+        Assert.Equal(HttpStatusCode.Created, asset.StatusCode);
+        var assetBody = await asset.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(assetBody);
+
+        var missingReplacement = await client.DeleteAsync($"/api/part-numbers/{oldBody.Id}");
+        Assert.Equal(HttpStatusCode.BadRequest, missingReplacement.StatusCode);
+
+        var deleted = await client.DeleteAsync(
+            $"/api/part-numbers/{oldBody.Id}?replacementId={newBody.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+
+        var updated = await client.GetFromJsonAsync<AssetResponse>($"/api/assets/{assetBody.Id}");
+        Assert.NotNull(updated);
+        Assert.Equal("PN-NEW-DEL", updated.PartNumber);
+        Assert.Contains(
+            updated.ChangeLog,
+            l => l.FieldName == "partNumber"
+                 && l.OldValue == "PN-OLD-DEL"
+                 && l.NewValue == "PN-NEW-DEL");
+    }
+
+    [Fact]
+    public async Task Delete_without_assets_succeeds_without_replacement()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberAdminWriteRequest("PN-ZERO-ASSETS", null));
+        var body = await created.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(body);
+
+        var deleted = await client.DeleteAsync($"/api/part-numbers/{body.Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+
+        var get = await client.GetAsync($"/api/part-numbers?page=1&q=PN-ZERO-ASSETS");
+        var list = await get.Content.ReadFromJsonAsync<PartNumberListResponse>();
+        Assert.NotNull(list);
+        Assert.DoesNotContain(list.Items, i => i.Id == body.Id);
+    }
+
+}
