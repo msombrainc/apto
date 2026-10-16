@@ -47,6 +47,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: mbugaiov/themis-agent
+          ref: 8065c4dfe04fe22b29df32a8d35860d26ce0e6ed
           path: .themis-agent
 
       - name: Run Cursor code review
