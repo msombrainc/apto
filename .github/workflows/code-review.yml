@@ -67,13 +67,16 @@ jobs:
           EOF
           else
             git fetch origin "${BASE}" --quiet || true
-            PROMPT="$(bash .themis-agent/scripts/build_review_prompt.sh \
+            if ! PROMPT="$(bash .themis-agent/scripts/build_review_prompt.sh \
               --pr "${{ github.event.pull_request.number }}" \
               --base "origin/${BASE}" \
               --label "${{ github.event.repository.name }}" \
               --local-rule .cursor/rules/code-review.mdc \
               --agents AGENTS.md \
-              --themis-root .themis-agent)"
+              --themis-root .themis-agent)"; then
+              echo "build_review_prompt.sh failed — cannot run review" >&2
+              exit 1
+            fi
             cursor-agent --force --api-key "$CURSOR_API_KEY" --model composer-2.5 --output-format text -p "$PROMPT" > review.md || true
             [[ -s review.md ]] || echo "Cursor review produced no output (see build log above)." > review.md
           fi

@@ -152,16 +152,41 @@ namespace Apto.Api.Data.Migrations
                     b.ToTable("QboSyncRequests");
                 });
 
+            modelBuilder.Entity("Apto.Api.Data.Entities.AptoIdSequence", b =>
+                {
+                    b.Property<byte>("Id")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("NextNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AptoIdSequences");
+                });
+
             modelBuilder.Entity("Apto.Api.Data.Entities.Asset", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AptoId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Grade")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
                     b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("LocationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("PartNumberId")
@@ -171,11 +196,22 @@ namespace Apto.Api.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("Status")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("AptoId")
+                        .IsUnique();
 
                     b.HasIndex("JobId");
 
+                    b.HasIndex("LocationId");
+
                     b.HasIndex("PartNumberId");
+
+                    b.HasIndex("SerialNumber");
 
                     b.ToTable("Assets");
                 });
@@ -359,11 +395,18 @@ namespace Apto.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Apto.Api.Data.Entities.ReferenceItem", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Apto.Api.Data.Entities.PartNumber", "PartNumber")
                         .WithMany("Assets")
                         .HasForeignKey("PartNumberId");
 
                     b.Navigation("Job");
+
+                    b.Navigation("Location");
 
                     b.Navigation("PartNumber");
                 });

@@ -37,6 +37,7 @@ public class CoreDataModelTests
         var asset = new Asset
         {
             Id = Guid.NewGuid(),
+            AptoId = "A0000001",
             JobId = job.Id,
             SerialNumber = "SN-1",
             PartNumberId = part.Id,

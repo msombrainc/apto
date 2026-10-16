@@ -14,6 +14,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<QboSyncRequest> QboSyncRequests => Set<QboSyncRequest>();
     public DbSet<AssetChangeLog> AssetChangeLogs => Set<AssetChangeLog>();
     public DbSet<ReferenceItem> ReferenceItems => Set<ReferenceItem>();
+    public DbSet<AptoIdSequence> AptoIdSequences => Set<AptoIdSequence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,7 +55,21 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
         {
             e.HasOne(x => x.Job).WithMany(x => x.Assets).HasForeignKey(x => x.JobId);
             e.HasOne(x => x.PartNumber).WithMany(x => x.Assets).HasForeignKey(x => x.PartNumberId);
+            e.HasOne(x => x.Location)
+                .WithMany()
+                .HasForeignKey(x => x.LocationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.Property(x => x.AptoId).HasMaxLength(16);
             e.Property(x => x.SerialNumber).HasMaxLength(100);
+            e.Property(x => x.Grade).HasMaxLength(32);
+            e.Property(x => x.Status).HasMaxLength(64);
+            e.HasIndex(x => x.AptoId).IsUnique();
+            e.HasIndex(x => x.SerialNumber);
+        });
+
+        modelBuilder.Entity<AptoIdSequence>(e =>
+        {
+            e.HasKey(x => x.Id);
         });
 
         modelBuilder.Entity<Category>(e =>

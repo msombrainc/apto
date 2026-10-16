@@ -33,6 +33,10 @@ public static class SqliteStgSchemaPatcher
             EnsureCategoriesTable(sqlite);
             EnsurePartNumbersTable(sqlite);
             EnsureAssetsTable(sqlite);
+            EnsureAssetScanColumns(sqlite);
+            EnsureAptoIdSequenceTable(sqlite);
+            BackfillAptoIds(sqlite);
+            EnsureAssetScanIndexes(sqlite);
             EnsureAssetChangeLogsTable(sqlite);
             EnsureReferenceItemsTable(sqlite);
             EnsureQboSyncRequestsTable(sqlite);
@@ -161,6 +165,123 @@ public static class SqliteStgSchemaPatcher
             """);
         Execute(connection, """CREATE INDEX "IX_Assets_JobId" ON "Assets" ("JobId");""");
         Execute(connection, """CREATE INDEX "IX_Assets_PartNumberId" ON "Assets" ("PartNumberId");""");
+    }
+
+    private static void EnsureAssetScanColumns(SqliteConnection connection)
+    {
+        if (!TableExists(connection, "Assets"))
+            return;
+
+        if (!ColumnExists(connection, "Assets", "AptoId"))
+            Execute(connection, "ALTER TABLE \"Assets\" ADD COLUMN \"AptoId\" TEXT NULL;");
+
+        if (!ColumnExists(connection, "Assets", "Grade"))
+            Execute(connection, "ALTER TABLE \"Assets\" ADD COLUMN \"Grade\" TEXT NULL;");
+
+        if (!ColumnExists(connection, "Assets", "Status"))
+            Execute(connection, "ALTER TABLE \"Assets\" ADD COLUMN \"Status\" TEXT NULL;");
+
+        if (!ColumnExists(connection, "Assets", "LocationId"))
+            Execute(connection, "ALTER TABLE \"Assets\" ADD COLUMN \"LocationId\" TEXT NULL;");
+    }
+
+    private static void EnsureAssetScanIndexes(SqliteConnection connection)
+    {
+        if (!TableExists(connection, "Assets"))
+            return;
+
+        if (!IndexExists(connection, "IX_Assets_AptoId"))
+            Execute(connection, """CREATE UNIQUE INDEX "IX_Assets_AptoId" ON "Assets" ("AptoId");""");
+
+        if (!IndexExists(connection, "IX_Assets_SerialNumber"))
+            Execute(connection, """CREATE INDEX "IX_Assets_SerialNumber" ON "Assets" ("SerialNumber");""");
+    }
+
+    private static void EnsureAptoIdSequenceTable(SqliteConnection connection)
+    {
+        if (TableExists(connection, "AptoIdSequences"))
+            return;
+
+        Execute(
+            connection,
+            """
+            CREATE TABLE "AptoIdSequences" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_AptoIdSequences" PRIMARY KEY,
+                "NextNumber" INTEGER NOT NULL
+            );
+            """);
+
+        using var countCmd = connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM \"Assets\";";
+        var count = Convert.ToInt32(countCmd.ExecuteScalar());
+        Execute(
+            connection,
+            $"INSERT INTO \"AptoIdSequences\" (\"Id\", \"NextNumber\") VALUES (1, {count + 1});");
+    }
+
+    private static void BackfillAptoIds(SqliteConnection connection)
+    {
+        if (!TableExists(connection, "Assets"))
+            return;
+
+        using var needsCmd = connection.CreateCommand();
+        needsCmd.CommandText =
+            "SELECT COUNT(*) FROM \"Assets\" WHERE \"AptoId\" IS NULL OR \"AptoId\" = '';";
+        var needs = Convert.ToInt32(needsCmd.ExecuteScalar());
+        if (needs == 0)
+            return;
+
+        using var selectCmd = connection.CreateCommand();
+        selectCmd.CommandText =
+            """
+            SELECT "Id" FROM "Assets"
+            WHERE "AptoId" IS NULL OR "AptoId" = ''
+            ORDER BY "CreatedAtUtc";
+            """;
+        using var reader = selectCmd.ExecuteReader();
+        var ids = new List<string>();
+        while (reader.Read())
+            ids.Add(reader.GetString(0));
+
+        var seq = 1;
+        if (TableExists(connection, "AptoIdSequences"))
+        {
+            using var maxCmd = connection.CreateCommand();
+            maxCmd.CommandText =
+                "SELECT \"NextNumber\" FROM \"AptoIdSequences\" WHERE \"Id\" = 1 LIMIT 1;";
+            var maxObj = maxCmd.ExecuteScalar();
+            if (maxObj is not null && maxObj is not DBNull)
+                seq = Convert.ToInt32(maxObj);
+        }
+
+        foreach (var id in ids)
+        {
+            var aptoId = $"A{seq:D7}";
+            using var updateCmd = connection.CreateCommand();
+            updateCmd.CommandText = "UPDATE \"Assets\" SET \"AptoId\" = $apto WHERE \"Id\" = $id;";
+            updateCmd.Parameters.AddWithValue("$apto", aptoId);
+            updateCmd.Parameters.AddWithValue("$id", id);
+            updateCmd.ExecuteNonQuery();
+            seq++;
+        }
+
+        if (TableExists(connection, "AptoIdSequences"))
+        {
+            using var updSeq = connection.CreateCommand();
+            updSeq.CommandText =
+                "UPDATE \"AptoIdSequences\" SET \"NextNumber\" = $n WHERE \"Id\" = 1;";
+            updSeq.Parameters.AddWithValue("$n", seq);
+            updSeq.ExecuteNonQuery();
+        }
+    }
+
+    private static bool IndexExists(SqliteConnection connection, string indexName)
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText =
+            "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = $name LIMIT 1;";
+        cmd.Parameters.AddWithValue("$name", indexName);
+        return cmd.ExecuteScalar() is not null;
     }
 
     private static void EnsureAssetChangeLogsTable(SqliteConnection connection)

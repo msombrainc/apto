@@ -2,8 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using Apto.Api.Accounts;
 using Apto.Api.Assets;
+using Apto.Api.Data;
 using Apto.Api.Jobs;
 using Apto.Api.PartNumbers;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Apto.Api.Tests;
 
@@ -42,6 +45,7 @@ public class AssetEndpointsTests
         var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
         Assert.NotNull(asset);
         Assert.Equal("SN-100", asset.SerialNumber);
+        Assert.StartsWith("A", asset.AptoId);
         Assert.Contains(asset.ChangeLog, e => e.FieldName == "created" && e.ChangedBy == "operator-1");
 
         var listed = await client.GetFromJsonAsync<List<AssetResponse>>(
@@ -434,6 +438,11 @@ public class AssetEndpointsTests
         await client.PostAsJsonAsync(
             $"/api/jobs/{createdJobA.Id}/assets",
             new AssetWriteRequest(null, "PLAIN-SN", "UNIQUE-PN-27"));
+        var aptoIdAsset = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJobA.Id}/assets",
+            new AssetWriteRequest(null, "APTOID-SN", "PN-APTOID"));
+        var createdForAptoId = await aptoIdAsset.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(createdForAptoId);
 
         var all = await client.GetFromJsonAsync<List<AssetInventoryRow>>("/api/assets");
         Assert.NotNull(all);
@@ -459,6 +468,12 @@ public class AssetEndpointsTests
         Assert.Single(byPartNumber);
         Assert.Equal("PLAIN-SN", byPartNumber[0].SerialNumber);
         Assert.Equal("UNIQUE-PN-27", byPartNumber[0].PartNumber);
+
+        var byAptoId = await client.GetFromJsonAsync<List<AssetInventoryRow>>(
+            $"/api/assets?q={createdForAptoId.AptoId}");
+        Assert.NotNull(byAptoId);
+        Assert.Single(byAptoId);
+        Assert.Equal(createdForAptoId.AptoId, byAptoId[0].AptoId);
     }
 
     [Fact]
@@ -604,5 +619,446 @@ public class AssetEndpointsTests
         var olderIdx = all.FindIndex(r => r.SerialNumber == "ALL-OLDER");
         Assert.True(newerIdx >= 0 && olderIdx >= 0);
         Assert.True(newerIdx < olderIdx);
+    }
+
+    [Fact]
+    public async Task Lookup_by_apto_id_returns_asset()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Lk Co", "LK-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "LK-SN-1", "PN-LK-1"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var lookup = await client.GetFromJsonAsync<AssetLookupResponse>(
+            $"/api/assets/lookup?code={asset.AptoId}");
+        Assert.NotNull(lookup);
+        Assert.Equal(asset.Id, lookup.Id);
+        Assert.Equal(asset.AptoId, lookup.AptoId);
+    }
+
+    [Fact]
+    public async Task Lookup_by_apto_id_is_case_insensitive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Lk Case Co", "LKC-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "LKC-SN", "PN-LKC"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        Assert.False(string.IsNullOrWhiteSpace(asset.AptoId));
+
+        var lookup = await client.GetFromJsonAsync<AssetLookupResponse>(
+            $"/api/assets/lookup?code={asset.AptoId.ToLowerInvariant()}");
+        Assert.NotNull(lookup);
+        Assert.Equal(asset.Id, lookup.Id);
+        Assert.Equal(asset.AptoId, lookup.AptoId);
+    }
+
+    [Fact]
+    public async Task Lookup_unknown_code_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/assets/lookup?code=UNKNOWN-CODE");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lookup_empty_code_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/assets/lookup?code=%20%20");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Lookup_by_serial_returns_asset_case_insensitive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Ser Co", "SER-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "Ser-Lookup-99", "PN-SER"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var lookup = await client.GetFromJsonAsync<AssetLookupResponse>(
+            "/api/assets/lookup?code=ser-lookup-99");
+        Assert.NotNull(lookup);
+        Assert.Equal(asset.Id, lookup.Id);
+        Assert.Equal("Ser-Lookup-99", lookup.SerialNumber);
+    }
+
+    [Fact]
+    public async Task Lookup_ambiguous_serial_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Dup Co", "DUP-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobA = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var jobB = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "TX", null, DateTime.UtcNow, null));
+        var createdA = await jobA.Content.ReadFromJsonAsync<JobResponse>();
+        var createdB = await jobB.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdA);
+        Assert.NotNull(createdB);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdA.Id}/assets",
+            new AssetWriteRequest(null, "DUP-SERIAL", "PN-DUP-A"));
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdB.Id}/assets",
+            new AssetWriteRequest(null, "dup-serial", "PN-DUP-B"));
+
+        var response = await client.GetAsync("/api/assets/lookup?code=DUP-SERIAL");
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<LookupConflictBody>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.AmbiguousCount);
+    }
+
+    [Fact]
+    public async Task Lookup_ambiguous_apto_id_returns_conflict()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Dup Apto Co", "DAP-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobA = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var jobB = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "TX", null, DateTime.UtcNow, null));
+        var createdA = await jobA.Content.ReadFromJsonAsync<JobResponse>();
+        var createdB = await jobB.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdA);
+        Assert.NotNull(createdB);
+
+        var postA = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdA.Id}/assets",
+            new AssetWriteRequest(null, "SN-A-DUP", "PN-DUP-A"));
+        var postB = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdB.Id}/assets",
+            new AssetWriteRequest(null, "SN-B-DUP", "PN-DUP-B"));
+        var assetA = await postA.Content.ReadFromJsonAsync<AssetResponse>();
+        var assetB = await postB.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(assetA);
+        Assert.NotNull(assetB);
+
+        const string sharedAptoId = "A9999999";
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+            var rowA = await db.Assets.SingleAsync(a => a.Id == assetA.Id);
+            var rowB = await db.Assets.SingleAsync(a => a.Id == assetB.Id);
+            rowA.AptoId = sharedAptoId;
+            rowB.AptoId = sharedAptoId;
+            await db.SaveChangesAsync();
+        }
+
+        var response = await client.GetAsync($"/api/assets/lookup?code={sharedAptoId}");
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<LookupConflictBody>();
+        Assert.NotNull(body);
+        Assert.Equal(2, body.AmbiguousCount);
+    }
+
+    [Fact]
+    public async Task Update_grade_status_location_appends_change_log()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Fld Co", "FLD-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "FLD-SN", "PN-FLD"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var facilities = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            "/api/reference/facility?pageSize=10");
+        Assert.NotNull(facilities);
+        var gaFacility = facilities.Items.First(f => f.Code == "GA");
+
+        var locations = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            $"/api/reference/location?facilityId={gaFacility.Id}&pageSize=50");
+        Assert.NotNull(locations);
+        var location = locations.Items.First();
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, "A", "WIPED", location.Id));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var updated = await put.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("A", updated.Grade);
+        Assert.Equal("WIPED", updated.Status);
+        Assert.Equal(location.Id, updated.LocationId);
+        Assert.Contains(updated.ChangeLog, e => e.FieldName == "grade");
+        Assert.Contains(updated.ChangeLog, e => e.FieldName == "status");
+        Assert.Contains(updated.ChangeLog, e => e.FieldName == "location");
+    }
+
+    /// <summary>
+    /// Quick Scan undo uses buildScanUndoBody: empty grade/status strings and
+    /// 00000000-0000-0000-0000-000000000000 locationId to clear fields (acceptance: undo).
+    /// </summary>
+    [Fact]
+    public async Task Update_asset_scan_undo_payload_clears_grade_status_location()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Undo Co", "UND-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "UNDO-SN", "PN-UNDO"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        Assert.Null(asset.Grade);
+        Assert.Null(asset.Status);
+        Assert.Null(asset.LocationId);
+
+        var facilities = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            "/api/reference/facility?pageSize=10");
+        Assert.NotNull(facilities);
+        var gaFacility = facilities.Items.First(f => f.Code == "GA");
+
+        var locations = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            $"/api/reference/location?facilityId={gaFacility.Id}&pageSize=50");
+        Assert.NotNull(locations);
+        var location = locations.Items.First();
+
+        var apply = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, "B", "IN-AUDIT", location.Id));
+        Assert.Equal(HttpStatusCode.OK, apply.StatusCode);
+        var scanned = await apply.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(scanned);
+        Assert.Equal("B", scanned.Grade);
+        Assert.Equal("IN-AUDIT", scanned.Status);
+        Assert.Equal(location.Id, scanned.LocationId);
+
+        var undo = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(
+                null,
+                null,
+                null,
+                string.Empty,
+                string.Empty,
+                Guid.Empty));
+        Assert.Equal(HttpStatusCode.OK, undo.StatusCode);
+
+        var restored = await undo.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(restored);
+        Assert.Null(restored.Grade);
+        Assert.Null(restored.Status);
+        Assert.Null(restored.LocationId);
+        Assert.Contains(restored.ChangeLog, e => e.FieldName == "grade" && e.NewValue == null);
+        Assert.Contains(restored.ChangeLog, e => e.FieldName == "status" && e.NewValue == null);
+        Assert.Contains(restored.ChangeLog, e => e.FieldName == "location" && e.NewValue == null);
+    }
+
+    [Fact]
+    public async Task Update_invalid_grade_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var asset = await CreateMinimalAssetAsync(client);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, "NOT-A-REAL-GRADE", null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+        var body = await put.Content.ReadAsStringAsync();
+        Assert.Contains("grade is invalid or inactive", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Update_invalid_status_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var asset = await CreateMinimalAssetAsync(client);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, null, "NOT-A-REAL-STATUS", null));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+        var body = await put.Content.ReadAsStringAsync();
+        Assert.Contains("status is invalid or inactive", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Create_asset_with_invalid_grade_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Cg Co", "CG-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "CG-SN", "PN-CG", "FAKE-GRADE", null, null));
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_location_outside_facility_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Xf Co", "XF-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "XF-SN", "PN-XF"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var facilities = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            "/api/reference/facility?pageSize=10");
+        Assert.NotNull(facilities);
+        var txFacility = facilities.Items.First(f => f.Code == "TX");
+        var txLocations = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            $"/api/reference/location?facilityId={txFacility.Id}&pageSize=50");
+        Assert.NotNull(txLocations);
+        var txLocation = txLocations.Items.First();
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, null, null, txLocation.Id));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+    }
+
+    private sealed record LookupConflictBody(int AmbiguousCount);
+
+    private static async Task<AssetResponse> CreateMinimalAssetAsync(HttpClient client)
+    {
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Min Co", "MIN-1", 0, 0, 0));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "MIN-SN", "PN-MIN"));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+        return asset;
     }
 }

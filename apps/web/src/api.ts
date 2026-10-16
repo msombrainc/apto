@@ -108,19 +108,42 @@ export type AssetChangeLogEntry = {
 
 export type Asset = {
   id: string;
+  aptoId: string;
   jobId: string;
   partNumberId: string | null;
   partNumber: string | null;
   serialNumber: string | null;
+  grade: string | null;
+  status: string | null;
+  locationId: string | null;
+  locationName: string | null;
   createdAtUtc: string;
   changeLog: AssetChangeLogEntry[];
 };
 
+export type AssetLookupResult = {
+  id: string;
+  aptoId: string;
+  serialNumber: string | null;
+  jobId: string;
+  facilityCode: string | null;
+  grade: string | null;
+  status: string | null;
+  locationId: string | null;
+  locationName: string | null;
+  partNumber: string | null;
+};
+
 export type AssetInventoryRow = {
   id: string;
+  aptoId: string;
   jobId: string;
   serialNumber: string | null;
   partNumber: string | null;
+  grade: string | null;
+  status: string | null;
+  locationId: string | null;
+  locationName: string | null;
   accountName: string;
   facilityCode: string | null;
   createdAtUtc: string;
@@ -130,6 +153,9 @@ export type AssetWrite = {
   partNumberId?: string | null;
   serialNumber?: string | null;
   newPartNumber?: string | null;
+  grade?: string | null;
+  status?: string | null;
+  locationId?: string | null;
 };
 
 function apiHeaders(): HeadersInit {
@@ -178,6 +204,18 @@ export async function listJobAssets(jobId: string): Promise<Asset[]> {
 export async function getAsset(id: string): Promise<Asset> {
   const res = await fetch(`${base}/api/assets/${id}`);
   if (!res.ok) throw new Error(`get asset failed: ${res.status}`);
+  return res.json();
+}
+
+export async function lookupAssetByCode(code: string): Promise<AssetLookupResult> {
+  const trimmed = code.trim();
+  const res = await fetch(
+    `${base}/api/assets/lookup?code=${encodeURIComponent(trimmed)}`,
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `lookup failed: ${res.status}`);
+  }
   return res.json();
 }
 

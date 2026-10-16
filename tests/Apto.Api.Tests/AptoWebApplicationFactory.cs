@@ -48,6 +48,12 @@ public sealed class AptoWebApplicationFactory : WebApplicationFactory<Program>
         var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
         db.Database.EnsureCreated();
         ReferenceDataSeeder.SeedIfEmptyAsync(db).GetAwaiter().GetResult();
+        if (!db.AptoIdSequences.Any())
+        {
+            db.AptoIdSequences.Add(new Data.Entities.AptoIdSequence { Id = 1, NextNumber = 1 });
+            db.SaveChanges();
+        }
+
         return host;
     }
 }
