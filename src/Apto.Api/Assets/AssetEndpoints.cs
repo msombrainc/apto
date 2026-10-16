@@ -39,6 +39,13 @@ public static class AssetEndpoints
         if (byApto.Count == 1)
             return Results.Ok(ToLookupResponse(byApto[0]));
 
+        if (byApto.Count > 1)
+            return Results.Conflict(new
+            {
+                error = $"ambiguous Apto ID: {byApto.Count} assets share this code.",
+                ambiguousCount = byApto.Count,
+            });
+
         var bySerial = await db.Assets.AsNoTracking()
             .Include(a => a.PartNumber)
             .Include(a => a.Job)

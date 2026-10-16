@@ -12,3 +12,5 @@
 | ASSUMPTION-481–486 | assumptions.md | AptoId, undo | FR-38, FR-39 |
 
 **Parent epic:** apto#43 Demo 2 — SLICE-003 enables F8 ops scan and shared lookup for F1/F7.
+
+**E2E:** `acceptance.feature` UI scenarios wire in factory STG / Argus validate-testing; this MR gates on API + `quickScanLogic` unit tests.
