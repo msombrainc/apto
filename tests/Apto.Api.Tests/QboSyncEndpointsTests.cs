@@ -67,6 +67,32 @@ public class QboSyncEndpointsTests
     }
 
     [Fact]
+    public async Task Retry_non_failed_returns_400()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var row = new QboSyncRequest
+        {
+            Id = Guid.NewGuid(),
+            Operation = QboSyncOperations.CreateCustomer,
+            EntityType = QboSyncEntityTypes.Account,
+            EntityId = Guid.NewGuid(),
+            PayloadJson = "{}",
+            Status = QboSyncRequestStatus.Pending,
+            Attempts = 0,
+            CreatedAtUtc = DateTime.UtcNow,
+            UpdatedAtUtc = DateTime.UtcNow,
+        };
+        db.QboSyncRequests.Add(row);
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var retry = await client.PostAsync($"/api/qbo/requests/{row.Id}/retry", null);
+        Assert.Equal(HttpStatusCode.BadRequest, retry.StatusCode);
+    }
+
+    [Fact]
     public async Task Retry_failed_resets_to_pending()
     {
         await using var factory = new AptoWebApplicationFactory();
@@ -138,6 +164,47 @@ public class QboSyncEndpointsTests
         Assert.Equal(1, list.Total);
         Assert.Single(list.Items);
         Assert.Equal(QboSyncRequestStatus.Failed, list.Items[0].Status);
+    }
+
+    [Fact]
+    public async Task List_requests_filters_by_type()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var entityId = Guid.NewGuid();
+        db.QboSyncRequests.AddRange(
+            new QboSyncRequest
+            {
+                Id = Guid.NewGuid(),
+                Operation = QboSyncOperations.CreateCustomer,
+                EntityType = QboSyncEntityTypes.Account,
+                EntityId = entityId,
+                PayloadJson = "{}",
+                Status = QboSyncRequestStatus.Pending,
+                Attempts = 0,
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+            },
+            new QboSyncRequest
+            {
+                Id = Guid.NewGuid(),
+                Operation = QboSyncOperations.UpdateCustomer,
+                EntityType = QboSyncEntityTypes.Account,
+                EntityId = entityId,
+                PayloadJson = "{}",
+                Status = QboSyncRequestStatus.Pending,
+                Attempts = 0,
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+            });
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var list = await client.GetFromJsonAsync<QboListDto>("/api/qbo/requests?type=CreateCustomer");
+        Assert.NotNull(list);
+        Assert.Equal(1, list.Total);
+        Assert.Single(list.Items);
     }
 
     [Fact]

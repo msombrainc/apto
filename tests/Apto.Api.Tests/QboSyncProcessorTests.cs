@@ -84,6 +84,51 @@ public class QboSyncProcessorTests
     }
 
     [Fact]
+    public async Task ProcessNext_skips_pending_row_until_backoff_elapsed()
+    {
+        await using var factory = CreateFactory((_, _) =>
+            Task.FromResult(new QboSyncResult(QboSyncStatus.Failed, null, "transient")));
+
+        var rowId = Guid.NewGuid();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        db.QboConnections.Add(new QboConnection
+        {
+            Id = QboConnection.SingletonId,
+            RealmId = "realm",
+            AccessToken = "tok",
+            RefreshToken = "ref",
+            AccessTokenExpiresAtUtc = DateTime.UtcNow.AddHours(1),
+            UpdatedAtUtc = DateTime.UtcNow,
+        });
+        var recent = DateTime.UtcNow;
+        db.QboSyncRequests.Add(new QboSyncRequest
+        {
+            Id = rowId,
+            Operation = QboSyncOperations.CreateCustomer,
+            EntityType = QboSyncEntityTypes.Account,
+            EntityId = Guid.NewGuid(),
+            PayloadJson = """{"DisplayName":"Backoff","CompanyName":"Co"}""",
+            Status = QboSyncRequestStatus.Pending,
+            Attempts = 1,
+            CreatedAtUtc = recent.AddMinutes(-5),
+            UpdatedAtUtc = recent,
+        });
+        await db.SaveChangesAsync();
+
+        var processor = scope.ServiceProvider.GetRequiredService<QboSyncRequestProcessor>();
+        Assert.False(await processor.ProcessNextAsync(CancellationToken.None));
+
+        var row = await db.QboSyncRequests.SingleAsync(r => r.Id == rowId);
+        row.UpdatedAtUtc = DateTime.UtcNow.AddSeconds(-(int)QboSyncRequestProcessor.BackoffAfterAttempt(1).TotalSeconds - 1);
+        await db.SaveChangesAsync();
+
+        Assert.True(await processor.ProcessNextAsync(CancellationToken.None));
+        var after = await db.QboSyncRequests.AsNoTracking().SingleAsync(r => r.Id == rowId);
+        Assert.Equal(2, after.Attempts);
+    }
+
+    [Fact]
     public async Task ProcessNext_marks_failed_after_five_attempts()
     {
         await using var factory = CreateFactory((_, _) =>
