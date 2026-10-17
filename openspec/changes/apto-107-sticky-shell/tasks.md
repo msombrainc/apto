@@ -9,4 +9,4 @@
 - [x] Jobs short-table scroll chain: filter-bar cap + overscroll contain (apto#112)
 - [x] Inventory browse: filter row wrap + column chooser labels/chips (apto#116 overlap)
 - [x] Document scroll lock on fixed shell (apto#112 / PR #119)
-- [ ] Dark table header + link tokens + modal form max-width (operator pass #107)
+- [x] Dark table header + link tokens + modal form max-width (operator pass #107)

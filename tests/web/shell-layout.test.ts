@@ -66,7 +66,13 @@ test("mobile breakpoint resets fixed shell heights (apto#107)", () => {
 test("dark data tables use elevated header + link tokens (apto#107)", () => {
   assert.match(css, /--aims-table-header:\s*#d1dae8/);
   assert.match(css, /--aims-link:\s*#ffc49a/);
+  assert.match(css, /\.data-table th\s*\{[^}]*color:\s*var\(--aims-table-header/);
+  assert.match(
+    css,
+    /\[data-theme="light"\]\s*\.data-table th\s*\{[^}]*color:\s*var\(--aims-text-muted\)/,
+  );
   assert.match(css, /\.modal-form input,\s*\n\.modal-form select/);
+  assert.match(css, /\.modal-form \.aims-select/);
 });
 
 test("AppShell installs document scroll lock helper (apto#112)", () => {
