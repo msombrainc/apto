@@ -446,6 +446,50 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Post_negative_fee_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var settings = new AccountSettingsDto
+        {
+            Fees = new AccountFeesDto { Audit = -1m },
+        };
+        var response = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "FEE-NEG", 1, 1, 1, Settings: settings));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("settings.fees.audit must be non-negative", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Put_fee_too_many_decimal_places_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "FEE-DEC", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var settings = new AccountSettingsDto
+        {
+            Fees = new AccountFeesDto { Wipe = 1.234m },
+        };
+        var response = await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Valid", "FEE-DEC", 1, 1, 1, Settings: settings));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("settings.fees.wipe must have at most two decimal places", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Get_changes_unknown_account_returns_not_found()
     {
         await using var factory = new AptoWebApplicationFactory();
