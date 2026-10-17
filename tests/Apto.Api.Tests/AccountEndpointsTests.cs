@@ -439,4 +439,82 @@ public class AccountEndpointsTests
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_changes_unknown_account_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/accounts/{Guid.NewGuid()}/changes");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_changes_supports_pagination_and_page_size_cap()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Paginate", "PAG-01", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        for (var i = 1; i <= 3; i++)
+        {
+            await client.PutAsJsonAsync(
+                $"/api/accounts/{created.Id}",
+                new AccountWriteRequest($"Name {i}", "PAG-01", 1, 1, 1));
+        }
+
+        var page1 = await client.GetFromJsonAsync<AccountChangeLogListResponse>(
+            $"/api/accounts/{created.Id}/changes?page=1&pageSize=2");
+        Assert.NotNull(page1);
+        Assert.Equal(1, page1.Page);
+        Assert.Equal(2, page1.PageSize);
+        Assert.Equal(3, page1.Total);
+        Assert.Equal(2, page1.Items.Count);
+
+        var capped = await client.GetFromJsonAsync<AccountChangeLogListResponse>(
+            $"/api/accounts/{created.Id}/changes?pageSize=500");
+        Assert.NotNull(capped);
+        Assert.Equal(100, capped.PageSize);
+    }
+
+    [Fact]
+    public async Task Get_changes_filters_by_field_and_date_range()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Filter Co", "FLT-01", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Renamed", "FLT-01", 1, 1, 1));
+
+        var settings = new AccountSettingsDto { AptoPercentage = 5m };
+        await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Renamed", "FLT-01", 1, 1, 1, Settings: settings));
+
+        var nameOnly = await client.GetFromJsonAsync<AccountChangeLogListResponse>(
+            $"/api/accounts/{created.Id}/changes?field=Name");
+        Assert.NotNull(nameOnly);
+        Assert.All(nameOnly.Items, c => Assert.Equal("Name", c.FieldName));
+        Assert.Contains(nameOnly.Items, c => c.NewValue == "Renamed");
+
+        var from = DateTime.UtcNow.AddHours(-1).ToString("O");
+        var to = DateTime.UtcNow.AddHours(1).ToString("O");
+        var inRange = await client.GetFromJsonAsync<AccountChangeLogListResponse>(
+            $"/api/accounts/{created.Id}/changes?from={Uri.EscapeDataString(from)}&to={Uri.EscapeDataString(to)}");
+        Assert.NotNull(inRange);
+        Assert.True(inRange.Total >= 2);
+    }
 }
