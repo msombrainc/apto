@@ -14,6 +14,10 @@ export const ROUTES = {
   referenceData: "/admin/reference-data",
   partNumbers: "/admin/part-numbers",
   qboSync: "/admin/qbo-sync",
+  userManagement: "/admin/user-management",
+  orderFulfillment: "/operations/order-fulfillment",
+  productionDashboard: "/dashboards/production",
+  assetImages: "/inventory/asset-images",
 } as const;
 
 export function inventoryAssetPath(assetId: string): string {

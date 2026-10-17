@@ -14,6 +14,7 @@ import {
   viewFromPathname,
 } from "../../apps/web/src/routing/moduleMap.ts";
 import {
+  ROUTES,
   accountPath,
   inventoryAssetPath,
   jobPath,
@@ -127,4 +128,29 @@ test("jobInvoicePath round-trips with parseJobInvoice", () => {
 test("parseInventoryAssetId decodes asset segment", () => {
   assert.equal(parseInventoryAssetId("/inventory/assets/asset%2F1"), "asset/1");
   assert.equal(parseInventoryAssetId("/inventory"), null);
+});
+
+test("F15 prototype modules and routes (apto#60)", () => {
+  const userMgmt = AIMS_MODULE_MAP.find((e) => e.id === "user-mgmt");
+  assert.equal(userMgmt?.availability, "prototype");
+  assert.equal(userMgmt?.path, ROUTES.userManagement);
+
+  const fulfillment = AIMS_MODULE_MAP.find((e) => e.id === "order-fulfillment");
+  assert.equal(fulfillment?.path, ROUTES.orderFulfillment);
+
+  const production = AIMS_MODULE_MAP.find((e) => e.id === "production");
+  assert.equal(production?.path, ROUTES.productionDashboard);
+
+  const assetImages = AIMS_MODULE_MAP.find((e) => e.id === "asset-images");
+  assert.equal(assetImages?.path, ROUTES.assetImages);
+
+  assert.equal(viewFromPathname("/admin/user-management"), "user-management");
+  assert.equal(viewFromPathname("/operations/order-fulfillment"), "order-fulfillment");
+  assert.equal(viewFromPathname("/dashboards/production"), "production-dashboard");
+  assert.equal(viewFromPathname("/inventory/asset-images"), "asset-images");
+
+  assert.equal(isKnownAppPath("/admin/user-management"), true);
+  assert.equal(isKnownAppPath("/operations/order-fulfillment"), true);
+  assert.equal(isKnownAppPath("/dashboards/production"), true);
+  assert.equal(isKnownAppPath("/inventory/asset-images"), true);
 });

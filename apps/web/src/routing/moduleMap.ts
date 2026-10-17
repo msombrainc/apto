@@ -44,6 +44,7 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     label: "Order Fulfillment",
     availability: "prototype",
     phaseTag: "Prototype / Phase 5",
+    path: ROUTES.orderFulfillment,
   },
   // Inventory
   {
@@ -80,6 +81,7 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     label: "Asset Images",
     availability: "prototype",
     phaseTag: "Prototype / Phase 3",
+    path: ROUTES.assetImages,
   },
   // Accounts & Sales
   { id: "accounts", group: "Accounts & Sales", label: "Accounts", availability: "d2", path: ROUTES.accounts },
@@ -146,6 +148,7 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     label: "User Management",
     availability: "prototype",
     phaseTag: "Prototype / Phase 1",
+    path: ROUTES.userManagement,
   },
   { id: "qbo-sync", group: "Admin", label: "QuickBooks Sync", availability: "d2", path: ROUTES.qboSync },
   // Dashboards
@@ -162,6 +165,7 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     label: "Production",
     availability: "prototype",
     phaseTag: "Prototype / Phase 6",
+    path: ROUTES.productionDashboard,
   },
 ];
 
@@ -181,14 +185,22 @@ export type AppView =
   | "scan"
   | "reference-data"
   | "part-numbers"
-  | "qbo-sync";
+  | "qbo-sync"
+  | "user-management"
+  | "order-fulfillment"
+  | "production-dashboard"
+  | "asset-images";
 
 export function viewFromPathname(pathname: string): AppView {
+  if (pathname.startsWith("/admin/user-management")) return "user-management";
   if (pathname.startsWith("/admin/reference-data")) return "reference-data";
   if (pathname.startsWith("/admin/part-numbers")) return "part-numbers";
   if (pathname.startsWith("/admin/qbo-sync")) return "qbo-sync";
+  if (pathname.startsWith("/operations/order-fulfillment")) return "order-fulfillment";
   if (pathname.startsWith("/operations/sla-dashboard")) return "sla-dashboard";
   if (pathname.startsWith("/operations/scan")) return "scan";
+  if (pathname.startsWith("/dashboards/production")) return "production-dashboard";
+  if (pathname.startsWith("/inventory/asset-images")) return "asset-images";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/jobs")) return "jobs";
   if (pathname.startsWith("/accounts")) return "accounts";
@@ -253,5 +265,9 @@ export function isKnownAppPath(pathname: string): boolean {
     || pathname.startsWith("/admin/reference-data")
     || pathname.startsWith("/admin/part-numbers")
     || pathname.startsWith("/admin/qbo-sync")
+    || pathname.startsWith("/admin/user-management")
+    || pathname.startsWith("/operations/order-fulfillment")
+    || pathname.startsWith("/dashboards/production")
+    || pathname.startsWith("/inventory/asset-images")
   );
 }

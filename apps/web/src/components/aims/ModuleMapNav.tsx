@@ -31,7 +31,14 @@ export function ModuleMapNav() {
               <ul className="module-map-list">
                 {entries.map((entry) => {
                   const tag = availabilityLabel(entry);
-                  if (entry.path && entry.availability === "d2") {
+                  if (
+                    entry.path
+                    && (entry.availability === "d2" || entry.availability === "prototype")
+                  ) {
+                    const tagClass =
+                      entry.availability === "d2"
+                        ? "module-map-tag module-map-tag--d2"
+                        : "module-map-tag";
                     return (
                       <li key={entry.id}>
                         <NavLink
@@ -41,7 +48,7 @@ export function ModuleMapNav() {
                           }
                         >
                           <span>{entry.label}</span>
-                          <span className="module-map-tag module-map-tag--d2">{tag}</span>
+                          <span className={tagClass}>{tag}</span>
                         </NavLink>
                       </li>
                     );
