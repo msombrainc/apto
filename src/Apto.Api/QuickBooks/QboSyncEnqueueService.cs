@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Apto.Api.Data;
 using Apto.Api.Data.Entities;
 using Microsoft.Extensions.Options;
@@ -35,6 +36,44 @@ public sealed class QboSyncEnqueueService(
             : QboSyncOperations.UpdateCustomer;
 
         return await EnqueueAsync(operation, QboSyncEntityTypes.Account, account.Id, account, ct);
+    }
+
+    public async Task<QboSyncRequest?> EnqueueServiceInvoiceAsync(
+        ServiceInvoice invoice,
+        Account account,
+        CancellationToken ct)
+    {
+        if (!_options.IsConfigured)
+            return null;
+
+        var payload = JsonSerializer.Serialize(new
+        {
+            serviceInvoiceId = invoice.Id,
+            jobId = invoice.JobId,
+            accountId = account.Id,
+            qboCustomerId = account.QboCustomerId,
+            linesJson = invoice.LinesJson,
+            total = invoice.Total,
+            note = invoice.Note,
+        });
+
+        var now = DateTime.UtcNow;
+        var row = new QboSyncRequest
+        {
+            Id = Guid.NewGuid(),
+            Operation = QboSyncOperations.CreateInvoice,
+            EntityType = QboSyncEntityTypes.ServiceInvoice,
+            EntityId = invoice.Id,
+            PayloadJson = payload,
+            Status = QboSyncRequestStatus.Pending,
+            Attempts = 0,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now,
+        };
+
+        db.QboSyncRequests.Add(row);
+        await db.SaveChangesAsync(ct);
+        return row;
     }
 
     private async Task<QboSyncRequest> EnqueueAsync(

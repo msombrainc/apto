@@ -17,6 +17,8 @@ public static class JobEndpoints
         group.MapPost("/", CreateJob);
         group.MapPut("/{id:guid}", UpdateJob);
 
+        group.MapJobInvoiceEndpoints();
+
         return group;
     }
 

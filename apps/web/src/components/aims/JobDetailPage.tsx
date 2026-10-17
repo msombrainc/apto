@@ -21,6 +21,7 @@ import {
   inventoryAssetPath,
   jobBulkUnserializedPath,
   jobCertificatePath,
+  jobInvoicePath,
   jobSpreadsheetImportPath,
 } from "../../routing/paths";
 import {
@@ -237,9 +238,13 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           >
             Certificate
           </Link>
-          <AimsButton variant="secondary" data-testid="f3-action-invoice" onClick={() => setStubAction("invoice")}>
+          <Link
+            to={jobInvoicePath(jobId)}
+            className="aims-btn aims-btn--secondary"
+            data-testid="f3-action-invoice"
+          >
             Service invoice
-          </AimsButton>
+          </Link>
         </div>
       </header>
 
@@ -401,7 +406,6 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
 
       <Modal open={stubAction !== null} title="Coming in a later slice" onClose={() => setStubAction(null)}>
         <p>
-          {stubAction === "invoice" && "Service invoice (F11) is tracked on apto#59."}
         </p>
       </Modal>
     </div>

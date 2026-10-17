@@ -12,6 +12,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<QboConnection> QboConnections => Set<QboConnection>();
     public DbSet<QboSyncRequest> QboSyncRequests => Set<QboSyncRequest>();
+    public DbSet<ServiceInvoice> ServiceInvoices => Set<ServiceInvoice>();
     public DbSet<AssetChangeLog> AssetChangeLogs => Set<AssetChangeLog>();
     public DbSet<AccountChangeLog> AccountChangeLogs => Set<AccountChangeLog>();
     public DbSet<ReferenceItem> ReferenceItems => Set<ReferenceItem>();
@@ -122,6 +123,18 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
             e.Property(x => x.NewValue).HasMaxLength(500);
             e.Property(x => x.ChangedBy).HasMaxLength(100);
             e.HasIndex(x => x.AccountId);
+        });
+
+        modelBuilder.Entity<ServiceInvoice>(e =>
+        {
+            e.HasOne(x => x.Job).WithMany().HasForeignKey(x => x.JobId);
+            e.HasOne(x => x.Account).WithMany().HasForeignKey(x => x.AccountId);
+            e.Property(x => x.Status).HasMaxLength(16);
+            e.Property(x => x.Note).HasMaxLength(2000);
+            e.Property(x => x.QboInvoiceId).HasMaxLength(64);
+            e.Property(x => x.QboDocNumber).HasMaxLength(32);
+            e.Property(x => x.LastError).HasMaxLength(2000);
+            e.HasIndex(x => x.JobId);
         });
     }
 }

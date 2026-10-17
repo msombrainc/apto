@@ -11,4 +11,9 @@ public interface IQboSyncEnqueueService
         CancellationToken ct);
 
     Task<QboSyncRequest?> EnqueueManualAccountSyncAsync(Account account, CancellationToken ct);
+
+    Task<QboSyncRequest?> EnqueueServiceInvoiceAsync(
+        ServiceInvoice invoice,
+        Account account,
+        CancellationToken ct);
 }

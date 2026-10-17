@@ -42,6 +42,7 @@ public static class SqliteStgSchemaPatcher
             EnsureAssetChangeLogsTable(sqlite);
             EnsureReferenceItemsTable(sqlite);
             EnsureQboSyncRequestsTable(sqlite);
+            EnsureServiceInvoicesTable(sqlite);
             EnsureCategoriesIsActiveColumn(sqlite);
             ReferenceDataSeeder.SeedIfEmptyAsync(db).GetAwaiter().GetResult();
         }
@@ -405,6 +406,36 @@ public static class SqliteStgSchemaPatcher
         Execute(
             connection,
             """CREATE INDEX "IX_QboSyncRequests_Status_CreatedAtUtc" ON "QboSyncRequests" ("Status", "CreatedAtUtc");""");
+    }
+
+    private static void EnsureServiceInvoicesTable(SqliteConnection connection)
+    {
+        if (TableExists(connection, "ServiceInvoices"))
+            return;
+
+        Execute(
+            connection,
+            """
+            CREATE TABLE "ServiceInvoices" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_ServiceInvoices" PRIMARY KEY,
+                "JobId" TEXT NOT NULL,
+                "AccountId" TEXT NOT NULL,
+                "LinesJson" TEXT NOT NULL,
+                "Total" REAL NOT NULL,
+                "Note" TEXT NULL,
+                "Status" TEXT NOT NULL,
+                "QboInvoiceId" TEXT NULL,
+                "QboDocNumber" TEXT NULL,
+                "LastError" TEXT NULL,
+                "CreatedAtUtc" TEXT NOT NULL,
+                "UpdatedAtUtc" TEXT NOT NULL,
+                FOREIGN KEY ("JobId") REFERENCES "Jobs" ("Id"),
+                FOREIGN KEY ("AccountId") REFERENCES "Accounts" ("Id")
+            );
+            """);
+        Execute(
+            connection,
+            """CREATE INDEX "IX_ServiceInvoices_JobId" ON "ServiceInvoices" ("JobId");""");
     }
 
     private static void EnsureCategoriesIsActiveColumn(SqliteConnection connection)
