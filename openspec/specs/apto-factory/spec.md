@@ -1,5 +1,7 @@
 # apto-factory
 
+## Purpose
+
 Factory process capabilities for the Apto product repo (not runtime behaviour).
 
 ## Requirements
