@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import type { Asset, ReferenceItem } from "../../apps/web/src/api.ts";
 import {
   certificateGroupsForType,
+  parseCertificateType,
   splitAssetsForCertificate,
 } from "../../apps/web/src/lib/jobCertificates.ts";
 
@@ -68,6 +69,13 @@ function asset(status: string | null): Asset {
     changeLog: [],
   };
 }
+
+test("parseCertificateType accepts known query values only", () => {
+  assert.equal(parseCertificateType("recycling"), "recycling");
+  assert.equal(parseCertificateType("data-destruction"), "data-destruction");
+  assert.equal(parseCertificateType("invalid"), null);
+  assert.equal(parseCertificateType(null), null);
+});
 
 test("certificateGroupsForType maps recycling vs destruction", () => {
   assert.deepEqual([...certificateGroupsForType("recycling")], ["Recycled"]);

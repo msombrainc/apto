@@ -4,4 +4,4 @@
 - [x] `jobCertificates` classification helpers + unit tests
 - [x] `JobCertificatePage` route, preview, print CSS
 - [x] Wire F3 certificate link; App routing
-- [ ] UX polish pass (Athena) + `gate:mr`
+- [x] UX polish pass (Athena) + `gate:mr`

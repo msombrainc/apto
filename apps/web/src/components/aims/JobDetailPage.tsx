@@ -401,7 +401,6 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
 
       <Modal open={stubAction !== null} title="Coming in a later slice" onClose={() => setStubAction(null)}>
         <p>
-          {stubAction === "certificate" && "Certificates (F10) is tracked on apto#58."}
           {stubAction === "invoice" && "Service invoice (F11) is tracked on apto#59."}
         </p>
       </Modal>
