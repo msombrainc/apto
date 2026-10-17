@@ -20,6 +20,7 @@ import {
   accountPath,
   inventoryAssetPath,
   jobBulkUnserializedPath,
+  jobCertificatePath,
   jobSpreadsheetImportPath,
 } from "../../routing/paths";
 import {
@@ -229,9 +230,13 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           >
             Bulk unserialized
           </Link>
-          <AimsButton variant="secondary" data-testid="f3-action-certificate" onClick={() => setStubAction("certificate")}>
+          <Link
+            to={jobCertificatePath(jobId)}
+            className="aims-btn aims-btn--secondary"
+            data-testid="f3-action-certificate"
+          >
             Certificate
-          </AimsButton>
+          </Link>
           <AimsButton variant="secondary" data-testid="f3-action-invoice" onClick={() => setStubAction("invoice")}>
             Service invoice
           </AimsButton>
@@ -396,7 +401,6 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
 
       <Modal open={stubAction !== null} title="Coming in a later slice" onClose={() => setStubAction(null)}>
         <p>
-          {stubAction === "certificate" && "Certificates (F10) is tracked on apto#58."}
           {stubAction === "invoice" && "Service invoice (F11) is tracked on apto#59."}
         </p>
       </Modal>

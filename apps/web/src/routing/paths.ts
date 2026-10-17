@@ -5,6 +5,7 @@ export const ROUTES = {
   jobDetail: "/jobs/:jobId",
   jobSpreadsheetImport: "/jobs/:jobId/import/spreadsheet",
   jobBulkUnserialized: "/jobs/:jobId/import/bulk",
+  jobCertificate: "/jobs/:jobId/certificate",
   inventory: "/inventory",
   inventoryAsset: "/inventory/assets/:assetId",
   scan: "/operations/scan",
@@ -32,4 +33,8 @@ export function jobSpreadsheetImportPath(jobId: string): string {
 
 export function jobBulkUnserializedPath(jobId: string): string {
   return `/jobs/${encodeURIComponent(jobId)}/import/bulk`;
+}
+
+export function jobCertificatePath(jobId: string): string {
+  return `/jobs/${encodeURIComponent(jobId)}/certificate`;
 }

@@ -1616,3 +1616,147 @@ tr.row-selected {
   font-size: 0.85rem;
   color: var(--aims-text-muted);
 }
+
+/* F10 — job certificates */
+.f10-certificate-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.f10-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  max-width: 640px;
+}
+
+.f10-type-card {
+  text-align: left;
+  padding: 1.25rem;
+  border-radius: var(--aims-radius, 8px);
+  border: 1px solid var(--aims-border);
+  background: var(--aims-surface);
+  cursor: pointer;
+}
+
+.f10-type-card:hover,
+.f10-type-card:focus-visible {
+  border-color: var(--aims-accent);
+  outline: 2px solid var(--aims-accent);
+  outline-offset: 2px;
+}
+
+.f10-certificate-doc {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.f10-sample-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: rgba(120, 120, 120, 0.18);
+  transform: rotate(-28deg);
+  pointer-events: none;
+  user-select: none;
+}
+
+.f10-cert-header {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.5rem;
+}
+
+.f10-cert-issuer {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--aims-text-muted);
+  margin: 0 0 0.25rem;
+}
+
+.f10-cert-header h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  margin: 0;
+}
+
+.f10-cert-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 0 0 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.f10-cert-meta dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--aims-text-muted);
+  margin: 0;
+}
+
+.f10-cert-meta dd {
+  margin: 0.15rem 0 0;
+}
+
+.f10-cert-total {
+  margin: 1rem 0 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.f10-cert-compliance {
+  margin: 1.25rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+.f10-cert-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.f10-sig-line {
+  display: block;
+  border-bottom: 1px solid var(--aims-text);
+  height: 2rem;
+  margin-bottom: 0.35rem;
+}
+
+@media print {
+  .f10-no-print,
+  .app-shell-header,
+  .app-shell-nav,
+  .global-search {
+    display: none !important;
+  }
+
+  .f10-certificate-doc {
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .f10-sample-watermark {
+    color: rgba(0, 0, 0, 0.12) !important;
+  }
+}
