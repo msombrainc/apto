@@ -57,7 +57,7 @@ export function AssetImagesPage() {
       <section className="dashboard-panel">
         <label className="field-inline">
           <span className="field-label">Sample asset</span>
-          <select className="aims-select"
+          <select
             className="aims-select"
             value={asset?.aptoId ?? ""}
             onChange={(e) => {

@@ -8,7 +8,7 @@ Demo 2 STG surfaces still use native select chrome, oversized controls, and inco
 
 - Shared `.aims-select` styling (appearance none, chevron, themed borders)
 - Filter-bar and form control max-widths per `docs/ux/apto-99-global-ui-pass-charter.md`
-- Dashboard primary buttons no longer full-bleed except login
+- Dashboard header CTAs use `AimsButton` (`aims-btn--primary`, inline-flex auto width); login keeps `.btn-primary` full-width
 - Light-theme ghost button borders readable on white panels
 
 ## Charter

@@ -42,7 +42,7 @@ export function SlaDashboardPage({
       <div className="dashboard-actions">
         <label className="field-inline">
           <span className="field-label">Account</span>
-          <select className="aims-select"
+          <select
             className="aims-select"
             value={accountId}
             onChange={(e) => setAccountId(e.target.value)}

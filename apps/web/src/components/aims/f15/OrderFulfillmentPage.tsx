@@ -98,7 +98,7 @@ export function OrderFulfillmentPage() {
           <FacilityPills facilities={facilities} value={facility} onChange={onFacilityChange} />
           <label className="field-inline">
             <span className="field-label">Invoice</span>
-            <select className="aims-select"
+            <select
               className="aims-select"
               value={invoice?.id ?? ""}
               onChange={(e) => {
