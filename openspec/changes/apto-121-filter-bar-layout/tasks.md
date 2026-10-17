@@ -1,0 +1,3 @@
+- [x] Charter `docs/ux/apto-121-filter-bar-charter.md`
+- [x] Filter bar CSS + tests
+- [ ] Gate + MR + STG handoff
