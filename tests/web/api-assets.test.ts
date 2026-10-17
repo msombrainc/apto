@@ -207,3 +207,37 @@ test("listInventoryAssetsPaged parses paged JSON and query keys", async () => {
 
   globalThis.fetch = original;
 });
+
+test("listInventoryAssetsPaged normalizes legacy array JSON", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
+    ({
+      ok: true,
+      status: 200,
+      json: async () => [
+        {
+          id: "1",
+          aptoId: "A1",
+          jobId: "j",
+          serialNumber: null,
+          partNumber: null,
+          categoryName: null,
+          grade: null,
+          status: null,
+          locationId: null,
+          locationName: null,
+          accountName: "Acme",
+          facilityCode: "GA",
+          createdAtUtc: "2026-01-01T00:00:00Z",
+        },
+      ],
+    }) as Response;
+
+  const result = await listInventoryAssetsPaged({});
+  assert.equal(result.items.length, 1);
+  assert.equal(result.page, 1);
+  assert.equal(result.pageSize, 1);
+  assert.equal(result.total, 1);
+
+  globalThis.fetch = original;
+});

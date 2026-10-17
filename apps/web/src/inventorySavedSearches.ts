@@ -4,7 +4,6 @@ import { downloadCsvFile, escapeCsv } from "./jobsListExport";
 export type SavedInventorySearch = {
   id: string;
   name: string;
-  isDefault?: boolean;
   params: Omit<InventoryListParams, "page">;
   visibleColumns: string[];
 };

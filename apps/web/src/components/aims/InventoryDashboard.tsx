@@ -240,7 +240,7 @@ export function InventoryDashboard({
     <div className="dashboard-stack">
       <div className="dashboard-actions dashboard-actions--end">
         <AimsButton variant="secondary" onClick={() => exportInventoryCsv(inventoryRows)}>
-          Export CSV
+          Export page CSV
         </AimsButton>
         <AimsButton variant="secondary" onClick={saveCurrentSearch}>
           Save search
@@ -363,7 +363,9 @@ export function InventoryDashboard({
                   if (e.target.checked) {
                     onVisibleColumnsChange([...visibleColumns, id]);
                   } else {
-                    onVisibleColumnsChange(visibleColumns.filter((c) => c !== id));
+                    const next = visibleColumns.filter((c) => c !== id);
+                    if (next.length === 0) return;
+                    onVisibleColumnsChange(next);
                   }
                 }}
               />
