@@ -21,7 +21,7 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     label: "SLA Dashboard",
     availability: "d2",
     phaseTag: "Demo 2",
-    path: ROUTES.jobs,
+    path: ROUTES.slaDashboard,
   },
   { id: "quick-scan", group: "Operations", label: "Quick Scan", availability: "d2", path: ROUTES.scan },
   {
@@ -154,7 +154,7 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     group: "Dashboards",
     label: "SLA",
     availability: "d2",
-    path: ROUTES.jobs,
+    path: ROUTES.slaDashboard,
   },
   {
     id: "production",
@@ -176,6 +176,7 @@ export function moduleGroups(): { group: string; entries: ModuleEntry[] }[] {
 export type AppView =
   | "accounts"
   | "jobs"
+  | "sla-dashboard"
   | "inventory"
   | "scan"
   | "reference-data"
@@ -186,6 +187,7 @@ export function viewFromPathname(pathname: string): AppView {
   if (pathname.startsWith("/admin/reference-data")) return "reference-data";
   if (pathname.startsWith("/admin/part-numbers")) return "part-numbers";
   if (pathname.startsWith("/admin/qbo-sync")) return "qbo-sync";
+  if (pathname.startsWith("/operations/sla-dashboard")) return "sla-dashboard";
   if (pathname.startsWith("/operations/scan")) return "scan";
   if (pathname.startsWith("/inventory")) return "inventory";
   if (pathname.startsWith("/jobs")) return "jobs";
@@ -232,6 +234,7 @@ export function isKnownAppPath(pathname: string): boolean {
     pathname.startsWith("/accounts")
     || pathname.startsWith("/jobs")
     || pathname.startsWith("/inventory")
+    || pathname.startsWith("/operations/sla-dashboard")
     || pathname.startsWith("/operations/scan")
     || pathname.startsWith("/admin/reference-data")
     || pathname.startsWith("/admin/part-numbers")
