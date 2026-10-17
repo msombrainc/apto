@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import * as XLSX from "xlsx";
 import { test } from "node:test";
 import { parseXlsxBuffer } from "../../apps/web/src/lib/spreadsheetImportXlsx.ts";
+import { isAssetLookupNotFound } from "../../apps/web/src/lib/assetLookupNotFound.ts";
 import {
   MAX_IMPORT_ROWS,
   buildSerialIndex,
@@ -39,6 +40,35 @@ test("validateImportRows flags duplicate serials in file", async () => {
   });
   const dupes = rows.filter((r) => r.messages.some((m) => m.includes("Duplicate")));
   assert.equal(dupes.length, 2);
+});
+
+test("isAssetLookupNotFound treats API not-found messages as available serial", () => {
+  assert.equal(isAssetLookupNotFound(new Error("no asset found")), true);
+  assert.equal(isAssetLookupNotFound(new Error("lookup failed: 404")), true);
+  assert.equal(isAssetLookupNotFound(new Error("lookup failed: 503")), false);
+  assert.equal(isAssetLookupNotFound(new Error("network")), false);
+});
+
+test("spreadsheet import serial adapter treats 404 as available", async () => {
+  const adaptLookupSerial = async (): Promise<boolean> => {
+    try {
+      throw new Error("lookup failed: 404");
+    } catch (e) {
+      if (isAssetLookupNotFound(e)) return false;
+      throw e;
+    }
+  };
+  const sheet = parseCsvText("part,serial\nP-1,S1");
+  const mapping = guessColumnMapping(sheet.headers);
+  const rows = await validateImportRows(sheet, mapping, {
+    gradeCodes: new Set(),
+    categoryNames: new Set(),
+    serialsInFile: buildSerialIndex(sheet, mapping),
+    unknownPartPolicy: "create",
+    lookupSerial: adaptLookupSerial,
+    resolvePartNumber: async () => ({ id: "pn-1" }),
+  });
+  assert.equal(rows[0].status, "ok");
 });
 
 test("validateImportRows flags serial lookup failures", async () => {

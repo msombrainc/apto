@@ -10,6 +10,7 @@ import {
   searchPartNumbers,
   type Job,
 } from "../../api";
+import { isAssetLookupNotFound } from "../../lib/assetLookupNotFound";
 import { jobPath } from "../../routing/paths";
 import {
   MAX_IMPORT_ROWS,
@@ -95,7 +96,7 @@ export function SpreadsheetImportPage({ jobId }: Props) {
       if (ext.endsWith(".csv")) {
         const text = await file.text();
         parsed = parseCsvText(text);
-      } else if (ext.endsWith(".xlsx") || ext.endsWith(".xls")) {
+      } else if (ext.endsWith(".xlsx")) {
         const buf = await file.arrayBuffer();
         parsed = parseXlsxBuffer(buf);
       } else {
@@ -139,10 +140,7 @@ export function SpreadsheetImportPage({ jobId }: Props) {
             await lookupAssetByCode(serial);
             return true;
           } catch (e) {
-            const msg = e instanceof Error ? e.message : "";
-            if (msg.includes("no asset found") || /lookup failed: 404\b/.test(msg)) {
-              return false;
-            }
+            if (isAssetLookupNotFound(e)) return false;
             throw e;
           }
         },
