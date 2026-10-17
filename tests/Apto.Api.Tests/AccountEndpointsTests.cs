@@ -407,6 +407,39 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Put_with_partial_settings_object_replaces_unspecified_leaves_with_defaults()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Sparse", "SPARSE-1", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var full = new AccountSettingsDto
+        {
+            AptoPercentage = 99m,
+            Fees = new AccountFeesDto { Audit = 5m },
+        };
+        await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Sparse", "SPARSE-1", 1, 1, 1, Settings: full));
+
+        var partial = new AccountSettingsDto { AptoPercentage = 10m };
+        var put = await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Sparse", "SPARSE-1", 1, 1, 1, Settings: partial));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var fetched = await put.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(fetched);
+        Assert.Equal(10m, fetched.Settings.AptoPercentage);
+        Assert.Equal(0m, fetched.Settings.Fees.Audit);
+    }
+
+    [Fact]
     public async Task List_status_filter_is_case_insensitive()
     {
         await using var factory = new AptoWebApplicationFactory();
