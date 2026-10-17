@@ -5,6 +5,7 @@ export const ROUTES = {
   inventoryAsset: "/inventory/assets/:assetId",
   scan: "/operations/scan",
   referenceData: "/admin/reference-data",
+  partNumbers: "/admin/part-numbers",
   qboSync: "/admin/qbo-sync",
 } as const;
 

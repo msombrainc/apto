@@ -123,8 +123,8 @@ export const AIMS_MODULE_MAP: ModuleEntry[] = [
     id: "part-numbers",
     group: "Admin",
     label: "Part Numbers",
-    availability: "future",
-    phaseTag: "Demo 2 (F14)",
+    availability: "d2",
+    path: ROUTES.partNumbers,
   },
   {
     id: "manufacturers",
@@ -179,10 +179,12 @@ export type AppView =
   | "inventory"
   | "scan"
   | "reference-data"
+  | "part-numbers"
   | "qbo-sync";
 
 export function viewFromPathname(pathname: string): AppView {
   if (pathname.startsWith("/admin/reference-data")) return "reference-data";
+  if (pathname.startsWith("/admin/part-numbers")) return "part-numbers";
   if (pathname.startsWith("/admin/qbo-sync")) return "qbo-sync";
   if (pathname.startsWith("/operations/scan")) return "scan";
   if (pathname.startsWith("/inventory")) return "inventory";
@@ -204,6 +206,7 @@ export function isKnownAppPath(pathname: string): boolean {
     || pathname.startsWith("/inventory")
     || pathname.startsWith("/operations/scan")
     || pathname.startsWith("/admin/reference-data")
+    || pathname.startsWith("/admin/part-numbers")
     || pathname.startsWith("/admin/qbo-sync")
   );
 }

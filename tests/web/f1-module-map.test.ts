@@ -32,8 +32,15 @@ test("moduleGroups preserves group order", () => {
   ]);
 });
 
+test("part-numbers module is Demo 2 with admin route", () => {
+  const partNumbers = AIMS_MODULE_MAP.find((e) => e.id === "part-numbers");
+  assert.equal(partNumbers?.availability, "d2");
+  assert.equal(partNumbers?.path, "/admin/part-numbers");
+});
+
 test("viewFromPathname maps deep links", () => {
   assert.equal(viewFromPathname("/admin/reference-data"), "reference-data");
+  assert.equal(viewFromPathname("/admin/part-numbers"), "part-numbers");
   assert.equal(viewFromPathname("/operations/scan"), "scan");
   assert.equal(viewFromPathname("/inventory/assets/abc"), "inventory");
   assert.equal(viewFromPathname("/accounts"), "accounts");
@@ -49,6 +56,7 @@ test("inventoryAssetPath round-trips with parseInventoryAssetId", () => {
 test("isKnownAppPath accepts registered routes and rejects typos", () => {
   assert.equal(isKnownAppPath("/jobs"), true);
   assert.equal(isKnownAppPath("/inventory/assets/x"), true);
+  assert.equal(isKnownAppPath("/admin/part-numbers"), true);
   assert.equal(isKnownAppPath("/typo"), false);
 });
 
