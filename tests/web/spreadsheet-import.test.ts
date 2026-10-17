@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import * as XLSX from "xlsx";
 import { test } from "node:test";
+import { parseXlsxBuffer } from "../../apps/web/src/lib/spreadsheetImportXlsx.ts";
 import {
   MAX_IMPORT_ROWS,
   buildSerialIndex,
@@ -83,6 +85,33 @@ test("validateImportRows rejects files over row cap", async () => {
       }),
     /maximum is 500/,
   );
+});
+
+test("parseXlsxBuffer reads first sheet rows", () => {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["part", "serial"],
+    ["P-1", "S1"],
+  ]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+  const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+  const sheet = parseXlsxBuffer(buf);
+  assert.equal(sheet.headers[0], "part");
+  assert.equal(sheet.rows[0][1], "S1");
+});
+
+test("validateImportRows flags unknown category", async () => {
+  const sheet = parseCsvText("part,serial,category\nP-1,,BadCat");
+  const mapping = guessColumnMapping(sheet.headers);
+  const rows = await validateImportRows(sheet, mapping, {
+    gradeCodes: new Set(),
+    categoryNames: new Set(["goodcat"]),
+    serialsInFile: buildSerialIndex(sheet, mapping),
+    unknownPartPolicy: "create",
+    lookupSerial: async () => false,
+    resolvePartNumber: async () => ({ id: "pn" }),
+  });
+  assert.ok(rows[0].messages.some((m) => m.includes("Unknown category")));
 });
 
 test("validateImportRows flags unknown grade", async () => {

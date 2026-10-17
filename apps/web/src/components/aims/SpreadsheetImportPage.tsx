@@ -361,8 +361,11 @@ export function SpreadsheetImportPage({ jobId }: Props) {
             <AimsButton variant="secondary" onClick={() => setStep("map")}>
               Edit mapping
             </AimsButton>
-            <AimsButton onClick={() => void runImport()} disabled={okRows.length === 0}>
-              Start import ({okRows.length} rows)
+            <AimsButton
+              onClick={() => void runImport()}
+              disabled={okRows.length === 0 || validating}
+            >
+              {validating ? "Re-validating…" : `Start import (${okRows.length} rows)`}
             </AimsButton>
           </div>
         </section>
