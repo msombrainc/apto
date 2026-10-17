@@ -2,7 +2,11 @@
 export function newId(): string {
   const c = globalThis.crypto;
   if (c && typeof c.randomUUID === "function") {
-    return c.randomUUID();
+    try {
+      return c.randomUUID();
+    } catch {
+      /* insecure context may expose randomUUID but throw on invoke */
+    }
   }
   if (c && typeof c.getRandomValues === "function") {
     const bytes = new Uint8Array(16);

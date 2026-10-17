@@ -31,4 +31,21 @@ describe("newId", () => {
       });
     }
   });
+
+  it("uses id- prefix when crypto is unavailable", () => {
+    const original = globalThis.crypto;
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      const id = newId();
+      assert.match(id, /^id-[a-z0-9]+-[a-z0-9]+$/i);
+    } finally {
+      Object.defineProperty(globalThis, "crypto", {
+        configurable: true,
+        value: original,
+      });
+    }
+  });
 });
