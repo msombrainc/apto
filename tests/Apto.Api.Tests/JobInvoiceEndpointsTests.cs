@@ -227,6 +227,50 @@ public class JobInvoiceEndpointsTests
     }
 
     [Fact]
+    public async Task Create_invoice_negative_quantity_returns_400()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+        });
+        var (jobId, _) = await SeedJobWithFeesAsync(factory);
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{jobId}/invoices",
+            new CreateServiceInvoiceRequest
+            {
+                Lines = [new CreateServiceInvoiceLine { ServiceKey = "audit", Quantity = -1 }],
+            });
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadAsStringAsync();
+        Assert.Contains("non-negative", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Create_invoice_unknown_service_key_returns_400()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+        });
+        var (jobId, _) = await SeedJobWithFeesAsync(factory);
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{jobId}/invoices",
+            new CreateServiceInvoiceRequest
+            {
+                Lines = [new CreateServiceInvoiceLine { ServiceKey = "not-a-real-fee", Quantity = 1 }],
+            });
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+        var body = await post.Content.ReadAsStringAsync();
+        Assert.Contains("not-a-real-fee", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Create_invoice_enqueues_sync_and_lists_history()
     {
         await using var factory = new AptoWebApplicationFactory(o =>
