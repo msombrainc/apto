@@ -302,7 +302,7 @@ export function QboSyncAdmin() {
         <div className="filter-bar">
           <label className="filter-field">
             Status
-            <select
+            <select className="aims-select"
               data-testid="qbo-sync-filter-status"
               value={statusFilter}
               onChange={(e) => {
@@ -317,7 +317,7 @@ export function QboSyncAdmin() {
           </label>
           <label className="filter-field">
             Type
-            <select
+            <select className="aims-select"
               data-testid="qbo-sync-filter-type"
               value={typeFilter}
               onChange={(e) => {

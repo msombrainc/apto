@@ -262,7 +262,7 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
         <div className="grid grid--2">
           <label>
             Account
-            <select
+            <select className="aims-select"
               value={draft.accountId}
               onChange={(e) => setDraft({ ...draft, accountId: e.target.value })}
             >
@@ -273,7 +273,7 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           </label>
           <label>
             Facility
-            <select
+            <select className="aims-select"
               value={draft.facilityCode ?? ""}
               onChange={(e) => setDraft({ ...draft, facilityCode: e.target.value || undefined })}
             >
@@ -285,7 +285,7 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           </label>
           <label>
             Ops status
-            <select
+            <select className="aims-select"
               value={opsStatusSelectValue(draft.opsStatus, opsStatuses)}
               onChange={(e) => setDraft({ ...draft, opsStatus: e.target.value || undefined })}
             >
@@ -341,7 +341,7 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           <AimsButton type="button" variant="secondary" onClick={() => void searchParts()}>Search parts</AimsButton>
           <label>
             Part number
-            <select
+            <select className="aims-select"
               value={assetForm.partNumberId}
               onChange={(e) => setAssetForm({ ...assetForm, partNumberId: e.target.value })}
             >

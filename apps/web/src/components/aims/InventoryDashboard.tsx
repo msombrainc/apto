@@ -238,7 +238,7 @@ export function InventoryDashboard({
         {savedSearches.length > 0 && (
           <label className="inventory-account-select">
             Saved
-            <select
+            <select className="aims-select"
               defaultValue=""
               onChange={(e) => {
                 if (e.target.value) applySavedSearch(e.target.value);
@@ -274,7 +274,7 @@ export function InventoryDashboard({
           />
           <label className="inventory-account-select" htmlFor="inventory-account-filter">
             Account
-            <select
+            <select className="aims-select"
               id="inventory-account-filter"
               value={inventoryAccountId}
               onChange={(e) => onInventoryAccountIdChange(e.target.value)}
@@ -397,7 +397,7 @@ export function InventoryDashboard({
           </AimsButton>
           <label className="inventory-account-select">
             Page size
-            <select
+            <select className="aims-select"
               value={inventoryPageSize}
               onChange={(e) => {
                 onInventoryPageSizeChange(Number(e.target.value));

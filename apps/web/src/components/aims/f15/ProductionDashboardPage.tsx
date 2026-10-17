@@ -62,7 +62,7 @@ export function ProductionDashboardPage() {
         <FacilityPills facilities={facilities} value={facility} onChange={setFacility} />
         <label className="field-inline">
           <span className="field-label">Period</span>
-          <select
+          <select className="aims-select"
             className="aims-select"
             value={period}
             onChange={(e) => setPeriod(e.target.value as F15ProductionPeriod)}

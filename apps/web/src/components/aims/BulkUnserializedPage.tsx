@@ -234,7 +234,7 @@ export function BulkUnserializedPage({ jobId }: Props) {
 
           <label>
             Grade (optional)
-            <select data-testid="f7-grade" value={grade} onChange={(e) => setGrade(e.target.value)}>
+            <select className="aims-select" data-testid="f7-grade" value={grade} onChange={(e) => setGrade(e.target.value)}>
               <option value="">—</option>
               {grades.map((g) => (
                 <option key={g.id} value={g.code}>{g.code} — {g.name}</option>
@@ -244,7 +244,7 @@ export function BulkUnserializedPage({ jobId }: Props) {
 
           <label>
             Status (optional)
-            <select data-testid="f7-status" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <select className="aims-select" data-testid="f7-status" value={status} onChange={(e) => setStatus(e.target.value)}>
               <option value="">—</option>
               {statuses.map((s) => (
                 <option key={s.id} value={s.code}>{s.code} — {s.name}</option>
@@ -254,7 +254,7 @@ export function BulkUnserializedPage({ jobId }: Props) {
 
           <label>
             Location (optional)
-            <select
+            <select className="aims-select"
               data-testid="f7-location"
               value={locationId}
               onChange={(e) => setLocationId(e.target.value)}

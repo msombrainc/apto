@@ -160,7 +160,7 @@ export function JobsListV2({
           onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
           data-testid="jobs-search"
         />
-        <select
+        <select className="aims-select"
           value={filters.accountId}
           onChange={(e) => onFiltersChange({ ...filters, accountId: e.target.value })}
           data-testid="jobs-filter-account"
@@ -177,7 +177,7 @@ export function JobsListV2({
           value={filters.facilityCode}
           onChange={(code) => onFiltersChange({ ...filters, facilityCode: code })}
         />
-        <select
+        <select className="aims-select"
           value={filters.opsStatus}
           onChange={(e) => onFiltersChange({ ...filters, opsStatus: e.target.value })}
         >
@@ -188,7 +188,7 @@ export function JobsListV2({
             </option>
           ))}
         </select>
-        <select
+        <select className="aims-select"
           value={filters.slaFlag}
           onChange={(e) =>
             onFiltersChange({
@@ -346,7 +346,7 @@ export function JobsListV2({
         <form className="form-stack" onSubmit={onCreateJob}>
           <label>
             Account
-            <select
+            <select className="aims-select"
               required
               value={jobForm.accountId}
               onChange={(e) => onJobFormChange({ ...jobForm, accountId: e.target.value })}
@@ -360,7 +360,7 @@ export function JobsListV2({
           </label>
           <label>
             Facility
-            <select
+            <select className="aims-select"
               value={jobForm.facilityCode}
               onChange={(e) => onJobFormChange({ ...jobForm, facilityCode: e.target.value })}
             >
