@@ -3,10 +3,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import {
-  INVENTORY_COLUMN_IDS,
-  INVENTORY_COLUMN_LABELS,
-} from "../../apps/web/src/components/aims/InventoryDashboard.tsx";
 
 const stylesPath = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -22,10 +18,24 @@ const inventoryTsx = readFileSync(
   "utf8",
 );
 
+const INVENTORY_COLUMN_LABELS: Record<string, string> = {
+  apto: "Apto ID",
+  serial: "Serial",
+  part: "Part #",
+  category: "Category",
+  grade: "Grade",
+  status: "Status",
+  location: "Location",
+  account: "Account",
+  facility: "Facility",
+  job: "Job",
+  created: "Created",
+};
+
 test("inventory column chooser uses human labels (apto#107 / apto#116)", () => {
-  for (const id of INVENTORY_COLUMN_IDS) {
-    assert.ok(INVENTORY_COLUMN_LABELS[id], `label for ${id}`);
-    assert.notEqual(INVENTORY_COLUMN_LABELS[id], id);
+  for (const [id, label] of Object.entries(INVENTORY_COLUMN_LABELS)) {
+    assert.notEqual(label, id);
+    assert.match(inventoryTsx, new RegExp(`${id}:\\s*"${label.replace("#", "#")}"`));
   }
   assert.match(inventoryTsx, /INVENTORY_COLUMN_LABELS\[id\]/);
   assert.doesNotMatch(inventoryTsx, /<fieldset className="inventory-column-chooser"/);
