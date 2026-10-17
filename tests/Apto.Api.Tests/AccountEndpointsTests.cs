@@ -1,6 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using Apto.Api.Accounts;
+using Apto.Api.Data;
+using Apto.Api.Data.Entities;
+using Apto.Api.QuickBooks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Apto.Api.Tests;
 
@@ -516,5 +521,71 @@ public class AccountEndpointsTests
             $"/api/accounts/{created.Id}/changes?from={Uri.EscapeDataString(from)}&to={Uri.EscapeDataString(to)}");
         Assert.NotNull(inRange);
         Assert.True(inRange.Total >= 2);
+    }
+
+    [Fact]
+    public async Task List_invalid_status_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/accounts?status=not-a-status");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("status must be Active, Inactive, or Both", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Get_by_id_returns_qbo_last_sync_from_most_recent_sent_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("QBO Sync Co", "QBO-SYNC", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var olderSent = DateTime.UtcNow.AddDays(-2);
+        var newerSent = DateTime.UtcNow.AddHours(-1);
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+            db.QboSyncRequests.AddRange(
+                new QboSyncRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Operation = QboSyncOperations.CreateCustomer,
+                    EntityType = QboSyncEntityTypes.Account,
+                    EntityId = created.Id,
+                    PayloadJson = "{}",
+                    Status = QboSyncRequestStatus.Sent,
+                    Attempts = 1,
+                    CreatedAtUtc = olderSent,
+                    UpdatedAtUtc = olderSent,
+                    SentAtUtc = olderSent,
+                },
+                new QboSyncRequest
+                {
+                    Id = Guid.NewGuid(),
+                    Operation = QboSyncOperations.UpdateCustomer,
+                    EntityType = QboSyncEntityTypes.Account,
+                    EntityId = created.Id,
+                    PayloadJson = "{}",
+                    Status = QboSyncRequestStatus.Sent,
+                    Attempts = 1,
+                    CreatedAtUtc = newerSent,
+                    UpdatedAtUtc = newerSent,
+                    SentAtUtc = newerSent,
+                });
+            await db.SaveChangesAsync();
+        }
+
+        var fetched = await client.GetFromJsonAsync<AccountResponse>($"/api/accounts/{created.Id}");
+        Assert.NotNull(fetched);
+        Assert.NotNull(fetched.QboLastSyncAtUtc);
+        Assert.Equal(newerSent, fetched.QboLastSyncAtUtc.Value, TimeSpan.FromSeconds(1));
     }
 }
