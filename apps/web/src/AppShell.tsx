@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
@@ -7,6 +7,7 @@ import { GlobalAssetLookup } from "./components/aims/GlobalAssetLookup";
 import { ModuleMapNav } from "./components/aims/ModuleMapNav";
 import { ROUTES } from "./routing/paths";
 import type { AppView } from "./routing/moduleMap";
+import { installDocumentScrollLock } from "./shellScrollLock";
 
 type AppShellProps = {
   view: AppView;
@@ -54,6 +55,9 @@ export function AppShell({
 }: AppShellProps) {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
+
+  // Belt-and-suspenders for apto#112: keep document scroll at 0 while shell is mounted.
+  useEffect(() => installDocumentScrollLock(), []);
 
   return (
     <div className="aims-app">
