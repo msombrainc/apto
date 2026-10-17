@@ -9,10 +9,24 @@ import {
   type Job,
   type ServiceInvoiceRow,
 } from "../../api";
-import { accountPath, jobPath } from "../../routing/paths";
+import { ROUTES, accountPath, jobPath } from "../../routing/paths";
 import { AimsButton } from "./Button";
 
 type Props = { jobId: string };
+
+function invoiceStatusClass(status: string): string {
+  switch (status) {
+    case "Sent":
+      return "status-pill status-pill--active";
+    case "Failed":
+      return "status-pill status-pill--failed";
+    case "Queued":
+    case "Processing":
+      return "status-pill status-pill--pending";
+    default:
+      return "status-pill status-pill--inactive";
+  }
+}
 
 export function JobInvoicePage({ jobId }: Props) {
   const [job, setJob] = useState<Job | null>(null);
@@ -112,7 +126,8 @@ export function JobInvoicePage({ jobId }: Props) {
       )}
 
       <div className="f11-invoice-layout">
-        <section className="dashboard-panel">
+        <section className="dashboard-panel f11-editor">
+          <h2 className="panel-subtitle">Editor</h2>
           <table className="data-table">
             <thead>
               <tr>
@@ -173,19 +188,28 @@ export function JobInvoicePage({ jobId }: Props) {
           </AimsButton>
         </section>
 
-        <section className="dashboard-panel">
-          <h2>History</h2>
+        <section className="dashboard-panel f11-history">
+          <h2 className="panel-subtitle">History</h2>
           {history.length === 0 ? (
             <p className="muted">No invoices yet.</p>
           ) : (
             <ul className="f11-history-list">
               {history.map((row) => (
                 <li key={row.id} data-testid={`f11-history-item-${row.id}`}>
-                  <span>{new Date(row.createdAtUtc).toLocaleString()}</span>
-                  <span className={`badge badge--${row.status.toLowerCase()}`}>{row.status}</span>
-                  <span>${row.total.toFixed(2)}</span>
+                  <span className="f11-history-date">
+                    {new Date(row.createdAtUtc).toLocaleString()}
+                  </span>
+                  <span className={invoiceStatusClass(row.status)}>{row.status}</span>
+                  <span className="f11-history-total">${row.total.toFixed(2)}</span>
                   {row.qboDocNumber && <span>QBO #{row.qboDocNumber}</span>}
-                  {row.lastError && <span className="error">{row.lastError}</span>}
+                  {row.lastError && (
+                    <span className="f11-history-error">
+                      <span className="error">{row.lastError}</span>
+                      <Link to={`${ROUTES.qboSync}?operation=CreateInvoice`}>
+                        View in QuickBooks sync queue
+                      </Link>
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

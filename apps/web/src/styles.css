@@ -1740,6 +1740,56 @@ tr.row-selected {
   margin-bottom: 0.35rem;
 }
 
+.f11-invoice-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+@media (max-width: 960px) {
+  .f11-invoice-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.f11-qbo-blocked {
+  margin-top: 1rem;
+}
+
+.f11-total {
+  margin: 1rem 0;
+  font-size: 1.05rem;
+}
+
+.f11-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.f11-history-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--aims-border);
+}
+
+.f11-history-error {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  font-size: 0.9rem;
+}
+
 @media print {
   .f10-no-print,
   .app-shell-header,
