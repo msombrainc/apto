@@ -68,10 +68,6 @@ export function LoginPage({ error, onLogin }: LoginPageProps) {
             </button>
           </form>
           {error && <p className="error" role="alert">{error}</p>}
-          <p className="login-footnote">
-            <span className="info-icon" aria-hidden>ⓘ</span>
-            Prototype · test data only
-          </p>
         </div>
       </section>
     </div>

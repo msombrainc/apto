@@ -67,6 +67,19 @@ test("dark data tables use elevated header + link tokens (apto#107)", () => {
   assert.match(css, /\.modal-form \.aims-select/);
 });
 
+test("aims-main fills shell 1fr column — no 1200px cap (apto#123)", () => {
+  // Desktop rule includes padding + width; mobile media also has .aims-main.
+  const main = css.match(
+    /\.aims-main\s*\{\s*padding:\s*1\.75rem[^}]*\}/,
+  );
+  assert.ok(main, "expected desktop .aims-main rule");
+  const block = main[0];
+  assert.match(block, /width:\s*100%/);
+  assert.match(block, /max-width:\s*none/);
+  assert.doesNotMatch(block, /max-width:\s*1200px/);
+  assert.doesNotMatch(css, /\.aims-main\s*\{[^}]*max-width:\s*1200px/);
+});
+
 test("AppShell installs document scroll lock helper (apto#112)", () => {
   const shellPath = join(
     dirname(fileURLToPath(import.meta.url)),
