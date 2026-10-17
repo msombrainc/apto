@@ -15,7 +15,7 @@ import {
   updateJob,
   type ReferenceItem,
 } from "../../api";
-import { ROUTES, accountPath, inventoryAssetPath } from "../../routing/paths";
+import { ROUTES, accountPath, inventoryAssetPath, jobSpreadsheetImportPath } from "../../routing/paths";
 import {
   formatSlaDaysRemaining,
   jobTotalAssetCount,
@@ -209,9 +209,13 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           Created {new Date(job.createdAtUtc).toLocaleDateString()} · {job.slaTotalDays}-day SLA
         </p>
         <div className="dashboard-actions">
-          <AimsButton variant="secondary" data-testid="f3-action-import" onClick={() => setStubAction("import")}>
+          <Link
+            to={jobSpreadsheetImportPath(jobId)}
+            className="aims-btn aims-btn--secondary"
+            data-testid="f3-action-import"
+          >
             Import spreadsheet
-          </AimsButton>
+          </Link>
           <AimsButton variant="secondary" data-testid="f3-action-bulk" onClick={() => setStubAction("bulk")}>
             Bulk unserialized
           </AimsButton>

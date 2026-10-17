@@ -3,6 +3,7 @@ export const ROUTES = {
   accountDetail: "/accounts/:accountId",
   jobs: "/jobs",
   jobDetail: "/jobs/:jobId",
+  jobSpreadsheetImport: "/jobs/:jobId/import/spreadsheet",
   inventory: "/inventory",
   inventoryAsset: "/inventory/assets/:assetId",
   scan: "/operations/scan",
@@ -21,4 +22,8 @@ export function accountPath(accountId: string): string {
 
 export function jobPath(jobId: string): string {
   return `/jobs/${encodeURIComponent(jobId)}`;
+}
+
+export function jobSpreadsheetImportPath(jobId: string): string {
+  return `/jobs/${encodeURIComponent(jobId)}/import/spreadsheet`;
 }
