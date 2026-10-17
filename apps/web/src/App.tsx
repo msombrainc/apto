@@ -48,6 +48,7 @@ import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 import { PartNumbersAdmin } from "./components/aims/PartNumbersAdmin";
 import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
 import { QuickScanPage } from "./components/aims/QuickScanPage";
+import { SlaDashboardPage } from "./components/aims/SlaDashboardPage";
 
 function slaRowClass(status: Job["slaStatus"]): string {
   if (status === "overdue") return "sla-overdue";
@@ -252,9 +253,12 @@ export function App() {
       void refreshAccounts(debouncedQuery, accountStatusFilter);
       return;
     }
-    if (view === "jobs") {
+    if (view === "jobs" || view === "sla-dashboard") {
       void refreshAccounts("", "Both");
       void refreshJobs();
+      void listFacilities()
+        .then(setFacilities)
+        .catch(() => setFacilities(["GA", "TX", "CA"]));
       return;
     }
     if (view === "inventory") {
@@ -376,6 +380,8 @@ export function App() {
         ? "Job detail"
       : view === "jobs"
         ? "Jobs"
+        : view === "sla-dashboard"
+          ? "SLA dashboard"
         : view === "scan"
           ? "Warehouse scan"
           : view === "reference-data"
@@ -394,6 +400,8 @@ export function App() {
         ? "Map columns, validate rows, and create serialized assets on this job."
       : view === "jobs"
         ? "Track facility jobs and SLA countdown from intake through shipping."
+        : view === "sla-dashboard"
+          ? "Company-wide SLA health, breakdowns, and jobs that need attention."
         : view === "scan"
           ? "Scan Apto IDs or serials to apply grade, status, and location presets with instant feedback."
           : view === "reference-data"
@@ -461,6 +469,17 @@ export function App() {
           onJobFormChange={setJobForm}
           onRefresh={() => void refreshJobs()}
           onCreateJob={onCreateJob}
+        />
+      )}
+
+      {view === "sla-dashboard" && (
+        <SlaDashboardPage
+          accounts={accounts}
+          jobs={jobs}
+          facilities={facilities}
+          loading={jobsLoading}
+          onRefresh={() => void refreshJobs()}
+          slaRowClass={slaRowClass}
         />
       )}
 

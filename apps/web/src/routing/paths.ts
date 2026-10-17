@@ -8,6 +8,7 @@ export const ROUTES = {
   inventory: "/inventory",
   inventoryAsset: "/inventory/assets/:assetId",
   scan: "/operations/scan",
+  slaDashboard: "/operations/sla-dashboard",
   referenceData: "/admin/reference-data",
   partNumbers: "/admin/part-numbers",
   qboSync: "/admin/qbo-sync",
