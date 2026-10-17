@@ -433,7 +433,7 @@ export function ReferenceDataAdmin() {
         <div className="filter-bar ref-admin-filters">
           <label className="filter-field">
             List type
-            <select
+            <select className="aims-select"
               data-testid="ref-admin-type-select"
               value={adminType}
               onChange={(e) => setAdminType(e.target.value as AdminTypeKey)}
@@ -446,7 +446,7 @@ export function ReferenceDataAdmin() {
           {adminType === "location" && (
             <label className="filter-field">
               Facility
-              <select
+              <select className="aims-select"
                 data-testid="ref-admin-facility-filter"
                 value={facilityId}
                 onChange={(e) => setFacilityId(e.target.value)}
@@ -565,7 +565,7 @@ export function ReferenceDataAdmin() {
           {adminType === "location" && (
             <label>
               Facility
-              <select
+              <select className="aims-select"
                 required
                 value={form.parentId}
                 onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
@@ -580,7 +580,7 @@ export function ReferenceDataAdmin() {
             <>
               <label>
                 Group
-                <select
+                <select className="aims-select"
                   required
                   value={form.group}
                   onChange={(e) => setForm((f) => ({ ...f, group: e.target.value }))}
@@ -592,7 +592,7 @@ export function ReferenceDataAdmin() {
               </label>
               <label>
                 Certificate group
-                <select
+                <select className="aims-select"
                   value={form.certificateGroup}
                   onChange={(e) => setForm((f) => ({ ...f, certificateGroup: e.target.value }))}
                 >

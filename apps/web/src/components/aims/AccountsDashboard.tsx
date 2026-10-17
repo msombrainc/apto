@@ -108,7 +108,7 @@ export function AccountsDashboard({
         >
           <label className="filter-bar__select">
             Status
-            <select
+            <select className="aims-select"
               data-testid="f2-accounts-filter-status"
               value={statusFilter}
               onChange={(e) => onStatusFilterChange(e.target.value as AccountStatusFilter)}
@@ -203,7 +203,7 @@ export function AccountsDashboard({
           </label>
           <label>
             Status
-            <select
+            <select className="aims-select"
               value={form.status ?? "Active"}
               onChange={(e) => onFormChange({ ...form, status: e.target.value })}
             >

@@ -303,7 +303,7 @@ export function SpreadsheetImportPage({ jobId }: Props) {
             {(Object.keys(FIELD_LABELS) as ImportField[]).map((field) => (
               <label key={field}>
                 {FIELD_LABELS[field]}
-                <select
+                <select className="aims-select"
                   value={mapping[field] ?? ""}
                   onChange={(e) =>
                     setMapping((m) => ({

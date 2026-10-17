@@ -306,7 +306,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
         </label>
         <label>
           Status
-          <select
+          <select className="aims-select"
             value={draft.status ?? "Active"}
             onChange={(e) => updateDraft({ status: e.target.value })}
           >

@@ -140,7 +140,7 @@ export function JobsDashboard({
           </label>
           <label htmlFor="jobs-account-filter">
             Account
-            <select
+            <select className="aims-select"
               id="jobs-account-filter"
               value={jobAccountFilter}
               onChange={(e) => onJobAccountFilterChange(e.target.value)}
@@ -240,7 +240,7 @@ export function JobsDashboard({
             </label>
             <label>
               Existing part
-              <select
+              <select className="aims-select"
                 value={assetForm.partNumberId}
                 onChange={(e) => onAssetFormChange({ ...assetForm, partNumberId: e.target.value })}
               >
@@ -335,7 +335,7 @@ export function JobsDashboard({
         <form className="grid modal-form" onSubmit={onCreateJob}>
           <label>
             Account
-            <select
+            <select className="aims-select"
               required
               value={jobForm.accountId}
               onChange={(e) => onJobFormChange({ ...jobForm, accountId: e.target.value })}
@@ -348,7 +348,7 @@ export function JobsDashboard({
           </label>
           <label>
             Facility
-            <select
+            <select className="aims-select"
               value={jobForm.facilityCode}
               onChange={(e) => onJobFormChange({ ...jobForm, facilityCode: e.target.value })}
             >

@@ -391,7 +391,7 @@ export function QuickScanPage() {
         <h2 className="panel-title">Preset</h2>
         <label className="filter-field" htmlFor="f8-scan-preset-select">
           Active preset
-          <select
+          <select className="aims-select"
             id="f8-scan-preset-select"
             data-testid="f8-scan-preset-select"
             value={selectedPreset?.id ?? ""}
@@ -431,7 +431,7 @@ export function QuickScanPage() {
             {(["grade", "status", "location"] as const).map((field) => (
               <div key={field} className="f8-field-row">
                 <span className="panel-subtitle">{field}</span>
-                <select
+                <select className="aims-select"
                   value={editorFields[`${field}Mode` as keyof PresetFields] ?? "ask"}
                   onChange={(e) =>
                     setEditorFields((f) => ({
@@ -444,7 +444,7 @@ export function QuickScanPage() {
                   <option value="ask">Ask each scan</option>
                 </select>
                 {editorFields[`${field}Mode` as keyof PresetFields] === "fixed" && field !== "location" && (
-                  <select
+                  <select className="aims-select"
                     value={(editorFields[field] as string) ?? ""}
                     onChange={(e) =>
                       setEditorFields((f) => ({ ...f, [field]: e.target.value }))
@@ -515,7 +515,7 @@ export function QuickScanPage() {
             {selectedPreset.fields.gradeMode === "ask" && (
               <label>
                 Grade
-                <select value={askGrade} onChange={(e) => setAskGrade(e.target.value)}>
+                <select className="aims-select" value={askGrade} onChange={(e) => setAskGrade(e.target.value)}>
                   <option value="">Select…</option>
                   {grades.map((g) => (
                     <option key={g.id} value={g.code}>{g.name}</option>
@@ -526,7 +526,7 @@ export function QuickScanPage() {
             {selectedPreset.fields.statusMode === "ask" && (
               <label>
                 Status
-                <select value={askStatus} onChange={(e) => setAskStatus(e.target.value)}>
+                <select className="aims-select" value={askStatus} onChange={(e) => setAskStatus(e.target.value)}>
                   <option value="">Select…</option>
                   {statuses.map((s) => (
                     <option key={s.id} value={s.code}>{s.name}</option>
@@ -537,7 +537,7 @@ export function QuickScanPage() {
             {selectedPreset.fields.locationMode === "ask" && (
               <label>
                 Location
-                <select value={askLocationId} onChange={(e) => setAskLocationId(e.target.value)}>
+                <select className="aims-select" value={askLocationId} onChange={(e) => setAskLocationId(e.target.value)}>
                   <option value="">Select…</option>
                   {askLocations.map((l) => (
                     <option key={l.id} value={l.id}>{l.name}</option>

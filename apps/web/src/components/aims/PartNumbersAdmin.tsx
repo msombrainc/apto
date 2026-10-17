@@ -354,7 +354,7 @@ export function PartNumbersAdmin() {
           </label>
           <label>
             Category
-            <select
+            <select className="aims-select"
               value={formCategoryId}
               onChange={(e) => setFormCategoryId(e.target.value)}
             >
