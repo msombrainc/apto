@@ -34,6 +34,23 @@ export const INVENTORY_COLUMN_IDS = [
   "created",
 ] as const;
 
+export const INVENTORY_COLUMN_LABELS: Record<
+  (typeof INVENTORY_COLUMN_IDS)[number],
+  string
+> = {
+  apto: "Apto ID",
+  serial: "Serial",
+  part: "Part #",
+  category: "Category",
+  grade: "Grade",
+  status: "Status",
+  location: "Location",
+  account: "Account",
+  facility: "Facility",
+  job: "Job",
+  created: "Created",
+};
+
 type InventoryDashboardProps = {
   accounts: Account[];
   facilities: string[];
@@ -265,17 +282,17 @@ export function InventoryDashboard({
       </div>
 
       <section className="dashboard-panel">
-        <div className="inventory-filters-row">
-          <FilterBar
-            searchPlaceholder="Search Apto ID, serial, or part #"
-            searchValue={inventoryQuery}
-            onSearchChange={onInventoryQueryChange}
-            countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"} total · page ${inventoryPage} of ${pageCount}`}
-            searchId="inventory-filter"
-          />
-          <label className="inventory-account-select" htmlFor="inventory-account-filter">
+        <FilterBar
+          searchPlaceholder="Search Apto ID, serial, or part #"
+          searchValue={inventoryQuery}
+          onSearchChange={onInventoryQueryChange}
+          countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"} total · page ${inventoryPage} of ${pageCount}`}
+          searchId="inventory-filter"
+        >
+          <label className="filter-bar__select" htmlFor="inventory-account-filter">
             Account
-            <select className="aims-select"
+            <select
+              className="aims-select"
               id="inventory-account-filter"
               value={inventoryAccountId}
               onChange={(e) => onInventoryAccountIdChange(e.target.value)}
@@ -286,33 +303,55 @@ export function InventoryDashboard({
               ))}
             </select>
           </label>
+        </FilterBar>
+
+        <div className="inventory-filters-row">
           <FacilityPills
             facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
             value={inventoryFacility}
             onChange={onInventoryFacilityChange}
           />
-        </div>
-
-        <div className="inventory-filters-row">
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Grade
-            <input value={inventoryGrade} onChange={(e) => onInventoryGradeChange(e.target.value)} />
+            <input
+              className="aims-input"
+              value={inventoryGrade}
+              onChange={(e) => onInventoryGradeChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Status
-            <input value={inventoryStatus} onChange={(e) => onInventoryStatusChange(e.target.value)} />
+            <input
+              className="aims-input"
+              value={inventoryStatus}
+              onChange={(e) => onInventoryStatusChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Category
-            <input value={inventoryCategory} onChange={(e) => onInventoryCategoryChange(e.target.value)} />
+            <input
+              className="aims-input"
+              value={inventoryCategory}
+              onChange={(e) => onInventoryCategoryChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Created from
-            <input type="date" value={createdFrom} onChange={(e) => onCreatedFromChange(e.target.value)} />
+            <input
+              className="aims-input"
+              type="date"
+              value={createdFrom}
+              onChange={(e) => onCreatedFromChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Created to
-            <input type="date" value={createdTo} onChange={(e) => onCreatedToChange(e.target.value)} />
+            <input
+              className="aims-input"
+              type="date"
+              value={createdTo}
+              onChange={(e) => onCreatedToChange(e.target.value)}
+            />
           </label>
         </div>
 
@@ -343,27 +382,29 @@ export function InventoryDashboard({
           )}
         </div>
 
-        <fieldset className="inventory-column-chooser">
-          <legend>Columns</legend>
-          {INVENTORY_COLUMN_IDS.map((id) => (
-            <label key={id}>
-              <input
-                type="checkbox"
-                checked={visibleColumns.includes(id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    onVisibleColumnsChange([...visibleColumns, id]);
-                  } else {
-                    const next = visibleColumns.filter((c) => c !== id);
-                    if (next.length === 0) return;
-                    onVisibleColumnsChange(next);
-                  }
-                }}
-              />
-              {id}
-            </label>
-          ))}
-        </fieldset>
+        <div className="inventory-column-chooser" role="group" aria-label="Visible columns">
+          <span className="inventory-column-chooser__title">Columns</span>
+          <div className="inventory-column-chooser__chips">
+            {INVENTORY_COLUMN_IDS.map((id) => (
+              <label key={id} className="inventory-column-chip">
+                <input
+                  type="checkbox"
+                  checked={visibleColumns.includes(id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      onVisibleColumnsChange([...visibleColumns, id]);
+                    } else {
+                      const next = visibleColumns.filter((c) => c !== id);
+                      if (next.length === 0) return;
+                      onVisibleColumnsChange(next);
+                    }
+                  }}
+                />
+                <span>{INVENTORY_COLUMN_LABELS[id]}</span>
+              </label>
+            ))}
+          </div>
+        </div>
 
         <DataTable
           ariaLabel="Cross-job inventory"
