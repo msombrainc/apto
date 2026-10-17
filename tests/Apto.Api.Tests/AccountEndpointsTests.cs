@@ -588,4 +588,64 @@ public class AccountEndpointsTests
         Assert.NotNull(fetched.QboLastSyncAtUtc);
         Assert.Equal(newerSent, fetched.QboLastSyncAtUtc.Value, TimeSpan.FromSeconds(1));
     }
+
+    [Fact]
+    public async Task Post_zero_sla_days_persists_default_sla_on_get()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("SLA Default Co", "SLA-DEF", 0, 0, 0));
+        Assert.Equal(HttpStatusCode.Created, post.StatusCode);
+
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+        Assert.Equal(30, created.SlaReceivingDays);
+        Assert.Equal(30, created.SlaProcessingDays);
+        Assert.Equal(60, created.SlaShippingDays);
+
+        var fetched = await client.GetFromJsonAsync<AccountResponse>($"/api/accounts/{created.Id}");
+        Assert.NotNull(fetched);
+        Assert.Equal(30, fetched.SlaReceivingDays);
+        Assert.Equal(30, fetched.SlaProcessingDays);
+        Assert.Equal(60, fetched.SlaShippingDays);
+    }
+
+    [Fact]
+    public async Task Post_invalid_status_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "STAT-POST", 1, 1, 1, Status: "bogus"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("status must be Active or Inactive", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Put_invalid_status_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var created = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "STAT-PUT", 1, 1, 1));
+        var body = await created.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(body);
+
+        var response = await client.PutAsJsonAsync(
+            $"/api/accounts/{body.Id}",
+            new AccountWriteRequest("Valid", "STAT-PUT", 1, 1, 1, Status: "bogus"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var error = await response.Content.ReadAsStringAsync();
+        Assert.Contains("status must be Active or Inactive", error, StringComparison.OrdinalIgnoreCase);
+    }
 }
