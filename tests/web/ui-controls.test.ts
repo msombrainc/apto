@@ -29,3 +29,26 @@ test("light theme muted text token meets charter contrast bump (apto#99)", () =>
   assert.ok(lightBlock, "expected light theme block");
   assert.match(lightBlock[1], /--aims-text-muted:\s*#5c6578/);
 });
+
+test("dark theme muted + table links + chips + buttons (apto#107 charter §3–§5)", () => {
+  const darkRoot = css.match(
+    /:root,\s*\n\[data-theme="dark"\]\s*\{([\s\S]*?)\n\}/,
+  );
+  assert.ok(darkRoot, "expected dark theme root block");
+  assert.match(darkRoot[1], /--aims-text-muted:\s*#b8c4d6/);
+
+  assert.match(css, /\.data-table a\s*\{[^}]*color:\s*var\(--aims-link\)/);
+  assert.doesNotMatch(
+    css,
+    /\.data-table a\s*\{[^}]*var\(--aims-accent\)/,
+  );
+
+  assert.match(css, /\.status-pill\s*\{[^}]*border:\s*1px solid var\(--aims-border\)/);
+  assert.match(
+    css,
+    /\.status-pill\s*\{[^}]*background:\s*var\(--aims-surface-elevated\)/,
+  );
+
+  assert.match(css, /\.aims-btn\s*\{[^}]*width:\s*auto/);
+  assert.match(css, /\.aims-btn\s*\{[^}]*flex:\s*0 0 auto/);
+});

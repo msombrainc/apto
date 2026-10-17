@@ -23,6 +23,10 @@ test("app shell uses full-viewport grid with hidden overflow (apto#107)", () => 
     css,
     /\.dashboard-panel:has\(\.data-table-wrap\)\s+\.data-table-wrap\s*\{[^}]*overflow:\s*auto/,
   );
+  assert.doesNotMatch(
+    css,
+    /\.data-table-wrap\s*\{[^}]*max-height:\s*min\(70vh/,
+  );
 });
 
 test("mobile breakpoint resets fixed shell heights (apto#107)", () => {
