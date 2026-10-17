@@ -17,6 +17,7 @@ import {
   type SavedInventorySearch,
 } from "../../inventorySavedSearches";
 import { jobPath } from "../../routing/paths";
+import { newId } from "../../id";
 import { StatCard } from "./StatCard";
 
 export const INVENTORY_COLUMN_IDS = [
@@ -197,7 +198,7 @@ export function InventoryDashboard({
     const name = window.prompt("Name this search");
     if (!name?.trim()) return;
     const entry: SavedInventorySearch = {
-      id: crypto.randomUUID(),
+      id: newId(),
       name: name.trim(),
       params: {
         q: inventoryQuery,
