@@ -24,7 +24,7 @@ public class JobEndpointsTests
         var start = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
         var post = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(createdAccount.Id, "TX", "intake", start, null));
+            new JobWriteRequest(createdAccount.Id, "TX", "WIP", start, null));
         Assert.Equal(HttpStatusCode.Created, post.StatusCode);
 
         var job = await post.Content.ReadFromJsonAsync<JobResponse>();
@@ -49,7 +49,7 @@ public class JobEndpointsTests
         var due = DateTime.UtcNow.Date.AddDays(-1);
         await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(createdAccount.Id, "GA", "late", DateTime.UtcNow.AddDays(-5), due));
+            new JobWriteRequest(createdAccount.Id, "GA", "WIP", DateTime.UtcNow.AddDays(-5), due));
 
         var listed = await client.GetFromJsonAsync<List<JobResponse>>(
             $"/api/jobs?accountId={createdAccount.Id}");
@@ -78,7 +78,7 @@ public class JobEndpointsTests
             new JobWriteRequest(
                 createdAccount.Id,
                 "GA",
-                "open",
+                "WIP",
                 DateTime.UtcNow.AddDays(-2),
                 null));
         var createdJob = await jobPost.Content.ReadFromJsonAsync<JobResponse>();
@@ -106,7 +106,7 @@ public class JobEndpointsTests
 
         var jobPost = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(createdAccount.Id, "GA", "open", DateTime.UtcNow, null));
+            new JobWriteRequest(createdAccount.Id, "GA", "WIP", DateTime.UtcNow, null));
         var createdJob = await jobPost.Content.ReadFromJsonAsync<JobResponse>();
         Assert.NotNull(createdJob);
 
@@ -182,20 +182,20 @@ public class JobEndpointsTests
         var start = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);
         var post = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(createdAccount.Id, "GA", "draft", start, null));
+            new JobWriteRequest(createdAccount.Id, "GA", "WIP", start, null));
         var created = await post.Content.ReadFromJsonAsync<JobResponse>();
         Assert.NotNull(created);
 
         var newStart = start.AddDays(2);
         var put = await client.PutAsJsonAsync(
             $"/api/jobs/{created.Id}",
-            new JobWriteRequest(createdAccount.Id, "TX", "active", newStart, null));
+            new JobWriteRequest(createdAccount.Id, "TX", "Received", newStart, null));
         Assert.Equal(HttpStatusCode.OK, put.StatusCode);
 
         var updated = await put.Content.ReadFromJsonAsync<JobResponse>();
         Assert.NotNull(updated);
         Assert.Equal("TX", updated.FacilityCode);
-        Assert.Equal("active", updated.OpsStatus);
+        Assert.Equal("Received", updated.OpsStatus);
         Assert.Equal(newStart.Date.AddDays(3), updated.DueDateUtc?.Date);
     }
 
@@ -214,8 +214,26 @@ public class JobEndpointsTests
         var start = new DateTime(2026, 10, 10, 0, 0, 0, DateTimeKind.Utc);
         var post = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(createdAccount.Id, "GA", "x", start, start.AddDays(-2)));
+            new JobWriteRequest(createdAccount.Id, "GA", "WIP", start, start.AddDays(-2)));
 
+        Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_rejects_invalid_ops_status()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Ops", "OPS-1", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var post = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", "not-valid", DateTime.UtcNow, null));
         Assert.Equal(HttpStatusCode.BadRequest, post.StatusCode);
     }
 

@@ -116,7 +116,7 @@ public class ReferenceEndpointsTests
             new JobWriteRequest(
                 createdAccount.Id,
                 "GA",
-                "open",
+                "WIP",
                 DateTime.UtcNow,
                 null));
 
@@ -149,7 +149,7 @@ public class ReferenceEndpointsTests
             new JobWriteRequest(
                 createdAccount.Id,
                 "GA",
-                "open",
+                "WIP",
                 DateTime.UtcNow,
                 null));
 
@@ -181,7 +181,7 @@ public class ReferenceEndpointsTests
             new JobWriteRequest(
                 createdAccount.Id,
                 "GA",
-                "open",
+                "WIP",
                 DateTime.UtcNow,
                 null));
 
@@ -196,7 +196,7 @@ public class ReferenceEndpointsTests
             new JobWriteRequest(
                 createdAccount.Id,
                 "GA",
-                "open",
+                "WIP",
                 DateTime.UtcNow,
                 null));
         Assert.Equal(HttpStatusCode.BadRequest, reject.StatusCode);

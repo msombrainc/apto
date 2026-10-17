@@ -5,6 +5,7 @@ public static class JobValidation
     public static bool TryValidate(
         JobWriteRequest request,
         IReadOnlyCollection<string> allowedFacilityCodes,
+        IReadOnlyCollection<string> allowedOpsStatusTokens,
         out string? error)
     {
         if (request.AccountId == Guid.Empty)
@@ -33,6 +34,16 @@ public static class JobValidation
         {
             error = "dueDateUtc cannot be before startDateUtc.";
             return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.OpsStatus))
+        {
+            var token = request.OpsStatus.Trim();
+            if (!allowedOpsStatusTokens.Contains(token, StringComparer.OrdinalIgnoreCase))
+            {
+                error = "ops status is not an active reference value.";
+                return false;
+            }
         }
 
         error = null;

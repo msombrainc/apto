@@ -27,7 +27,7 @@ public class AssetEndpointsTests
 
         var job = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(createdAccount.Id, "GA", "intake", DateTime.UtcNow, null));
+            new JobWriteRequest(createdAccount.Id, "GA", "WIP", DateTime.UtcNow, null));
         var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
         Assert.NotNull(createdJob);
 

@@ -246,6 +246,26 @@ export async function listFacilities(): Promise<string[]> {
   return res.json();
 }
 
+export async function getJob(id: string): Promise<Job> {
+  const res = await fetch(`${base}/api/jobs/${encodeURIComponent(id)}`);
+  if (res.status === 404) throw new Error("job not found");
+  if (!res.ok) throw new Error(`get job failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updateJob(id: string, body: JobWrite): Promise<Job> {
+  const res = await fetch(`${base}/api/jobs/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `update job failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 export async function createJob(body: JobWrite): Promise<Job> {
   const res = await fetch(`${base}/api/jobs`, {
     method: "POST",
@@ -279,6 +299,7 @@ export type Asset = {
   jobId: string;
   partNumberId: string | null;
   partNumber: string | null;
+  category: string | null;
   serialNumber: string | null;
   grade: string | null;
   status: string | null;

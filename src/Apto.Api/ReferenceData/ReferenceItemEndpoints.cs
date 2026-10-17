@@ -33,6 +33,17 @@ public static class ReferenceItemEndpoints
             .ToListAsync(ct);
     }
 
+    public static async Task<IReadOnlyList<ReferenceItem>> GetActiveJobStatusesAsync(
+        AptoDbContext db,
+        CancellationToken ct)
+    {
+        return await db.ReferenceItems.AsNoTracking()
+            .Where(r => r.Type == ReferenceTypes.JobStatus && r.IsActive)
+            .OrderBy(r => r.SortOrder)
+            .ThenBy(r => r.Name)
+            .ToListAsync(ct);
+    }
+
     private static async Task<IResult> ListReferenceItems(
         string type,
         string? q,
