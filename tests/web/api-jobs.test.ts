@@ -69,6 +69,12 @@ test("createJob returns parsed job on success", async () => {
     daysRemaining: 5,
     slaStatus: "on-track",
     createdAtUtc: "2026-10-01T00:00:00Z",
+    accountCode: "ACME",
+    daysSinceStart: 3,
+    wipAssetCount: 1,
+    exceptionAssetCount: 0,
+    finishedAssetCount: 2,
+    progressPercent: 67,
   };
   globalThis.fetch = async () =>
     ({

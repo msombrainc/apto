@@ -10,6 +10,7 @@ import { isCreatedTodayUtc } from "../../apps/web/src/inventoryDates.ts";
 import { buildInventoryListParams } from "../../apps/web/src/inventoryListParams.ts";
 import { filterJobs, countJobsBySla } from "../../apps/web/src/jobFilters.ts";
 import type { Job } from "../../apps/web/src/api.ts";
+import { emptyJobFilters, jobFixture } from "./job-test-fixtures.ts";
 
 test("accountInitials edge cases", () => {
   assert.equal(accountInitials(""), "?");
@@ -26,77 +27,37 @@ test("slaTotalDays and formatSlaSummary", () => {
 
 test("filterJobs applies account, facility, and search haystack", () => {
   const jobs: Job[] = [
-    {
-      id: "j1",
-      accountId: "a1",
-      accountName: "Acme",
-      facilityCode: "GA",
-      opsStatus: "open",
-      slaStatus: "on-track",
-      startDateUtc: "2026-01-01",
-      dueDateUtc: null,
-      slaTotalDays: 10,
-      daysRemaining: 5,
-      createdAtUtc: "2026-01-01T00:00:00Z",
-    },
-    {
+    jobFixture({ id: "j1", accountId: "a1", accountName: "Acme", facilityCode: "GA" }),
+    jobFixture({
       id: "j2",
       accountId: "a2",
       accountName: "Beta",
       facilityCode: "TX",
       opsStatus: "closed",
       slaStatus: "overdue",
-      startDateUtc: "2026-01-01",
-      dueDateUtc: null,
-      slaTotalDays: 10,
       daysRemaining: -1,
-      createdAtUtc: "2026-01-01T00:00:00Z",
-    },
+    }),
   ];
   assert.equal(
-    filterJobs(jobs, { search: "", accountId: "a1", facilityCode: "" }).length,
+    filterJobs(jobs, { ...emptyJobFilters, accountId: "a1" }).length,
     1,
   );
   assert.equal(
-    filterJobs(jobs, { search: "tx", accountId: "", facilityCode: "TX" }).length,
+    filterJobs(jobs, { ...emptyJobFilters, search: "tx", facilityCode: "TX" }).length,
     1,
   );
   assert.equal(
-    filterJobs(jobs, { search: "j1", accountId: "", facilityCode: "" }).length,
+    filterJobs(jobs, { ...emptyJobFilters, search: "j1" }).length,
     1,
   );
 });
 
 test("countJobsBySla uses same job set as KPI cards", () => {
   const jobs: Job[] = [
-    {
-      id: "1",
-      accountId: "a",
-      accountName: "A",
-      facilityCode: "GA",
-      opsStatus: "",
-      slaStatus: "on-track",
-      startDateUtc: "",
-      dueDateUtc: null,
-      slaTotalDays: 7,
-      daysRemaining: 1,
-      createdAtUtc: "2026-01-01T00:00:00Z",
-    },
-    {
-      id: "2",
-      accountId: "a",
-      accountName: "A",
-      facilityCode: "GA",
-      opsStatus: "",
-      slaStatus: "overdue",
-      startDateUtc: "",
-      dueDateUtc: null,
-      slaTotalDays: 7,
-      daysRemaining: -1,
-      createdAtUtc: "2026-01-01T00:00:00Z",
-    },
+    jobFixture({ id: "1", accountId: "a", slaStatus: "on-track", daysRemaining: 1 }),
+    jobFixture({ id: "2", accountId: "a", slaStatus: "overdue", daysRemaining: -1 }),
   ];
-  const filtered = filterJobs(jobs, { search: "", accountId: "a", facilityCode: "GA" });
+  const filtered = filterJobs(jobs, { ...emptyJobFilters, accountId: "a", facilityCode: "GA" });
   const counts = countJobsBySla(filtered);
   assert.equal(counts.onTrack, 1);
   assert.equal(counts.overdue, 1);
@@ -104,32 +65,8 @@ test("countJobsBySla uses same job set as KPI cards", () => {
 
 test("countJobsBySla counts at-risk and ignores unknown slaStatus", () => {
   const jobs: Job[] = [
-    {
-      id: "a",
-      accountId: "1",
-      accountName: "A",
-      facilityCode: "GA",
-      opsStatus: "",
-      slaStatus: "at-risk",
-      startDateUtc: "",
-      dueDateUtc: null,
-      slaTotalDays: 5,
-      daysRemaining: 1,
-      createdAtUtc: "2026-01-01T00:00:00Z",
-    },
-    {
-      id: "b",
-      accountId: "1",
-      accountName: "A",
-      facilityCode: "GA",
-      opsStatus: "",
-      slaStatus: "on-track",
-      startDateUtc: "",
-      dueDateUtc: null,
-      slaTotalDays: 5,
-      daysRemaining: 3,
-      createdAtUtc: "2026-01-01T00:00:00Z",
-    },
+    jobFixture({ id: "a", slaStatus: "at-risk", daysRemaining: 1 }),
+    jobFixture({ id: "b", slaStatus: "on-track", daysRemaining: 3 }),
   ];
   const counts = countJobsBySla(jobs);
   assert.equal(counts.atRisk, 1);

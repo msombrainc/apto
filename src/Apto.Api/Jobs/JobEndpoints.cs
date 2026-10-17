@@ -50,7 +50,9 @@ public static class JobEndpoints
             .OrderBy(j => j.DueDateUtc)
             .ToListAsync(ct);
 
-        return Results.Ok(items.Select(j => ToResponse(j, j.Account)).ToList());
+        var counts = await JobAssetCountAggregator.CountsByJobIdAsync(db, ct);
+
+        return Results.Ok(items.Select(j => ToResponse(j, j.Account, counts)).ToList());
     }
 
     private static async Task<IResult> GetJob(Guid id, AptoDbContext db, CancellationToken ct)
@@ -60,7 +62,8 @@ public static class JobEndpoints
         if (job is null)
             return Results.NotFound();
 
-        return Results.Ok(ToResponse(job, job.Account));
+        var counts = await JobAssetCountAggregator.CountsByJobIdAsync(db, ct);
+        return Results.Ok(ToResponse(job, job.Account, counts));
     }
 
     private static async Task<IResult> CreateJob(
@@ -94,7 +97,8 @@ public static class JobEndpoints
         db.Jobs.Add(job);
         await db.SaveChangesAsync(ct);
 
-        return Results.Created($"/api/jobs/{job.Id}", ToResponse(job, account));
+        var createdCounts = await JobAssetCountAggregator.CountsByJobIdAsync(db, ct);
+        return Results.Created($"/api/jobs/{job.Id}", ToResponse(job, account, createdCounts));
     }
 
     private static async Task<IResult> UpdateJob(
@@ -132,7 +136,8 @@ public static class JobEndpoints
 
         await db.SaveChangesAsync(ct);
 
-        return Results.Ok(ToResponse(job, slaAccount));
+        var updateCounts = await JobAssetCountAggregator.CountsByJobIdAsync(db, ct);
+        return Results.Ok(ToResponse(job, slaAccount, updateCounts));
     }
 
     private static string? NormalizeFacility(string? facilityCode)
@@ -142,7 +147,10 @@ public static class JobEndpoints
         return facilityCode.Trim().ToUpperInvariant();
     }
 
-    private static JobResponse ToResponse(Job job, Account account)
+    private static JobResponse ToResponse(
+        Job job,
+        Account account,
+        IReadOnlyDictionary<Guid, JobAssetCounts> countsByJob)
     {
         var due = job.DueDateUtc ?? SlaStatusCalculator.DefaultDueDateUtc(
             job.StartDateUtc ?? DateTime.UtcNow,
@@ -150,11 +158,15 @@ public static class JobEndpoints
         var total = SlaStatusCalculator.TotalSlaDays(account);
         var remaining = SlaStatusCalculator.DaysRemaining(due);
         var status = SlaStatusCalculator.SlaStatus(remaining);
+        var start = job.StartDateUtc?.Date ?? DateTime.UtcNow.Date;
+        var daysSinceStart = (int)Math.Max(0, (DateTime.UtcNow.Date - start).TotalDays);
+        countsByJob.TryGetValue(job.Id, out var assetCounts);
 
         return new JobResponse(
             job.Id,
             job.AccountId,
             account.Name,
+            account.Code,
             job.FacilityCode,
             job.OpsStatus,
             job.StartDateUtc,
@@ -162,6 +174,11 @@ public static class JobEndpoints
             total,
             remaining,
             status,
-            job.CreatedAtUtc);
+            job.CreatedAtUtc,
+            daysSinceStart,
+            assetCounts.Wip,
+            assetCounts.Exception,
+            assetCounts.Finished,
+            assetCounts.ProgressPercent);
     }
 }

@@ -207,6 +207,7 @@ export type Job = {
   id: string;
   accountId: string;
   accountName: string;
+  accountCode: string;
   facilityCode: string | null;
   opsStatus: string | null;
   startDateUtc: string | null;
@@ -215,6 +216,11 @@ export type Job = {
   daysRemaining: number;
   slaStatus: "on-track" | "at-risk" | "overdue";
   createdAtUtc: string;
+  daysSinceStart: number;
+  wipAssetCount: number;
+  exceptionAssetCount: number;
+  finishedAssetCount: number;
+  progressPercent: number;
 };
 
 export type JobWrite = {
