@@ -53,6 +53,10 @@ import { PartNumbersAdmin } from "./components/aims/PartNumbersAdmin";
 import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
 import { QuickScanPage } from "./components/aims/QuickScanPage";
 import { SlaDashboardPage } from "./components/aims/SlaDashboardPage";
+import { UserManagementPage } from "./components/aims/f15/UserManagementPage";
+import { OrderFulfillmentPage } from "./components/aims/f15/OrderFulfillmentPage";
+import { ProductionDashboardPage } from "./components/aims/f15/ProductionDashboardPage";
+import { AssetImagesPage } from "./components/aims/f15/AssetImagesPage";
 
 function slaRowClass(status: Job["slaStatus"]): string {
   if (status === "overdue") return "sla-overdue";
@@ -396,7 +400,15 @@ export function App() {
               ? "Part numbers"
               : view === "qbo-sync"
                 ? "QuickBooks sync"
-                : "Inventory browse";
+                : view === "user-management"
+                  ? "User management"
+                  : view === "order-fulfillment"
+                    ? "Order fulfillment — Pull & Pack"
+                    : view === "production-dashboard"
+                      ? "Production dashboard"
+                      : view === "asset-images"
+                        ? "Asset images"
+                        : "Inventory browse";
   const pageSubtitle =
     view === "accounts" && routeAccountId
       ? "View and edit customer profile, fees, billing, and QuickBooks sync."
@@ -416,7 +428,15 @@ export function App() {
               ? "Search, add, and maintain part numbers and categories used on assets."
               : view === "qbo-sync"
                 ? "Connection status, outbound queue, and retries for QuickBooks Online (sandbox)."
-                : "Search assets across jobs with account and facility filters.";
+                : view === "user-management"
+                  ? "Search users, toggle feature permissions, and review access changes (sample data)."
+                  : view === "order-fulfillment"
+                    ? "Pull and pack invoice lines, enter shipment details, and mark staged or shipped."
+                    : view === "production-dashboard"
+                      ? "Facility output by operator and category with run-rate summary (sample data)."
+                      : view === "asset-images"
+                        ? "Capture up to three photos per sample asset from this device."
+                        : "Search assets across jobs with account and facility filters.";
 
   return (
     <AppShell
@@ -502,6 +522,14 @@ export function App() {
       {view === "part-numbers" && <PartNumbersAdmin />}
 
       {view === "qbo-sync" && <QboSyncAdmin />}
+
+      {view === "user-management" && <UserManagementPage />}
+
+      {view === "order-fulfillment" && <OrderFulfillmentPage />}
+
+      {view === "production-dashboard" && <ProductionDashboardPage />}
+
+      {view === "asset-images" && <AssetImagesPage />}
 
       {view === "inventory" && (
         <InventoryDashboard
