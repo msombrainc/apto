@@ -40,9 +40,9 @@ export function JobInvoicePage({ jobId }: Props) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (opts?: { retainError?: string }) => {
     setLoading(true);
-    setError(null);
+    if (!opts?.retainError) setError(null);
     try {
       const [j, preview, invoices] = await Promise.all([
         getJob(jobId),
@@ -61,6 +61,7 @@ export function JobInvoicePage({ jobId }: Props) {
       setJob(null);
     } finally {
       setLoading(false);
+      if (opts?.retainError) setError(opts.retainError);
     }
   }, [jobId]);
 
@@ -88,7 +89,8 @@ export function JobInvoicePage({ jobId }: Props) {
       });
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Send failed");
+      const msg = e instanceof Error ? e.message : "Send failed";
+      await refresh({ retainError: msg });
     } finally {
       setSending(false);
     }
@@ -98,10 +100,10 @@ export function JobInvoicePage({ jobId }: Props) {
     return <p className="muted">Loading invoice preview…</p>;
   }
 
-  if (error || !job) {
+  if (!job) {
     return (
       <div data-testid="f11-invoice-page">
-        <AlertBanner variant="error">{error ?? "Job not found"}</AlertBanner>
+        <AlertBanner message={error ?? "Job not found"} />
         <Link to={jobPath(jobId)}>Back to job</Link>
       </div>
     );
@@ -127,6 +129,12 @@ export function JobInvoicePage({ jobId }: Props) {
             Account is not synced to QuickBooks.{" "}
             <Link to={accountPath(job.accountId)}>Sync account to QuickBooks</Link> before sending.
           </p>
+        </div>
+      )}
+
+      {error && (
+        <div data-testid="f11-send-error">
+          <AlertBanner message={error} />
         </div>
       )}
 
