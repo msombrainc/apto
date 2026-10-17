@@ -623,6 +623,39 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Inventory_list_unpaged_query_returns_json_array_not_paged_object()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var acct = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Legacy Co", "LEG", 1, 1, 1));
+        var account = await acct.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(account);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(account.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(null, "LEGACY-SN", "PN-LEG"));
+
+        var response = await client.GetAsync("/api/assets?q=legacy-sn");
+        Assert.True(response.IsSuccessStatusCode);
+        var raw = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("\"items\"", raw, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"pageSize\"", raw, StringComparison.Ordinal);
+        var rows = await response.Content.ReadFromJsonAsync<List<AssetInventoryRow>>();
+        Assert.NotNull(rows);
+        Assert.Single(rows);
+        Assert.Equal("LEGACY-SN", rows[0].SerialNumber);
+    }
+
+    [Fact]
     public async Task Inventory_list_paged_returns_total_and_page()
     {
         await using var factory = new AptoWebApplicationFactory();
