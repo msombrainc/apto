@@ -32,7 +32,7 @@ SLA row semantics (unchanged): on-track green tint, at-risk amber, overdue red �
 Split viewport (~55% hero / ~45% form):
 
 - **Hero:** grid texture, Apto Solutions mark, headline “Custom ITAD. Total coverage. Transparent results.”, supporting copy, three pillars (Accounts / Jobs / Inventory).
-- **Panel:** “Sign in to AIMS”, username + password, cream/dark CTA “Sign in →”, footnote “Prototype · test data only”.
+- **Panel:** “Sign in to AIMS”, username + password, cream/dark CTA “Sign in →”.
 - **STG product login:** `demo` / `demo` (not the preview password).
 - **Design preview login:** `apto-inventory` / `apto2026` (prototype only — do not wire into product auth).
 
@@ -41,7 +41,7 @@ Baseline: `docs/ux/screenshots/apto-42-login-{light,dark}.png`
 ## Authenticated shell
 
 - **Sidebar** (`aria-label="Main menu"`): logo, “AIMS”, primary nav buttons (Accounts, Jobs & SLA, Inventory, Warehouse scan per apto#48), theme toggle (Dark | Light), sign out.
-- **Main:** page title, optional subtitle, cards for forms/tables; max-width ~1200px content column.
+- **Main:** page title, optional subtitle, cards for forms/tables; fills remaining viewport width after the fixed sidebar (padding only — no 1200px content cap).
 - **Accounts / Jobs / Inventory:** preserve existing form field names, routes, and API wiring; restyle only (no `data-testid` on main today — add only if a factory STG scenario needs them).
 
 Baselines: `docs/ux/screenshots/apto-42-*-{light,dark}.png`

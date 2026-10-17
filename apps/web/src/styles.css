@@ -242,28 +242,10 @@ body:has(.aims-app) {
   margin-top: 1.5rem;
 }
 
-.login-footnote {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background: var(--aims-surface);
-  border: 1px solid var(--aims-border);
-  font-size: 0.85rem;
-  color: var(--aims-text);
-  opacity: 0.88;
-}
-
 .login-lede,
 .login-panel .muted {
   color: var(--aims-text-muted);
   opacity: 1;
-}
-
-.info-icon {
-  opacity: 0.7;
 }
 
 /* —— App shell —— */
@@ -352,6 +334,9 @@ body:has(.aims-app) {
 }
 
 .sidebar-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   text-align: left;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
@@ -360,16 +345,20 @@ body:has(.aims-app) {
   color: inherit;
   cursor: pointer;
   font-weight: 500;
+  /* NavLink renders <a> — kill browser default underline (preview has none). */
+  text-decoration: none;
+}
+
+.sidebar-nav-btn:hover,
+.sidebar-nav-btn:focus,
+.sidebar-nav-btn:focus-visible,
+.sidebar-nav-btn:active,
+.sidebar-nav-btn.is-active {
+  text-decoration: none;
 }
 
 .sidebar-nav-btn:hover {
   background: rgba(255, 255, 255, 0.06);
-}
-
-.sidebar-nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .sidebar-nav-dot {
@@ -470,7 +459,9 @@ body:has(.aims-app) {
 
 .aims-main {
   padding: 1.75rem 2rem 1.25rem;
-  max-width: 1200px;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -1239,7 +1230,8 @@ tr.row-selected {
 }
 
 .data-table a:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  filter: brightness(1.08);
 }
 
 .data-table td {
@@ -1936,7 +1928,8 @@ tr.row-selected {
 }
 
 .text-button:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  filter: brightness(1.08);
 }
 
 .qbo-account-panel {
