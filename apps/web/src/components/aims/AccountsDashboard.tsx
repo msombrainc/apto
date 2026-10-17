@@ -45,6 +45,17 @@ function statusPillClass(status: string): string {
     : "status-pill status-pill--active";
 }
 
+function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
+  switch (statusFilter) {
+    case "Inactive":
+      return "Inactive customer records";
+    case "Both":
+      return "All customer records";
+    default:
+      return "Active customer records";
+  }
+}
+
 export function AccountsDashboard({
   accounts,
   query,
@@ -76,7 +87,7 @@ export function AccountsDashboard({
         <StatCard
           label="Accounts"
           value={accounts.length}
-          sublabel="Active customer records"
+          sublabel={accountsKpiSublabel(statusFilter)}
           icon={<IconUsers />}
         />
         <StatCard

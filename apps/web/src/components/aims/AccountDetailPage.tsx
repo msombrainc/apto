@@ -231,6 +231,14 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
   }
 
   if (!loaded || !draft) {
+    if (error) {
+      return (
+        <div className="dashboard-stack">
+          <Link to={ROUTES.accounts} className="text-button">← Accounts</Link>
+          <AlertBanner message={error} />
+        </div>
+      );
+    }
     return <EmptyState title="Account not found" message="This account may have been removed." />;
   }
 

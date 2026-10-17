@@ -182,24 +182,29 @@ public static class AccountEndpoints
         AppendScalarChange(db, account.Id, "Name", account.Name, newName);
         AppendScalarChange(db, account.Id, "Code", account.Code, normalizedCode);
         AppendScalarChange(db, account.Id, "Status", account.Status, newStatus);
+        var (slaR, slaP, slaS) = AccountValidation.NormalizeSlaDays(
+            request.SlaReceivingDays,
+            request.SlaProcessingDays,
+            request.SlaShippingDays);
+
         AppendScalarChange(
             db,
             account.Id,
             "SlaReceivingDays",
             account.SlaReceivingDays.ToString(),
-            request.SlaReceivingDays.ToString());
+            slaR.ToString());
         AppendScalarChange(
             db,
             account.Id,
             "SlaProcessingDays",
             account.SlaProcessingDays.ToString(),
-            request.SlaProcessingDays.ToString());
+            slaP.ToString());
         AppendScalarChange(
             db,
             account.Id,
             "SlaShippingDays",
             account.SlaShippingDays.ToString(),
-            request.SlaShippingDays.ToString());
+            slaS.ToString());
 
         foreach (var (field, oldVal, newVal) in AccountSettingsJson.DiffLeaves(beforeSettings, afterSettings))
         {
@@ -218,9 +223,9 @@ public static class AccountEndpoints
         account.Name = newName;
         account.Code = normalizedCode;
         account.Status = newStatus;
-        account.SlaReceivingDays = request.SlaReceivingDays;
-        account.SlaProcessingDays = request.SlaProcessingDays;
-        account.SlaShippingDays = request.SlaShippingDays;
+        account.SlaReceivingDays = slaR;
+        account.SlaProcessingDays = slaP;
+        account.SlaShippingDays = slaS;
         account.Settings = AccountSettingsJson.Serialize(afterSettings);
 
         await db.SaveChangesAsync(ct);

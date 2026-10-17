@@ -331,6 +331,27 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task List_default_status_excludes_inactive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var active = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Active Co", "DEF-ACT", 0, 0, 0, Status: "Active"));
+        var inactive = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Inactive Co", "DEF-INA", 0, 0, 0, Status: "Inactive"));
+        Assert.Equal(HttpStatusCode.Created, active.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, inactive.StatusCode);
+
+        var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts");
+        Assert.NotNull(listed);
+        Assert.Contains(listed, a => a.Code == "DEF-ACT");
+        Assert.DoesNotContain(listed, a => a.Code == "DEF-INA");
+    }
+
+    [Fact]
     public async Task List_status_filter_inactive()
     {
         await using var factory = new AptoWebApplicationFactory();
