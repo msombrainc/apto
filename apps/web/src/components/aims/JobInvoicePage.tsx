@@ -121,8 +121,6 @@ export function JobInvoicePage({ jobId }: Props) {
         </Link>
       </header>
 
-      {error && <p className="error">{error}</p>}
-
       {!qboCustomerId && (
         <div className="dashboard-panel f11-qbo-blocked" data-testid="f11-qbo-blocked">
           <p>

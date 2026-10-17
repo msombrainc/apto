@@ -53,6 +53,17 @@ public class JobInvoiceEndpointsTests
     }
 
     [Fact]
+    public async Task List_invoices_returns_404_for_missing_job()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var missingJobId = Guid.NewGuid();
+
+        var res = await client.GetAsync($"/api/jobs/{missingJobId}/invoices");
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
     public async Task Invoice_preview_returns_lines_from_account_fees()
     {
         await using var factory = new AptoWebApplicationFactory();
