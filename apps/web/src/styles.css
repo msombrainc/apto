@@ -482,7 +482,7 @@ body:has(.aims-app) {
 .page-content {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
   padding-top: 1rem;
   padding-bottom: 1.5rem;
 }

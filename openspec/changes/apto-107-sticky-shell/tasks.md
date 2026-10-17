@@ -3,3 +3,4 @@
 - [x] Dark contrast + table link tokens
 - [x] Gate + MR
 - [x] `tests/web/shell-layout.test.ts` shell scroll contract
+- [x] `tests/web/jobs-list-shell.test.ts` Jobs panel wrap contract
