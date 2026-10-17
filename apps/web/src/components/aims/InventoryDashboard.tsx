@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { Account, Asset, AssetInventoryRow } from "../../api";
 import { AssetChangeLogTable } from "../../AssetChangeLogTable";
@@ -18,21 +18,12 @@ import {
 } from "../../inventorySavedSearches";
 import { jobPath } from "../../routing/paths";
 import { newId } from "../../id";
+import {
+  INVENTORY_COLUMN_IDS,
+  INVENTORY_COLUMN_LABELS,
+  type InventoryListColumnId,
+} from "../../inventoryListColumns";
 import { StatCard } from "./StatCard";
-
-export const INVENTORY_COLUMN_IDS = [
-  "apto",
-  "serial",
-  "part",
-  "category",
-  "grade",
-  "status",
-  "location",
-  "account",
-  "facility",
-  "job",
-  "created",
-] as const;
 
 type InventoryDashboardProps = {
   accounts: Account[];
@@ -116,79 +107,74 @@ export function InventoryDashboard({
   const pageCount = Math.max(1, Math.ceil(inventoryTotal / inventoryPageSize));
 
   const allColumns = useMemo(
-    () => [
-      {
-        id: "apto",
-        header: "Apto ID",
-        cell: (r: AssetInventoryRow) => <span className="mono">{r.aptoId}</span>,
-      },
-      {
-        id: "serial",
-        header: "Serial",
-        cell: (r: AssetInventoryRow) => r.serialNumber ?? "—",
-      },
-      {
-        id: "part",
-        header: "Part #",
-        cell: (r: AssetInventoryRow) => (
-          <span className="part-cell">
-            <IconPart />
-            <span>{r.partNumber ?? "—"}</span>
-          </span>
-        ),
-      },
-      {
-        id: "category",
-        header: "Category",
-        cell: (r: AssetInventoryRow) => r.categoryName ?? "—",
-      },
-      {
-        id: "grade",
-        header: "Grade",
-        cell: (r: AssetInventoryRow) => r.grade ?? "—",
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: (r: AssetInventoryRow) => r.status ?? "—",
-      },
-      {
-        id: "location",
-        header: "Location",
-        cell: (r: AssetInventoryRow) => r.locationName ?? "—",
-      },
-      {
-        id: "account",
-        header: "Account",
-        cell: (r: AssetInventoryRow) => (
-          <span className="account-cell">
-            <AccountAvatar name={r.accountName} size="sm" />
-            <span>{r.accountName}</span>
-          </span>
-        ),
-      },
-      {
-        id: "facility",
-        header: "Facility",
-        cell: (r: AssetInventoryRow) => (
-          <span className="facility-cell muted">@ {r.facilityCode ?? "—"}</span>
-        ),
-      },
-      {
-        id: "job",
-        header: "Job",
-        cell: (r: AssetInventoryRow) => (
-          <Link to={jobPath(r.jobId)} className="text-link" onClick={(e) => e.stopPropagation()}>
-            {r.jobId.slice(0, 8)}…
-          </Link>
-        ),
-      },
-      {
-        id: "created",
-        header: "Created",
-        cell: (r: AssetInventoryRow) => new Date(r.createdAtUtc).toLocaleString(),
-      },
-    ],
+    () =>
+      (
+        [
+          {
+            id: "apto" as const,
+            cell: (r: AssetInventoryRow) => <span className="mono">{r.aptoId}</span>,
+          },
+          {
+            id: "serial" as const,
+            cell: (r: AssetInventoryRow) => r.serialNumber ?? "—",
+          },
+          {
+            id: "part" as const,
+            cell: (r: AssetInventoryRow) => (
+              <span className="part-cell">
+                <IconPart />
+                <span>{r.partNumber ?? "—"}</span>
+              </span>
+            ),
+          },
+          {
+            id: "category" as const,
+            cell: (r: AssetInventoryRow) => r.categoryName ?? "—",
+          },
+          {
+            id: "grade" as const,
+            cell: (r: AssetInventoryRow) => r.grade ?? "—",
+          },
+          {
+            id: "status" as const,
+            cell: (r: AssetInventoryRow) => r.status ?? "—",
+          },
+          {
+            id: "location" as const,
+            cell: (r: AssetInventoryRow) => r.locationName ?? "—",
+          },
+          {
+            id: "account" as const,
+            cell: (r: AssetInventoryRow) => (
+              <span className="account-cell">
+                <AccountAvatar name={r.accountName} size="sm" />
+                <span>{r.accountName}</span>
+              </span>
+            ),
+          },
+          {
+            id: "facility" as const,
+            cell: (r: AssetInventoryRow) => (
+              <span className="facility-cell muted">@ {r.facilityCode ?? "—"}</span>
+            ),
+          },
+          {
+            id: "job" as const,
+            cell: (r: AssetInventoryRow) => (
+              <Link to={jobPath(r.jobId)} className="text-link" onClick={(e) => e.stopPropagation()}>
+                {r.jobId.slice(0, 8)}…
+              </Link>
+            ),
+          },
+          {
+            id: "created" as const,
+            cell: (r: AssetInventoryRow) => new Date(r.createdAtUtc).toLocaleString(),
+          },
+        ] satisfies { id: InventoryListColumnId; cell: (r: AssetInventoryRow) => ReactNode }[]
+      ).map((col) => ({
+        ...col,
+        header: INVENTORY_COLUMN_LABELS[col.id],
+      })),
     [],
   );
 
@@ -265,17 +251,17 @@ export function InventoryDashboard({
       </div>
 
       <section className="dashboard-panel">
-        <div className="inventory-filters-row">
-          <FilterBar
-            searchPlaceholder="Search Apto ID, serial, or part #"
-            searchValue={inventoryQuery}
-            onSearchChange={onInventoryQueryChange}
-            countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"} total · page ${inventoryPage} of ${pageCount}`}
-            searchId="inventory-filter"
-          />
-          <label className="inventory-account-select" htmlFor="inventory-account-filter">
+        <FilterBar
+          searchPlaceholder="Search Apto ID, serial, or part #"
+          searchValue={inventoryQuery}
+          onSearchChange={onInventoryQueryChange}
+          countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"} total · page ${inventoryPage} of ${pageCount}`}
+          searchId="inventory-filter"
+        >
+          <label className="filter-bar__select" htmlFor="inventory-account-filter">
             Account
-            <select className="aims-select"
+            <select
+              className="aims-select"
               id="inventory-account-filter"
               value={inventoryAccountId}
               onChange={(e) => onInventoryAccountIdChange(e.target.value)}
@@ -286,33 +272,55 @@ export function InventoryDashboard({
               ))}
             </select>
           </label>
+        </FilterBar>
+
+        <div className="inventory-filters-row">
           <FacilityPills
             facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
             value={inventoryFacility}
             onChange={onInventoryFacilityChange}
           />
-        </div>
-
-        <div className="inventory-filters-row">
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Grade
-            <input value={inventoryGrade} onChange={(e) => onInventoryGradeChange(e.target.value)} />
+            <input
+              className="aims-input"
+              value={inventoryGrade}
+              onChange={(e) => onInventoryGradeChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Status
-            <input value={inventoryStatus} onChange={(e) => onInventoryStatusChange(e.target.value)} />
+            <input
+              className="aims-input"
+              value={inventoryStatus}
+              onChange={(e) => onInventoryStatusChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Category
-            <input value={inventoryCategory} onChange={(e) => onInventoryCategoryChange(e.target.value)} />
+            <input
+              className="aims-input"
+              value={inventoryCategory}
+              onChange={(e) => onInventoryCategoryChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Created from
-            <input type="date" value={createdFrom} onChange={(e) => onCreatedFromChange(e.target.value)} />
+            <input
+              className="aims-input"
+              type="date"
+              value={createdFrom}
+              onChange={(e) => onCreatedFromChange(e.target.value)}
+            />
           </label>
-          <label className="inventory-account-select">
+          <label className="filter-field">
             Created to
-            <input type="date" value={createdTo} onChange={(e) => onCreatedToChange(e.target.value)} />
+            <input
+              className="aims-input"
+              type="date"
+              value={createdTo}
+              onChange={(e) => onCreatedToChange(e.target.value)}
+            />
           </label>
         </div>
 
@@ -343,27 +351,29 @@ export function InventoryDashboard({
           )}
         </div>
 
-        <fieldset className="inventory-column-chooser">
-          <legend>Columns</legend>
-          {INVENTORY_COLUMN_IDS.map((id) => (
-            <label key={id}>
-              <input
-                type="checkbox"
-                checked={visibleColumns.includes(id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    onVisibleColumnsChange([...visibleColumns, id]);
-                  } else {
-                    const next = visibleColumns.filter((c) => c !== id);
-                    if (next.length === 0) return;
-                    onVisibleColumnsChange(next);
-                  }
-                }}
-              />
-              {id}
-            </label>
-          ))}
-        </fieldset>
+        <div className="inventory-column-chooser" role="group" aria-label="Visible columns">
+          <span className="inventory-column-chooser__title">Columns</span>
+          <div className="inventory-column-chooser__chips">
+            {INVENTORY_COLUMN_IDS.map((id) => (
+              <label key={id} className="inventory-column-chip">
+                <input
+                  type="checkbox"
+                  checked={visibleColumns.includes(id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      onVisibleColumnsChange([...visibleColumns, id]);
+                    } else {
+                      const next = visibleColumns.filter((c) => c !== id);
+                      if (next.length === 0) return;
+                      onVisibleColumnsChange(next);
+                    }
+                  }}
+                />
+                <span>{INVENTORY_COLUMN_LABELS[id]}</span>
+              </label>
+            ))}
+          </div>
+        </div>
 
         <DataTable
           ariaLabel="Cross-job inventory"

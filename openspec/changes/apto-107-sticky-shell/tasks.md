@@ -7,3 +7,4 @@
 - [x] Page-content scroll lock (toolbar/KPI fixed; table-only scroll in `.data-table-wrap`)
 - [x] Dark table links + status-pill elevated chips (second operator pass)
 - [x] Jobs short-table scroll chain: filter-bar cap + overscroll contain (apto#112)
+- [x] Inventory browse: filter row wrap + column chooser labels/chips (apto#116 overlap)
