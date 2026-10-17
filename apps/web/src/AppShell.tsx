@@ -8,10 +8,6 @@ import { ModuleMapNav } from "./components/aims/ModuleMapNav";
 import { ROUTES } from "./routing/paths";
 import type { AppView } from "./routing/moduleMap";
 import { installDocumentScrollLock } from "./shellScrollLock";
-import {
-  handleDocumentScroll,
-  resetDocumentScrollTops,
-} from "./shellDocumentScrollClamp";
 
 type AppShellProps = {
   view: AppView;
@@ -61,14 +57,7 @@ export function AppShell({
   const { pathname } = useLocation();
 
   // Belt-and-suspenders for apto#112: keep document scroll at 0 while shell is mounted.
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    resetDocumentScrollTops(html, body);
-    const onScroll = () => handleDocumentScroll(html, body);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  useEffect(() => installDocumentScrollLock(), []);
 
   return (
     <div className="aims-app">
