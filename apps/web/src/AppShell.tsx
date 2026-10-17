@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
 import { useTheme, type Theme } from "./theme";
@@ -54,6 +54,20 @@ export function AppShell({
 }: AppShellProps) {
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
+
+  // Belt-and-suspenders for apto#112: keep document scroll at 0 while shell is mounted.
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    html.scrollTop = 0;
+    body.scrollTop = 0;
+    const onScroll = () => {
+      if (html.scrollTop !== 0) html.scrollTop = 0;
+      if (body.scrollTop !== 0) body.scrollTop = 0;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <div className="aims-app">

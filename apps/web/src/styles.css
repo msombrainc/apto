@@ -69,14 +69,19 @@ body {
   background: var(--aims-bg);
 }
 
+/* Pin document when authenticated shell mounts — prevents scrollHeight > clientHeight
+   leaks (Jobs STG: 509 vs 500 → scrollTop 9) that break apto#107 / #112 OpenSpec. */
 html:has(.aims-app),
 body:has(.aims-app) {
   height: 100%;
+  max-height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 #root:has(.aims-app) {
   height: 100%;
+  max-height: 100%;
   overflow: hidden;
 }
 
@@ -264,13 +269,19 @@ body:has(.aims-app) {
 .aims-app {
   display: grid;
   grid-template-columns: 260px 1fr;
-  height: 100vh;
-  max-height: 100vh;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
   overflow: hidden;
 }
 
 @media (max-width: 768px) {
   .aims-app {
+    position: relative;
+    inset: auto;
+    width: auto;
     grid-template-columns: 1fr;
     height: auto;
     max-height: none;
@@ -306,12 +317,13 @@ body:has(.aims-app) {
   padding: 1.25rem 1rem;
   gap: 1rem;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
-  height: 100vh;
-  max-height: 100vh;
+  height: 100%;
+  max-height: 100%;
   overflow-y: auto;
-  position: sticky;
-  top: 0;
-  align-self: start;
+  overscroll-behavior: contain;
+  position: relative;
+  align-self: stretch;
+  min-height: 0;
 }
 
 .sidebar-brand {
@@ -461,8 +473,8 @@ body:has(.aims-app) {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  height: 100vh;
-  max-height: 100vh;
+  height: 100%;
+  max-height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
 }
@@ -487,6 +499,11 @@ body:has(.aims-app) {
   overscroll-behavior: none;
   padding-top: 1rem;
   padding-bottom: 1.5rem;
+}
+
+.page-content:has(> .dashboard-stack) {
+  display: flex;
+  flex-direction: column;
 }
 
 .page-content:not(:has(> .dashboard-stack)) {
