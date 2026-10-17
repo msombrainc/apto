@@ -40,7 +40,10 @@ public static class AccountEndpoints
                 return Results.BadRequest(new { error = "status must be Active, Inactive, or Both." });
             }
 
-            query = query.Where(a => a.Status == statusFilter);
+            var normalizedStatus = string.Equals(statusFilter, AccountStatuses.Active, StringComparison.OrdinalIgnoreCase)
+                ? AccountStatuses.Active
+                : AccountStatuses.Inactive;
+            query = query.Where(a => a.Status == normalizedStatus);
         }
 
         if (!string.IsNullOrWhiteSpace(q))
@@ -172,7 +175,9 @@ public static class AccountEndpoints
             return Results.Conflict(new { error = "account code already exists." });
 
         var beforeSettings = AccountSettingsJson.Parse(account.Settings);
-        var afterSettings = AccountValidation.MergeSettings(request.Settings);
+        var afterSettings = request.Settings is null
+            ? beforeSettings
+            : AccountValidation.MergeSettings(request.Settings);
         var beforeName = account.Name;
         var beforeBillingSame = AccountSettingsJson.BillingAddressEquals(beforeSettings, afterSettings);
 

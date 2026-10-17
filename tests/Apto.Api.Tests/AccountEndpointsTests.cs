@@ -374,6 +374,53 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Put_without_settings_preserves_existing_settings()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Keep Pct", "KEEP-PCT", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var settings = new AccountSettingsDto { AptoPercentage = 42.5m };
+        await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Keep Pct", "KEEP-PCT", 1, 1, 1, Settings: settings));
+
+        var scalarOnly = await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Renamed Only", "KEEP-PCT", 2, 3, 4));
+        Assert.Equal(HttpStatusCode.OK, scalarOnly.StatusCode);
+
+        var fetched = await scalarOnly.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(fetched);
+        Assert.Equal("Renamed Only", fetched.Name);
+        Assert.Equal(42.5m, fetched.Settings.AptoPercentage);
+    }
+
+    [Fact]
+    public async Task List_status_filter_is_case_insensitive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Active Co", "CASE-ACT", 0, 0, 0, Status: "Active"));
+        await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Inactive Co", "CASE-INA", 0, 0, 0, Status: "Inactive"));
+
+        var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?status=inactive");
+        Assert.NotNull(listed);
+        Assert.Contains(listed, a => a.Code == "CASE-INA");
+        Assert.DoesNotContain(listed, a => a.Code == "CASE-ACT");
+    }
+
+    [Fact]
     public async Task Put_invalid_apto_percentage_returns_bad_request()
     {
         await using var factory = new AptoWebApplicationFactory();
