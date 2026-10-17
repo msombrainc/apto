@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Account,
@@ -10,7 +10,7 @@ import {
   getAsset,
   listAccounts,
   listFacilities,
-  listInventoryAssets,
+  listInventoryAssetsPaged,
   listJobs,
   AssetInventoryRow,
 } from "./api";
@@ -28,13 +28,18 @@ import {
 import { ROUTES, inventoryAssetPath } from "./routing/paths";
 import { LoginPage } from "./LoginPage";
 import { isDemoLogin } from "./demoAuth";
-import { buildInventoryListParams } from "./inventoryListParams";
+import {
+  buildInventoryListParams,
+  inventoryListParamsFromSaved,
+  type InventoryListParams,
+} from "./inventoryListParams";
+import type { SavedInventorySearch } from "./inventorySavedSearches";
 import type { JobFilterState } from "./jobFilters";
 import { useDebounced } from "./useDebounced";
 import { AccountDetailPage } from "./components/aims/AccountDetailPage";
 import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
-import { InventoryDashboard } from "./components/aims/InventoryDashboard";
+import { INVENTORY_COLUMN_IDS, InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobDetailPage } from "./components/aims/JobDetailPage";
 import { BulkUnserializedPage } from "./components/aims/BulkUnserializedPage";
 import { SpreadsheetImportPage } from "./components/aims/SpreadsheetImportPage";
@@ -104,6 +109,19 @@ export function App() {
   const debouncedInventoryQuery = useDebounced(inventoryQuery, 300);
   const [inventoryAccountId, setInventoryAccountId] = useState("");
   const [inventoryFacility, setInventoryFacility] = useState("");
+  const [inventoryGrade, setInventoryGrade] = useState("");
+  const [inventoryStatus, setInventoryStatus] = useState("");
+  const [inventoryCategory, setInventoryCategory] = useState("");
+  const [inventoryCreatedFrom, setInventoryCreatedFrom] = useState("");
+  const [inventoryCreatedTo, setInventoryCreatedTo] = useState("");
+  const [inventoryPasteCodes, setInventoryPasteCodes] = useState("");
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const [inventoryPageSize, setInventoryPageSize] = useState(50);
+  const [inventoryTotal, setInventoryTotal] = useState(0);
+  const [inventoryNotFoundCodes, setInventoryNotFoundCodes] = useState<string[]>([]);
+  const [inventoryVisibleColumns, setInventoryVisibleColumns] = useState<string[]>([
+    ...INVENTORY_COLUMN_IDS,
+  ]);
   const [inventoryRows, setInventoryRows] = useState<AssetInventoryRow[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -132,27 +150,81 @@ export function App() {
     }
   }, []);
 
-  const refreshInventory = useCallback(async () => {
+  const inventoryFetchSeq = useRef(0);
+
+  const runInventoryFetch = useCallback(async (params: InventoryListParams) => {
+    const seq = ++inventoryFetchSeq.current;
     setError(null);
     setInventoryLoading(true);
     try {
-      const rows = await listInventoryAssets(
-        buildInventoryListParams(
-          debouncedInventoryQuery,
-          inventoryAccountId,
-          inventoryFacility,
-        ),
-      );
-      setInventoryRows(rows);
+      const result = await listInventoryAssetsPaged(params);
+      if (seq !== inventoryFetchSeq.current) return;
+      setInventoryRows(result.items);
+      setInventoryTotal(result.total);
+      setInventoryNotFoundCodes(result.notFoundCodes ?? []);
       setSelectedAsset((current) =>
-        current && !rows.some((r) => r.id === current.id) ? null : current,
+        current && !result.items.some((r) => r.id === current.id) ? null : current,
       );
     } catch (e) {
+      if (seq !== inventoryFetchSeq.current) return;
       setError(e instanceof Error ? e.message : "Failed to load inventory");
     } finally {
-      setInventoryLoading(false);
+      if (seq === inventoryFetchSeq.current) setInventoryLoading(false);
     }
-  }, [debouncedInventoryQuery, inventoryAccountId, inventoryFacility]);
+  }, []);
+
+  const refreshInventory = useCallback(async () => {
+    const params = buildInventoryListParams(
+      debouncedInventoryQuery,
+      inventoryAccountId,
+      inventoryFacility,
+      inventoryGrade,
+      inventoryStatus,
+      "",
+      inventoryCategory,
+      inventoryCreatedFrom,
+      inventoryCreatedTo,
+      inventoryPasteCodes,
+      inventoryPage,
+      inventoryPageSize,
+      "created",
+      "desc",
+    );
+    await runInventoryFetch(params);
+  }, [
+    runInventoryFetch,
+    debouncedInventoryQuery,
+    inventoryAccountId,
+    inventoryFacility,
+    inventoryGrade,
+    inventoryStatus,
+    inventoryCategory,
+    inventoryCreatedFrom,
+    inventoryCreatedTo,
+    inventoryPasteCodes,
+    inventoryPage,
+    inventoryPageSize,
+  ]);
+
+  const applyInventorySavedSearch = useCallback(
+    async (saved: SavedInventorySearch) => {
+      const p = saved.params;
+      setInventoryQuery(p.q ?? "");
+      setInventoryAccountId(p.accountId ?? "");
+      setInventoryFacility(p.facilityCode ?? "");
+      setInventoryGrade(p.grade ?? "");
+      setInventoryStatus(p.status ?? "");
+      setInventoryCategory(p.category ?? "");
+      setInventoryCreatedFrom(p.createdFrom ?? "");
+      setInventoryCreatedTo(p.createdTo ?? "");
+      setInventoryPasteCodes(p.codes ?? "");
+      setInventoryPageSize(p.pageSize ?? 50);
+      setInventoryVisibleColumns(saved.visibleColumns);
+      setInventoryPage(1);
+      await runInventoryFetch(inventoryListParamsFromSaved(p, 1));
+    },
+    [runInventoryFetch],
+  );
 
   const loadAssetDetail = useCallback(async (assetId: string) => {
     setError(null);
@@ -192,6 +264,20 @@ export function App() {
         .catch(() => setFacilities(["GA", "TX", "CA"]));
     }
   }, [loggedIn, view, routeAccountId, debouncedQuery, accountStatusFilter, refreshAccounts, refreshJobs]);
+
+  useEffect(() => {
+    setInventoryPage(1);
+  }, [
+    debouncedInventoryQuery,
+    inventoryAccountId,
+    inventoryFacility,
+    inventoryGrade,
+    inventoryStatus,
+    inventoryCategory,
+    inventoryCreatedFrom,
+    inventoryCreatedTo,
+    inventoryPasteCodes,
+  ]);
 
   useEffect(() => {
     if (!loggedIn || view !== "inventory") return;
@@ -396,9 +482,30 @@ export function App() {
           onInventoryAccountIdChange={setInventoryAccountId}
           inventoryFacility={inventoryFacility}
           onInventoryFacilityChange={setInventoryFacility}
+          inventoryGrade={inventoryGrade}
+          onInventoryGradeChange={setInventoryGrade}
+          inventoryStatus={inventoryStatus}
+          onInventoryStatusChange={setInventoryStatus}
+          inventoryCategory={inventoryCategory}
+          onInventoryCategoryChange={setInventoryCategory}
+          createdFrom={inventoryCreatedFrom}
+          onCreatedFromChange={setInventoryCreatedFrom}
+          createdTo={inventoryCreatedTo}
+          onCreatedToChange={setInventoryCreatedTo}
+          pasteCodes={inventoryPasteCodes}
+          onPasteCodesChange={setInventoryPasteCodes}
+          inventoryPage={inventoryPage}
+          onInventoryPageChange={setInventoryPage}
+          inventoryPageSize={inventoryPageSize}
+          onInventoryPageSizeChange={setInventoryPageSize}
+          inventoryTotal={inventoryTotal}
+          notFoundCodes={inventoryNotFoundCodes}
+          visibleColumns={inventoryVisibleColumns}
+          onVisibleColumnsChange={setInventoryVisibleColumns}
           inventoryRows={inventoryRows}
           loading={inventoryLoading}
           onRefresh={() => void refreshInventory()}
+          onApplySavedSearch={(s) => void applyInventorySavedSearch(s)}
           selectedAsset={selectedAsset}
           onSelectAsset={(id) => {
             navigate(inventoryAssetPath(id));

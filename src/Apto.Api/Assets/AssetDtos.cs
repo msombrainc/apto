@@ -48,6 +48,7 @@ public record AssetInventoryRow(
     Guid JobId,
     string? SerialNumber,
     string? PartNumber,
+    string? CategoryName,
     string? Grade,
     string? Status,
     Guid? LocationId,
@@ -55,3 +56,10 @@ public record AssetInventoryRow(
     string AccountName,
     string? FacilityCode,
     DateTime CreatedAtUtc);
+
+public record AssetInventoryListResponse(
+    IReadOnlyList<AssetInventoryRow> Items,
+    int Page,
+    int PageSize,
+    int Total,
+    IReadOnlyList<string>? NotFoundCodes);

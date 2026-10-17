@@ -72,11 +72,23 @@ public static class AssetEndpoints
         Guid? accountId,
         string? facilityCode,
         Guid? jobId,
+        string? grade,
+        string? status,
+        Guid? locationId,
+        string? category,
+        DateTime? createdFrom,
+        DateTime? createdTo,
+        string? codes,
+        int? page,
+        int? pageSize,
+        string? sortBy,
+        string? sortDir,
         AptoDbContext db,
         CancellationToken ct)
     {
         var query = db.Assets.AsNoTracking()
             .Include(a => a.PartNumber)
+            .ThenInclude(p => p!.Category)
             .Include(a => a.Job)
             .ThenInclude(j => j.Account)
             .Include(a => a.Location)
@@ -95,7 +107,38 @@ public static class AssetEndpoints
                 && a.Job.FacilityCode.ToUpper() == fc);
         }
 
-        if (!string.IsNullOrWhiteSpace(q))
+        if (!string.IsNullOrWhiteSpace(grade))
+            query = query.Where(a => a.Grade != null && a.Grade == grade.Trim());
+
+        if (!string.IsNullOrWhiteSpace(status))
+            query = query.Where(a => a.Status != null && a.Status == status.Trim());
+
+        if (locationId is { } locId)
+            query = query.Where(a => a.LocationId == locId);
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var cat = category.Trim().ToLowerInvariant();
+            query = query.Where(a => a.PartNumber != null
+                && a.PartNumber.Category != null
+                && a.PartNumber.Category.Name.ToLower() == cat);
+        }
+
+        if (createdFrom is { } from)
+            query = query.Where(a => a.CreatedAtUtc >= from);
+
+        if (createdTo is { } to)
+            query = query.Where(a => a.CreatedAtUtc <= to);
+
+        var codeList = string.IsNullOrWhiteSpace(codes) ? null : ParseCodeList(codes);
+        if (codeList is { Count: > 0 })
+        {
+            var upper = codeList.Select(c => c.ToUpperInvariant()).ToList();
+            query = query.Where(a =>
+                upper.Contains(a.AptoId.ToUpper())
+                || (a.SerialNumber != null && upper.Contains(a.SerialNumber.ToUpper())));
+        }
+        else if (!string.IsNullOrWhiteSpace(q))
         {
             var term = q.Trim().ToLowerInvariant();
             query = query.Where(a =>
@@ -104,26 +147,103 @@ public static class AssetEndpoints
                 || a.AptoId.ToLower().Contains(term));
         }
 
-        var rows = await query
-            .OrderByDescending(a => a.CreatedAtUtc)
-            .Take(200)
-            .Select(a => new AssetInventoryRow(
-                a.Id,
-                a.AptoId,
-                a.JobId,
-                a.SerialNumber,
-                a.PartNumber != null ? a.PartNumber.Number : null,
-                a.Grade,
-                a.Status,
-                a.LocationId,
-                a.Location != null ? a.Location.Name : null,
-                a.Job.Account.Name,
-                a.Job.FacilityCode,
-                a.CreatedAtUtc))
-            .ToListAsync(ct);
+        var desc = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase);
+        var sortKey = (sortBy ?? "created").Trim().ToLowerInvariant();
+        IOrderedQueryable<Data.Entities.Asset> ordered = sortKey switch
+        {
+            "aptoid" => desc ? query.OrderByDescending(a => a.AptoId) : query.OrderBy(a => a.AptoId),
+            "serial" => desc ? query.OrderByDescending(a => a.SerialNumber) : query.OrderBy(a => a.SerialNumber),
+            "partnumber" => desc
+                ? query.OrderByDescending(a => a.PartNumber != null ? a.PartNumber.Number : "")
+                : query.OrderBy(a => a.PartNumber != null ? a.PartNumber.Number : ""),
+            "grade" => desc ? query.OrderByDescending(a => a.Grade) : query.OrderBy(a => a.Grade),
+            "status" => desc ? query.OrderByDescending(a => a.Status) : query.OrderBy(a => a.Status),
+            "location" => desc
+                ? query.OrderByDescending(a => a.Location != null ? a.Location.Name : "")
+                : query.OrderBy(a => a.Location != null ? a.Location.Name : ""),
+            "account" => desc
+                ? query.OrderByDescending(a => a.Job.Account.Name)
+                : query.OrderBy(a => a.Job.Account.Name),
+            "facility" => desc
+                ? query.OrderByDescending(a => a.Job.FacilityCode)
+                : query.OrderBy(a => a.Job.FacilityCode),
+            _ => desc
+                ? query.OrderByDescending(a => a.CreatedAtUtc)
+                : query.OrderBy(a => a.CreatedAtUtc),
+        };
 
-        return Results.Ok(rows);
+        var usePaging = page is not null || pageSize is not null || sortBy is not null || sortDir is not null
+            || codeList is { Count: > 0 } || !string.IsNullOrWhiteSpace(grade)
+            || !string.IsNullOrWhiteSpace(status) || locationId is not null
+            || !string.IsNullOrWhiteSpace(category) || createdFrom is not null || createdTo is not null;
+
+        if (!usePaging)
+        {
+            var legacy = await query
+                .OrderByDescending(a => a.CreatedAtUtc)
+                .Take(200)
+                .Select(a => new AssetInventoryRow(
+                    a.Id,
+                    a.AptoId,
+                    a.JobId,
+                    a.SerialNumber,
+                    a.PartNumber != null ? a.PartNumber.Number : null,
+                    a.PartNumber != null && a.PartNumber.Category != null ? a.PartNumber.Category.Name : null,
+                    a.Grade,
+                    a.Status,
+                    a.LocationId,
+                    a.Location != null ? a.Location.Name : null,
+                    a.Job.Account.Name,
+                    a.Job.FacilityCode,
+                    a.CreatedAtUtc))
+                .ToListAsync(ct);
+            return Results.Ok(legacy);
+        }
+
+        var pg = Math.Max(1, page ?? 1);
+        var size = Math.Clamp(pageSize ?? 50, 1, 200);
+        var total = await ordered.CountAsync(ct);
+        var pageRows = await ordered.Skip((pg - 1) * size).Take(size).ToListAsync(ct);
+        var items = pageRows.Select(ToInventoryRow).ToList();
+
+        IReadOnlyList<string>? notFoundCodes = null;
+        if (codeList is { Count: > 0 })
+        {
+            var matched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var row in await ordered.Select(a => new { a.AptoId, a.SerialNumber }).ToListAsync(ct))
+            {
+                matched.Add(row.AptoId);
+                if (row.SerialNumber is not null)
+                    matched.Add(row.SerialNumber);
+            }
+
+            notFoundCodes = codeList.Where(c => !matched.Contains(c)).ToList();
+        }
+
+        return Results.Ok(new AssetInventoryListResponse(items, pg, size, total, notFoundCodes));
     }
+
+    private static AssetInventoryRow ToInventoryRow(Data.Entities.Asset a) =>
+        new(
+            a.Id,
+            a.AptoId,
+            a.JobId,
+            a.SerialNumber,
+            a.PartNumber != null ? a.PartNumber.Number : null,
+            a.PartNumber?.Category?.Name,
+            a.Grade,
+            a.Status,
+            a.LocationId,
+            a.Location != null ? a.Location.Name : null,
+            a.Job.Account.Name,
+            a.Job.FacilityCode,
+            a.CreatedAtUtc);
+
+    private static List<string> ParseCodeList(string raw) =>
+        raw.Split(new[] { '\n', '\r', ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(s => s.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     private static async Task<IResult> ListForJob(Guid jobId, AptoDbContext db, CancellationToken ct)
     {
