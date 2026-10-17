@@ -282,7 +282,11 @@ export function BulkUnserializedPage({ jobId }: Props) {
         <p>This job is {job?.opsStatus}. Create {quantity ?? 0} assets anyway?</p>
         <AimsButton
           variant="primary"
-          onClick={() => quantity !== null && void runBulkCreate(quantity)}
+          onClick={() => {
+            if (quantity === null) return;
+            setConfirmAdd(false);
+            void runBulkCreate(quantity);
+          }}
         >
           Confirm
         </AimsButton>
