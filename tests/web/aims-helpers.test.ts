@@ -7,7 +7,10 @@ import {
 } from "../../apps/web/src/components/aims/SlaSegmentBar.tsx";
 import { debounceSchedule } from "../../apps/web/src/debounceSchedule.ts";
 import { isCreatedTodayUtc } from "../../apps/web/src/inventoryDates.ts";
-import { buildInventoryListParams } from "../../apps/web/src/inventoryListParams.ts";
+import {
+  buildInventoryListParams,
+  inventoryListParamsFromSaved,
+} from "../../apps/web/src/inventoryListParams.ts";
 import { filterJobs, countJobsBySla } from "../../apps/web/src/jobFilters.ts";
 import type { Job } from "../../apps/web/src/api.ts";
 import { emptyJobFilters, jobFixture } from "./job-test-fixtures.ts";
@@ -78,6 +81,32 @@ test("isCreatedTodayUtc respects UTC day boundary", () => {
   const now = new Date("2026-10-15T23:00:00Z");
   assert.equal(isCreatedTodayUtc("2026-10-15T01:00:00Z", now), true);
   assert.equal(isCreatedTodayUtc("2026-10-14T23:59:59Z", now), false);
+});
+
+test("inventoryListParamsFromSaved applies stored q on page 1 immediately", () => {
+  const saved = buildInventoryListParams(
+    "debounced-would-differ",
+    "acc-1",
+    "GA",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    3,
+    50,
+    "created",
+    "desc",
+  );
+  const { page: _page, ...withoutPage } = saved;
+  assert.deepEqual(inventoryListParamsFromSaved(withoutPage, 1), {
+    ...withoutPage,
+    page: 1,
+    q: "debounced-would-differ",
+  });
+  assert.deepEqual(inventoryListParamsFromSaved({ ...withoutPage, q: "" }, 1).q, "");
 });
 
 test("buildInventoryListParams omits empty account and facility", () => {
