@@ -407,7 +407,7 @@ public class AccountEndpointsTests
     }
 
     [Fact]
-    public async Task Put_with_partial_settings_object_replaces_unspecified_leaves_with_defaults()
+    public async Task Put_with_partial_settings_object_clears_unspecified_fee_leaves()
     {
         await using var factory = new AptoWebApplicationFactory();
         var client = factory.CreateClient();
@@ -436,7 +436,8 @@ public class AccountEndpointsTests
         var fetched = await put.Content.ReadFromJsonAsync<AccountResponse>();
         Assert.NotNull(fetched);
         Assert.Equal(10m, fetched.Settings.AptoPercentage);
-        Assert.Equal(0m, fetched.Settings.Fees.Audit);
+        // Sparse settings JSON is stored atomically — fee fields omitted in the body are not preserved (ASSUMPTION-511).
+        Assert.Null(fetched.Settings.Fees.Audit);
     }
 
     [Fact]
