@@ -22,6 +22,7 @@ import {
   parseJobId,
   parseJobBulkUnserialized,
   parseJobCertificate,
+  parseJobInvoice,
   parseJobSpreadsheetImport,
   viewFromPathname,
   type AppView,
@@ -44,6 +45,7 @@ import { INVENTORY_COLUMN_IDS, InventoryDashboard } from "./components/aims/Inve
 import { JobDetailPage } from "./components/aims/JobDetailPage";
 import { BulkUnserializedPage } from "./components/aims/BulkUnserializedPage";
 import { JobCertificatePage } from "./components/aims/JobCertificatePage";
+import { JobInvoicePage } from "./components/aims/JobInvoicePage";
 import { SpreadsheetImportPage } from "./components/aims/SpreadsheetImportPage";
 import { JobsListV2 } from "./components/aims/JobsListV2";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
@@ -69,6 +71,7 @@ export function App() {
   const spreadsheetImportJobId = parseJobSpreadsheetImport(location.pathname);
   const bulkUnserializedJobId = parseJobBulkUnserialized(location.pathname);
   const certificateJobId = parseJobCertificate(location.pathname);
+  const invoiceJobId = parseJobInvoice(location.pathname);
   const [query, setQuery] = useState("");
   const [accountStatusFilter, setAccountStatusFilter] = useState<AccountStatusFilter>("Active");
   const debouncedQuery = useDebounced(query, 300);
@@ -456,7 +459,10 @@ export function App() {
       {view === "jobs" && certificateJobId && (
         <JobCertificatePage jobId={certificateJobId} />
       )}
-      {view === "jobs" && routeJobId && !spreadsheetImportJobId && !bulkUnserializedJobId && !certificateJobId && (
+      {view === "jobs" && invoiceJobId && (
+        <JobInvoicePage jobId={invoiceJobId} />
+      )}
+      {view === "jobs" && routeJobId && !spreadsheetImportJobId && !bulkUnserializedJobId && !certificateJobId && !invoiceJobId && (
         <JobDetailPage jobId={routeJobId} accounts={accounts} />
       )}
 

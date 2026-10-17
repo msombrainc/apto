@@ -8,6 +8,7 @@ import {
   parseJobId,
   parseJobBulkUnserialized,
   parseJobCertificate,
+  parseJobInvoice,
   parseJobSpreadsheetImport,
   parseInventoryAssetId,
   viewFromPathname,
@@ -18,6 +19,7 @@ import {
   jobPath,
   jobBulkUnserializedPath,
   jobCertificatePath,
+  jobInvoicePath,
   jobSpreadsheetImportPath,
 } from "../../apps/web/src/routing/paths.ts";
 
@@ -112,6 +114,13 @@ test("jobCertificatePath round-trips with parseJobCertificate", () => {
   const id = "job-58";
   const path = jobCertificatePath(id);
   assert.equal(parseJobCertificate(path), id);
+  assert.equal(parseJobId(path), id);
+});
+
+test("jobInvoicePath round-trips with parseJobInvoice", () => {
+  const id = "job-59";
+  const path = jobInvoicePath(id);
+  assert.equal(parseJobInvoice(path), id);
   assert.equal(parseJobId(path), id);
 });
 

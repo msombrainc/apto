@@ -235,6 +235,13 @@ export function parseJobCertificate(pathname: string): string | null {
   return id === "" ? null : id;
 }
 
+export function parseJobInvoice(pathname: string): string | null {
+  const match = /^\/jobs\/([^/]+)\/invoice\/?$/.exec(pathname);
+  if (!match) return null;
+  const id = decodeURIComponent(match[1]);
+  return id === "" ? null : id;
+}
+
 export function isKnownAppPath(pathname: string): boolean {
   if (pathname === "/" || pathname === "") return true;
   return (

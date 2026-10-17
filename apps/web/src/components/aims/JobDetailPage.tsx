@@ -21,6 +21,7 @@ import {
   inventoryAssetPath,
   jobBulkUnserializedPath,
   jobCertificatePath,
+  jobInvoicePath,
   jobSpreadsheetImportPath,
 } from "../../routing/paths";
 import {
@@ -84,7 +85,6 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
   const [notFound, setNotFound] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
-  const [stubAction, setStubAction] = useState<string | null>(null);
   const [confirmAdd, setConfirmAdd] = useState(false);
   const [partQuery, setPartQuery] = useState("");
   const [partOptions, setPartOptions] = useState<{ id: string; number: string }[]>([]);
@@ -237,9 +237,13 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           >
             Certificate
           </Link>
-          <AimsButton variant="secondary" data-testid="f3-action-invoice" onClick={() => setStubAction("invoice")}>
+          <Link
+            to={jobInvoicePath(jobId)}
+            className="aims-btn aims-btn--secondary"
+            data-testid="f3-action-invoice"
+          >
             Service invoice
-          </AimsButton>
+          </Link>
         </div>
       </header>
 
@@ -399,11 +403,6 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
         </AimsButton>
       </Modal>
 
-      <Modal open={stubAction !== null} title="Coming in a later slice" onClose={() => setStubAction(null)}>
-        <p>
-          {stubAction === "invoice" && "Service invoice (F11) is tracked on apto#59."}
-        </p>
-      </Modal>
     </div>
   );
 }

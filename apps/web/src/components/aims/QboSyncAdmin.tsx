@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   QboRequestRow,
   QboStatus,
@@ -54,8 +55,12 @@ function formatDateTime(iso: string): string {
 }
 
 export function QboSyncAdmin() {
+  const [searchParams] = useSearchParams();
+  const initialOp = searchParams.get("operation") ?? "";
   const [statusFilter, setStatusFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState(
+    TYPE_OPTIONS.some((o) => o.value === initialOp) ? initialOp : "",
+  );
   const [page, setPage] = useState(1);
   const pageSize = 50;
   const [loading, setLoading] = useState(false);

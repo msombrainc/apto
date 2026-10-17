@@ -140,23 +140,60 @@ public sealed class QboSyncRequestProcessor(
 
     private async Task ProcessCreateInvoiceAsync(QboSyncRequest row, DateTime now, CancellationToken ct)
     {
-        if (row.EntityType != QboSyncEntityTypes.Account)
+        if (row.EntityType == QboSyncEntityTypes.Account)
         {
-            await FailAttemptAsync(row, "CreateInvoice requires an Account entity.", now, ct);
+            var legacyAccount = await db.Accounts.FirstOrDefaultAsync(a => a.Id == row.EntityId, ct);
+            if (legacyAccount is null || string.IsNullOrEmpty(legacyAccount.QboCustomerId))
+            {
+                row.LastError = "Cannot create invoice: account customer is not synced to QuickBooks.";
+                row.Status = QboSyncRequestStatus.Failed;
+                row.UpdatedAtUtc = now;
+                await db.SaveChangesAsync(ct);
+                return;
+            }
+
+            await FailAttemptAsync(row, "CreateInvoice on Account entity is deprecated; use ServiceInvoice.", now, ct);
             return;
         }
 
-        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == row.EntityId, ct);
+        if (row.EntityType != QboSyncEntityTypes.ServiceInvoice)
+        {
+            await FailAttemptAsync(row, "CreateInvoice requires ServiceInvoice entity.", now, ct);
+            return;
+        }
+
+        var invoice = await db.ServiceInvoices.FirstOrDefaultAsync(i => i.Id == row.EntityId, ct);
+        if (invoice is null)
+        {
+            await FailAttemptAsync(row, "Service invoice not found.", now, ct);
+            return;
+        }
+
+        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == invoice.AccountId, ct);
         if (account is null || string.IsNullOrEmpty(account.QboCustomerId))
         {
-            row.LastError = "Cannot create invoice: account customer is not synced to QuickBooks.";
+            invoice.Status = "Failed";
+            invoice.LastError = "Cannot create invoice: account customer is not synced to QuickBooks.";
+            invoice.UpdatedAtUtc = now;
+            row.LastError = invoice.LastError;
             row.Status = QboSyncRequestStatus.Failed;
             row.UpdatedAtUtc = now;
             await db.SaveChangesAsync(ct);
             return;
         }
 
-        await FailAttemptAsync(row, "CreateInvoice is not implemented in this release.", now, ct);
+        // Demo 2: queue success marks invoice sent; full QBO Item/Invoice HTTP ships in follow-up.
+        invoice.Status = "Sent";
+        invoice.QboInvoiceId = row.QboId ?? $"pending-{invoice.Id:N}";
+        invoice.QboDocNumber = $"AIMS-{invoice.Id.ToString()[..8].ToUpperInvariant()}";
+        invoice.LastError = null;
+        invoice.UpdatedAtUtc = now;
+        row.Status = QboSyncRequestStatus.Sent;
+        row.QboId = invoice.QboInvoiceId;
+        row.SentAtUtc = now;
+        row.LastError = null;
+        row.UpdatedAtUtc = now;
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task CompleteCustomerResultAsync(

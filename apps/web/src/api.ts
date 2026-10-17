@@ -818,6 +818,69 @@ export async function retryQboRequest(id: string): Promise<void> {
   }
 }
 
+export type InvoicePreviewLine = {
+  serviceKey: string;
+  label: string;
+  unitRate: number;
+  defaultQuantity: number;
+  quantityHint: string;
+  lineTotal: number;
+};
+
+export type JobInvoicePreview = {
+  jobId: string;
+  accountId: string;
+  accountName: string;
+  qboCustomerId: string | null;
+  lines: InvoicePreviewLine[];
+};
+
+export type ServiceInvoiceRow = {
+  id: string;
+  status: string;
+  total: number;
+  note: string | null;
+  qboDocNumber: string | null;
+  qboInvoiceId: string | null;
+  lastError: string | null;
+  createdAtUtc: string;
+};
+
+export async function getJobInvoicePreview(jobId: string): Promise<JobInvoicePreview> {
+  const res = await fetch(`${base}/api/jobs/${encodeURIComponent(jobId)}/invoice-preview`);
+  if (!res.ok) throw new Error(`invoice preview failed: ${res.status}`);
+  return res.json();
+}
+
+export async function listJobInvoices(jobId: string): Promise<ServiceInvoiceRow[]> {
+  const res = await fetch(`${base}/api/jobs/${encodeURIComponent(jobId)}/invoices`);
+  if (!res.ok) throw new Error(`list invoices failed: ${res.status}`);
+  return res.json();
+}
+
+export async function createJobInvoice(
+  jobId: string,
+  body: { note?: string; lines: { serviceKey: string; quantity: number }[] },
+): Promise<{ id: string; status: string }> {
+  const res = await fetch(`${base}/api/jobs/${encodeURIComponent(jobId)}/invoices`, {
+    method: "POST",
+    headers: apiHeaders(),
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as {
+      error?: string;
+      lastError?: string;
+    };
+    const message =
+      err.error ??
+      err.lastError ??
+      `create invoice failed: ${res.status}`;
+    throw new Error(message);
+  }
+  return res.json();
+}
+
 export async function updateAsset(id: string, body: AssetWrite): Promise<Asset> {
   const res = await fetch(`${base}/api/assets/${id}`, {
     method: "PUT",

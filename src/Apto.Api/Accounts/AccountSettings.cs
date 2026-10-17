@@ -30,6 +30,16 @@ public sealed class AccountFeesDto
     public decimal? Repair { get; set; }
     public decimal? OsInstall { get; set; }
     public decimal? Redeploy { get; set; }
+
+    /// <summary>Fee rate for F11 invoice line keys (audit, wipe, shred, recycle).</summary>
+    public decimal? ResolveInvoiceServiceRate(string key) => key switch
+    {
+        "audit" => Audit,
+        "wipe" => Wipe,
+        "shred" => Shred,
+        "recycle" => Recycle,
+        _ => null,
+    };
 }
 
 public sealed class AccountRulesDto
