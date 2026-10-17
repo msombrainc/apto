@@ -8,6 +8,7 @@ import {
   guessColumnMapping,
   parseCsvText,
   validateImportRows,
+  failedRowsCsv,
 } from "../../apps/web/src/lib/spreadsheetImport.ts";
 
 test("parseCsvText reads header and rows", () => {
@@ -140,4 +141,20 @@ test("validateImportRows requires part number", async () => {
     resolvePartNumber: async () => null,
   });
   assert.equal(rows[0].status, "error");
+});
+
+test("failedRowsCsv exports header and escaped messages", () => {
+  const csv = failedRowsCsv([
+    {
+      index: 0,
+      serialNumber: 'S"1',
+      partNumber: "P-1",
+      category: "",
+      grade: "",
+      status: "error",
+      messages: ['bad "quote"'],
+    },
+  ]);
+  assert.match(csv, /^row,serial,partNumber/);
+  assert.ok(csv.includes('"bad ""quote"""'));
 });

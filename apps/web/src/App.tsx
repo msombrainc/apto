@@ -281,6 +281,8 @@ export function App() {
       ? "Account detail"
       : view === "accounts"
       ? "Customer accounts"
+      : view === "jobs" && spreadsheetImportJobId
+        ? "Import spreadsheet"
       : view === "jobs" && routeJobId
         ? "Job detail"
       : view === "jobs"
@@ -299,6 +301,8 @@ export function App() {
       ? "View and edit customer profile, fees, billing, and QuickBooks sync."
       : view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
+      : view === "jobs" && spreadsheetImportJobId
+        ? "Map columns, validate rows, and create serialized assets on this job."
       : view === "jobs"
         ? "Track facility jobs and SLA countdown from intake through shipping."
         : view === "scan"
