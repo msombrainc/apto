@@ -2,6 +2,7 @@ export const ROUTES = {
   accounts: "/accounts",
   accountDetail: "/accounts/:accountId",
   jobs: "/jobs",
+  jobDetail: "/jobs/:jobId",
   inventory: "/inventory",
   inventoryAsset: "/inventory/assets/:assetId",
   scan: "/operations/scan",
@@ -16,4 +17,8 @@ export function inventoryAssetPath(assetId: string): string {
 
 export function accountPath(accountId: string): string {
   return `/accounts/${encodeURIComponent(accountId)}`;
+}
+
+export function jobPath(jobId: string): string {
+  return `/jobs/${encodeURIComponent(jobId)}`;
 }

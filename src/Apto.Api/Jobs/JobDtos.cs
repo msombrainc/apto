@@ -11,6 +11,7 @@ public record JobResponse(
     Guid Id,
     Guid AccountId,
     string AccountName,
+    string AccountCode,
     string? FacilityCode,
     string? OpsStatus,
     DateTime? StartDateUtc,
@@ -18,4 +19,9 @@ public record JobResponse(
     int SlaTotalDays,
     int DaysRemaining,
     string SlaStatus,
-    DateTime CreatedAtUtc);
+    DateTime CreatedAtUtc,
+    int DaysSinceStart,
+    int WipAssetCount,
+    int ExceptionAssetCount,
+    int FinishedAssetCount,
+    int ProgressPercent);

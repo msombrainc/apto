@@ -1,22 +1,17 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Account,
   Asset,
   Job,
-  PartNumber,
   createAccount,
   createJob,
-  createJobAsset,
   defaultAccountSettings,
   getAsset,
   listAccounts,
   listFacilities,
   listInventoryAssets,
-  listJobAssets,
   listJobs,
-  searchPartNumbers,
-  updateAsset,
   AssetInventoryRow,
 } from "./api";
 import { AppShell } from "./AppShell";
@@ -24,6 +19,7 @@ import {
   isKnownAppPath,
   parseAccountId,
   parseInventoryAssetId,
+  parseJobId,
   viewFromPathname,
   type AppView,
 } from "./routing/moduleMap";
@@ -31,13 +27,14 @@ import { ROUTES, inventoryAssetPath } from "./routing/paths";
 import { LoginPage } from "./LoginPage";
 import { isDemoLogin } from "./demoAuth";
 import { buildInventoryListParams } from "./inventoryListParams";
-import { filterJobs } from "./jobFilters";
+import type { JobFilterState } from "./jobFilters";
 import { useDebounced } from "./useDebounced";
 import { AccountDetailPage } from "./components/aims/AccountDetailPage";
 import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
-import { JobsDashboard } from "./components/aims/JobsDashboard";
+import { JobDetailPlaceholder } from "./components/aims/JobDetailPlaceholder";
+import { JobsListV2 } from "./components/aims/JobsListV2";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 import { PartNumbersAdmin } from "./components/aims/PartNumbersAdmin";
 import { QboSyncAdmin } from "./components/aims/QboSyncAdmin";
@@ -56,6 +53,7 @@ export function App() {
   const view: AppView = viewFromPathname(location.pathname);
   const routeAssetId = parseInventoryAssetId(location.pathname);
   const routeAccountId = parseAccountId(location.pathname);
+  const routeJobId = parseJobId(location.pathname);
   const [query, setQuery] = useState("");
   const [accountStatusFilter, setAccountStatusFilter] = useState<AccountStatusFilter>("Active");
   const debouncedQuery = useDebounced(query, 300);
@@ -82,26 +80,27 @@ export function App() {
     opsStatus: "",
     startDateUtc: new Date().toISOString().slice(0, 10),
   });
-  const [jobSearch, setJobSearch] = useState("");
-  const [jobAccountFilter, setJobAccountFilter] = useState("");
-  const [jobFacilityFilter, setJobFacilityFilter] = useState("");
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [jobAssets, setJobAssets] = useState<Asset[]>([]);
-  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
-  const [partSearch, setPartSearch] = useState("");
-  const [partOptions, setPartOptions] = useState<PartNumber[]>([]);
-  const [assetForm, setAssetForm] = useState({
-    partNumberId: "",
-    newPartNumber: "",
-    serialNumber: "",
+  const [jobFilters, setJobFilters] = useState<JobFilterState>({
+    search: "",
+    accountId: "",
+    facilityCode: "",
+    opsStatus: "",
+    slaFlag: "",
+    openOnly: true,
+    createdFrom: "",
+    createdTo: "",
+    startFrom: "",
+    startTo: "",
+    dueFrom: "",
+    dueTo: "",
   });
-  const [assetEditSerial, setAssetEditSerial] = useState("");
   const [inventoryQuery, setInventoryQuery] = useState("");
   const debouncedInventoryQuery = useDebounced(inventoryQuery, 300);
   const [inventoryAccountId, setInventoryAccountId] = useState("");
   const [inventoryFacility, setInventoryFacility] = useState("");
   const [inventoryRows, setInventoryRows] = useState<AssetInventoryRow[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   const refreshAccounts = useCallback(async (q: string, status: AccountStatusFilter) => {
     setError(null);
@@ -124,15 +123,6 @@ export function App() {
       setError(e instanceof Error ? e.message : "Failed to load jobs");
     } finally {
       setJobsLoading(false);
-    }
-  }, []);
-
-  const refreshJobAssets = useCallback(async (jobId: string) => {
-    setError(null);
-    try {
-      setJobAssets(await listJobAssets(jobId));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load assets");
     }
   }, []);
 
@@ -163,7 +153,6 @@ export function App() {
     try {
       const asset = await getAsset(assetId);
       setSelectedAsset(asset);
-      setAssetEditSerial(asset.serialNumber ?? "");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load asset");
     }
@@ -215,16 +204,6 @@ export function App() {
       setJobForm((f) => ({ ...f, accountId: accounts[0].id }));
     }
   }, [accounts, jobForm.accountId]);
-
-  const filteredJobs = useMemo(
-    () =>
-      filterJobs(jobs, {
-        search: jobSearch,
-        accountId: jobAccountFilter,
-        facilityCode: jobFacilityFilter,
-      }),
-    [jobs, jobSearch, jobAccountFilter, jobFacilityFilter],
-  );
 
   function onLogin(e: FormEvent) {
     e.preventDefault();
@@ -282,53 +261,6 @@ export function App() {
     }
   }
 
-  async function onSearchParts() {
-    setError(null);
-    try {
-      setPartOptions(await searchPartNumbers(partSearch));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Part search failed");
-    }
-  }
-
-  async function onCreateAsset(e: FormEvent) {
-    e.preventDefault();
-    if (!selectedJobId) return;
-    setError(null);
-    try {
-      await createJobAsset(selectedJobId, {
-        partNumberId: assetForm.partNumberId || null,
-        newPartNumber: assetForm.newPartNumber || null,
-        serialNumber: assetForm.serialNumber || null,
-      });
-      setAssetForm({ partNumberId: "", newPartNumber: "", serialNumber: "" });
-      await refreshJobAssets(selectedJobId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Create asset failed");
-    }
-  }
-
-  async function onSaveAssetEdit(e: FormEvent) {
-    e.preventDefault();
-    if (!selectedAsset) return;
-    setError(null);
-    try {
-      const updated = await updateAsset(selectedAsset.id, {
-        serialNumber: assetEditSerial,
-      });
-      setSelectedAsset(updated);
-      if (selectedJobId) await refreshJobAssets(selectedJobId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Update asset failed");
-    }
-  }
-
-  function selectJob(job: Job) {
-    setSelectedJobId(job.id);
-    setSelectedAsset(null);
-    void refreshJobAssets(job.id);
-  }
-
   if (!loggedIn) {
     return <LoginPage error={error} onLogin={onLogin} />;
   }
@@ -346,8 +278,10 @@ export function App() {
       ? "Account detail"
       : view === "accounts"
       ? "Customer accounts"
+      : view === "jobs" && routeJobId
+        ? "Job detail"
       : view === "jobs"
-        ? "Jobs & SLA"
+        ? "Jobs"
         : view === "scan"
           ? "Warehouse scan"
           : view === "reference-data"
@@ -406,19 +340,16 @@ export function App() {
         />
       )}
 
-      {view === "jobs" && (
-        <JobsDashboard
+      {view === "jobs" && routeJobId && <JobDetailPlaceholder jobId={routeJobId} />}
+
+      {view === "jobs" && !routeJobId && (
+        <JobsListV2
           accounts={accounts}
           jobs={jobs}
           facilities={facilities}
           loading={jobsLoading}
-          jobSearch={jobSearch}
-          onJobSearchChange={setJobSearch}
-          jobAccountFilter={jobAccountFilter}
-          onJobAccountFilterChange={setJobAccountFilter}
-          jobFacilityFilter={jobFacilityFilter}
-          onJobFacilityFilterChange={setJobFacilityFilter}
-          filteredJobs={filteredJobs}
+          filters={jobFilters}
+          onFiltersChange={setJobFilters}
           slaRowClass={slaRowClass}
           createOpen={jobCreateOpen}
           onCreateOpenChange={setJobCreateOpen}
@@ -426,21 +357,6 @@ export function App() {
           onJobFormChange={setJobForm}
           onRefresh={() => void refreshJobs()}
           onCreateJob={onCreateJob}
-          selectedJobId={selectedJobId}
-          onSelectJob={selectJob}
-          jobAssets={jobAssets}
-          partSearch={partSearch}
-          onPartSearchChange={setPartSearch}
-          onSearchParts={() => void onSearchParts()}
-          partOptions={partOptions}
-          assetForm={assetForm}
-          onAssetFormChange={setAssetForm}
-          onCreateAsset={onCreateAsset}
-          selectedAsset={selectedAsset}
-          assetEditSerial={assetEditSerial}
-          onAssetEditSerialChange={setAssetEditSerial}
-          onSaveAssetEdit={onSaveAssetEdit}
-          onLoadAssetDetail={(id) => void loadAssetDetail(id)}
         />
       )}
 

@@ -55,6 +55,39 @@ public class JobEndpointsTests
         var job = Assert.Single(listed);
         Assert.Equal("overdue", job.SlaStatus);
         Assert.True(job.DaysRemaining < 0);
+        Assert.Equal("SLA-1", job.AccountCode);
+        Assert.Equal(0, job.ProgressPercent);
+    }
+
+    [Fact]
+    public async Task List_jobs_includes_asset_count_buckets()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Counts Co", "CNT-1", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobPost = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(
+                createdAccount.Id,
+                "GA",
+                "open",
+                DateTime.UtcNow.AddDays(-2),
+                null));
+        var createdJob = await jobPost.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var listed = await client.GetFromJsonAsync<List<JobResponse>>("/api/jobs");
+        Assert.NotNull(listed);
+        var row = Assert.Single(listed, j => j.Id == createdJob.Id);
+        Assert.Equal(0, row.WipAssetCount);
+        Assert.Equal(0, row.FinishedAssetCount);
+        Assert.True(row.DaysSinceStart >= 2);
     }
 
     [Fact]
