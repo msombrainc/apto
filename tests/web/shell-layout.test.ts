@@ -67,6 +67,16 @@ test("dark data tables use elevated header + link tokens (apto#107)", () => {
   assert.match(css, /\.modal-form \.aims-select/);
 });
 
+test("sidebar nav links have no underline (apto#123)", () => {
+  const btn = css.match(/\.sidebar-nav-btn\s*\{([^}]*)\}/);
+  assert.ok(btn, "expected .sidebar-nav-btn");
+  assert.match(btn[1], /text-decoration:\s*none/);
+  assert.match(
+    css,
+    /\.sidebar-nav-btn:hover[\s\S]*?text-decoration:\s*none/,
+  );
+});
+
 test("aims-main fills shell 1fr column — no 1200px cap (apto#123)", () => {
   // Desktop rule includes padding + width; mobile media also has .aims-main.
   const main = css.match(
