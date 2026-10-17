@@ -68,7 +68,8 @@ public static class JobAssetCountAggregator
     {
         if (string.IsNullOrWhiteSpace(statusCode))
             return "WIP";
-        if (groupByCode.TryGetValue(statusCode.Trim(), out var g))
+        var key = statusCode.Trim().ToUpperInvariant();
+        if (groupByCode.TryGetValue(key, out var g))
             return g;
         return "WIP";
     }

@@ -228,6 +228,22 @@ export function JobsListV2({
           />
         </label>
         <label>
+          Start to
+          <input
+            type="date"
+            value={filters.startTo}
+            onChange={(e) => onFiltersChange({ ...filters, startTo: e.target.value })}
+          />
+        </label>
+        <label>
+          Due from
+          <input
+            type="date"
+            value={filters.dueFrom}
+            onChange={(e) => onFiltersChange({ ...filters, dueFrom: e.target.value })}
+          />
+        </label>
+        <label>
           Due to
           <input
             type="date"

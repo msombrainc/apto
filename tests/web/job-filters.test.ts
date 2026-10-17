@@ -28,6 +28,7 @@ test("isOpenJob excludes completed statuses", () => {
   assert.equal(isOpenJob(baseJob), true);
   assert.equal(isOpenJob({ ...baseJob, opsStatus: "Completed" }), false);
   assert.equal(isOpenJob({ ...baseJob, opsStatus: "in transit" }), false);
+  assert.equal(isOpenJob({ ...baseJob, opsStatus: "IN-TRANSIT" }), false);
 });
 
 test("filterJobs openOnly default", () => {

@@ -15,10 +15,14 @@ export type JobFilterState = {
   dueTo: string;
 };
 
-const CLOSED_OPS = new Set(["completed", "canceled", "in transit"]);
+const CLOSED_OPS = new Set(["completed", "canceled", "in transit", "in-transit"]);
+
+function normalizeOpsStatus(ops: string): string {
+  return ops.trim().toLowerCase().replace(/-/g, " ");
+}
 
 export function isOpenJob(job: Job): boolean {
-  const ops = (job.opsStatus ?? "").trim().toLowerCase();
+  const ops = normalizeOpsStatus(job.opsStatus ?? "");
   if (!ops) return true;
   return !CLOSED_OPS.has(ops);
 }
