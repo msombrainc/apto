@@ -305,6 +305,32 @@ public class AccountEndpointsTests
     }
 
     [Fact]
+    public async Task Put_writes_change_log_for_settings_leaf()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Pct Co", "PCT-LOG", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var settings = new AccountSettingsDto { AptoPercentage = 12.5m };
+        await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Pct Co", "PCT-LOG", 1, 1, 1, Settings: settings));
+
+        var changes = await client.GetFromJsonAsync<AccountChangeLogListResponse>(
+            $"/api/accounts/{created.Id}/changes");
+        Assert.NotNull(changes);
+        Assert.Contains(
+            changes.Items,
+            c => c.FieldName.Contains("aptoPercentage", StringComparison.OrdinalIgnoreCase)
+                && c.NewValue == "12.5");
+    }
+
+    [Fact]
     public async Task List_status_filter_inactive()
     {
         await using var factory = new AptoWebApplicationFactory();

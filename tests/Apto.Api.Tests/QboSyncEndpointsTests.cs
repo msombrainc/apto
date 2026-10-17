@@ -248,6 +248,85 @@ public class QboSyncEndpointsTests
     }
 
     [Fact]
+    public async Task Update_account_enqueues_update_customer_when_billing_address_changes()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+            o.RedirectUri = "http://localhost/callback";
+        });
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var accountId = Guid.NewGuid();
+        db.Accounts.Add(new Account
+        {
+            Id = accountId,
+            Name = "Billing Co",
+            Code = "BILL-01",
+            QboCustomerId = "qbo-88",
+            QboSyncStatus = QboSyncStatus.Synced,
+            CreatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var client = factory.CreateClient();
+        var settings = new AccountSettingsDto
+        {
+            BillingAddress = new AccountBillingAddressDto { Line1 = "123 Main St" },
+        };
+        var put = await client.PutAsJsonAsync(
+            $"/api/accounts/{accountId}",
+            new AccountWriteRequest("Billing Co", "BILL-01", 1, 1, 1, Settings: settings));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var row = await db.QboSyncRequests.AsNoTracking()
+            .OrderByDescending(r => r.CreatedAtUtc)
+            .FirstAsync(r => r.EntityId == accountId);
+        Assert.Equal(QboSyncOperations.UpdateCustomer, row.Operation);
+        Assert.Equal(QboSyncRequestStatus.Pending, row.Status);
+    }
+
+    [Fact]
+    public async Task Update_account_rules_only_does_not_enqueue_qbo()
+    {
+        await using var factory = new AptoWebApplicationFactory(o =>
+        {
+            o.ClientId = "c";
+            o.ClientSecret = "s";
+            o.RedirectUri = "http://localhost/callback";
+        });
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var accountId = Guid.NewGuid();
+        db.Accounts.Add(new Account
+        {
+            Id = accountId,
+            Name = "Rules Co",
+            Code = "RUL-01",
+            QboCustomerId = "qbo-77",
+            QboSyncStatus = QboSyncStatus.Synced,
+            CreatedAtUtc = DateTime.UtcNow,
+        });
+        await db.SaveChangesAsync();
+
+        var before = await db.QboSyncRequests.CountAsync(r => r.EntityId == accountId);
+
+        var client = factory.CreateClient();
+        var settings = new AccountSettingsDto
+        {
+            Rules = new AccountRulesDto { RequireProcessingApproval = true },
+        };
+        var put = await client.PutAsJsonAsync(
+            $"/api/accounts/{accountId}",
+            new AccountWriteRequest("Rules Co", "RUL-01", 1, 1, 1, Settings: settings));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var after = await db.QboSyncRequests.CountAsync(r => r.EntityId == accountId);
+        Assert.Equal(before, after);
+    }
+
+    [Fact]
     public async Task Manual_qbo_sync_returns_accepted_with_request_id()
     {
         await using var factory = new AptoWebApplicationFactory(o =>

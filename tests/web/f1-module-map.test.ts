@@ -8,7 +8,7 @@ import {
   parseInventoryAssetId,
   viewFromPathname,
 } from "../../apps/web/src/routing/moduleMap.ts";
-import { inventoryAssetPath } from "../../apps/web/src/routing/paths.ts";
+import { accountPath, inventoryAssetPath } from "../../apps/web/src/routing/paths.ts";
 
 test("module map includes Demo 2 Operations entries", () => {
   const jobs = AIMS_MODULE_MAP.find((e) => e.id === "jobs");
@@ -58,8 +58,15 @@ test("inventoryAssetPath round-trips with parseInventoryAssetId", () => {
 test("isKnownAppPath accepts registered routes and rejects typos", () => {
   assert.equal(isKnownAppPath("/jobs"), true);
   assert.equal(isKnownAppPath("/inventory/assets/x"), true);
+  assert.equal(isKnownAppPath("/accounts/abc-123"), true);
   assert.equal(isKnownAppPath("/admin/part-numbers"), true);
   assert.equal(isKnownAppPath("/typo"), false);
+});
+
+test("accountPath round-trips with parseAccountId", () => {
+  const id = "acct/with space";
+  const path = accountPath(id);
+  assert.equal(parseAccountId(path), id);
 });
 
 test("parseInventoryAssetId decodes asset segment", () => {
