@@ -65,6 +65,7 @@ type InventoryDashboardProps = {
   inventoryRows: AssetInventoryRow[];
   loading: boolean;
   onRefresh: () => void;
+  onApplySavedSearch: (search: SavedInventorySearch) => void;
   selectedAsset: Asset | null;
   onSelectAsset: (id: string) => void;
 };
@@ -101,6 +102,7 @@ export function InventoryDashboard({
   inventoryRows,
   loading,
   onRefresh,
+  onApplySavedSearch,
   selectedAsset,
   onSelectAsset,
 }: InventoryDashboardProps) {
@@ -221,19 +223,7 @@ export function InventoryDashboard({
   function applySavedSearch(id: string) {
     const s = savedSearches.find((x) => x.id === id);
     if (!s) return;
-    onInventoryQueryChange(s.params.q);
-    onInventoryAccountIdChange(s.params.accountId ?? "");
-    onInventoryFacilityChange(s.params.facilityCode ?? "");
-    onInventoryGradeChange(s.params.grade ?? "");
-    onInventoryStatusChange(s.params.status ?? "");
-    onInventoryCategoryChange(s.params.category ?? "");
-    onCreatedFromChange(s.params.createdFrom ?? "");
-    onCreatedToChange(s.params.createdTo ?? "");
-    onPasteCodesChange(s.params.codes ?? "");
-    onInventoryPageSizeChange(s.params.pageSize ?? 50);
-    onVisibleColumnsChange(s.visibleColumns);
-    onInventoryPageChange(1);
-    onRefresh();
+    onApplySavedSearch(s);
   }
 
   return (

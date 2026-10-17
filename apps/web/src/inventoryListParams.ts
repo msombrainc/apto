@@ -50,3 +50,15 @@ export function buildInventoryListParams(
   if (codes.trim()) params.codes = codes.trim();
   return params;
 }
+
+/** Saved-search apply uses stored `q` immediately (bypasses search debounce). */
+export function inventoryListParamsFromSaved(
+  saved: Omit<InventoryListParams, "page">,
+  page = 1,
+): InventoryListParams {
+  return {
+    ...saved,
+    page,
+    q: saved.q ?? "",
+  };
+}

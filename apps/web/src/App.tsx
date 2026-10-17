@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   Account,
@@ -28,7 +28,12 @@ import {
 import { ROUTES, inventoryAssetPath } from "./routing/paths";
 import { LoginPage } from "./LoginPage";
 import { isDemoLogin } from "./demoAuth";
-import { buildInventoryListParams } from "./inventoryListParams";
+import {
+  buildInventoryListParams,
+  inventoryListParamsFromSaved,
+  type InventoryListParams,
+} from "./inventoryListParams";
+import type { SavedInventorySearch } from "./inventorySavedSearches";
 import type { JobFilterState } from "./jobFilters";
 import { useDebounced } from "./useDebounced";
 import { AccountDetailPage } from "./components/aims/AccountDetailPage";
@@ -145,27 +150,15 @@ export function App() {
     }
   }, []);
 
-  const refreshInventory = useCallback(async () => {
+  const inventoryFetchSeq = useRef(0);
+
+  const runInventoryFetch = useCallback(async (params: InventoryListParams) => {
+    const seq = ++inventoryFetchSeq.current;
     setError(null);
     setInventoryLoading(true);
     try {
-      const params = buildInventoryListParams(
-        debouncedInventoryQuery,
-        inventoryAccountId,
-        inventoryFacility,
-        inventoryGrade,
-        inventoryStatus,
-        "",
-        inventoryCategory,
-        inventoryCreatedFrom,
-        inventoryCreatedTo,
-        inventoryPasteCodes,
-        inventoryPage,
-        inventoryPageSize,
-        "created",
-        "desc",
-      );
       const result = await listInventoryAssetsPaged(params);
+      if (seq !== inventoryFetchSeq.current) return;
       setInventoryRows(result.items);
       setInventoryTotal(result.total);
       setInventoryNotFoundCodes(result.notFoundCodes ?? []);
@@ -173,11 +166,33 @@ export function App() {
         current && !result.items.some((r) => r.id === current.id) ? null : current,
       );
     } catch (e) {
+      if (seq !== inventoryFetchSeq.current) return;
       setError(e instanceof Error ? e.message : "Failed to load inventory");
     } finally {
-      setInventoryLoading(false);
+      if (seq === inventoryFetchSeq.current) setInventoryLoading(false);
     }
+  }, []);
+
+  const refreshInventory = useCallback(async () => {
+    const params = buildInventoryListParams(
+      debouncedInventoryQuery,
+      inventoryAccountId,
+      inventoryFacility,
+      inventoryGrade,
+      inventoryStatus,
+      "",
+      inventoryCategory,
+      inventoryCreatedFrom,
+      inventoryCreatedTo,
+      inventoryPasteCodes,
+      inventoryPage,
+      inventoryPageSize,
+      "created",
+      "desc",
+    );
+    await runInventoryFetch(params);
   }, [
+    runInventoryFetch,
     debouncedInventoryQuery,
     inventoryAccountId,
     inventoryFacility,
@@ -190,6 +205,26 @@ export function App() {
     inventoryPage,
     inventoryPageSize,
   ]);
+
+  const applyInventorySavedSearch = useCallback(
+    async (saved: SavedInventorySearch) => {
+      const p = saved.params;
+      setInventoryQuery(p.q ?? "");
+      setInventoryAccountId(p.accountId ?? "");
+      setInventoryFacility(p.facilityCode ?? "");
+      setInventoryGrade(p.grade ?? "");
+      setInventoryStatus(p.status ?? "");
+      setInventoryCategory(p.category ?? "");
+      setInventoryCreatedFrom(p.createdFrom ?? "");
+      setInventoryCreatedTo(p.createdTo ?? "");
+      setInventoryPasteCodes(p.codes ?? "");
+      setInventoryPageSize(p.pageSize ?? 50);
+      setInventoryVisibleColumns(saved.visibleColumns);
+      setInventoryPage(1);
+      await runInventoryFetch(inventoryListParamsFromSaved(p, 1));
+    },
+    [runInventoryFetch],
+  );
 
   const loadAssetDetail = useCallback(async (assetId: string) => {
     setError(null);
@@ -470,6 +505,7 @@ export function App() {
           inventoryRows={inventoryRows}
           loading={inventoryLoading}
           onRefresh={() => void refreshInventory()}
+          onApplySavedSearch={(s) => void applyInventorySavedSearch(s)}
           selectedAsset={selectedAsset}
           onSelectAsset={(id) => {
             navigate(inventoryAssetPath(id));
