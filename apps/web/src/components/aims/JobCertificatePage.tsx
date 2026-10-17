@@ -59,11 +59,11 @@ export function JobCertificatePage({ jobId }: Props) {
       const [j, rows, ref] = await Promise.all([
         getJob(jobId),
         listJobAssets(jobId),
-        listReferenceItems("asset-status"),
+        listReferenceItems("asset-status", { pageSize: 100 }),
       ]);
       setJob(j);
       setAssets(rows);
-      setStatuses(ref);
+      setStatuses(ref.items);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load job");
       setJob(null);
