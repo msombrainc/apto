@@ -40,7 +40,6 @@ public static class JobInvoiceEndpoints
                 i.QboInvoiceId,
                 i.LastError,
                 i.CreatedAtUtc,
-                lines = i.LinesJson,
             })
             .ToListAsync(ct);
 
@@ -69,9 +68,6 @@ public static class JobInvoiceEndpoints
             return Results.BadRequest(new { error = "At least one invoice line is required." });
 
         var settings = AccountSettingsJson.Parse(job.Account.Settings);
-        var preview = await JobInvoicePreview.BuildAsync(db, id, ct);
-        if (preview is null)
-            return Results.NotFound();
 
         var lineWrites = new List<JobInvoicePreview.InvoiceLineWrite>();
         decimal total = 0;
