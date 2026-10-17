@@ -36,7 +36,7 @@ internal static class JobInvoicePreview
 
         foreach (var def in CoreLines)
         {
-            var rate = FeeRate(fees, def.Key);
+            var rate = fees.ResolveInvoiceServiceRate(def.Key);
             if (rate is null)
                 continue;
 
@@ -62,15 +62,6 @@ internal static class JobInvoicePreview
             lines,
         };
     }
-
-    private static decimal? FeeRate(AccountFeesDto fees, string key) => key switch
-    {
-        "audit" => fees.Audit,
-        "wipe" => fees.Wipe,
-        "shred" => fees.Shred,
-        "recycle" => fees.Recycle,
-        _ => null,
-    };
 
     private static int DefaultQty(string key, (int Total, int Wiped, int Shredded, int Recycled) counts) =>
         key switch

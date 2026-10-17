@@ -80,7 +80,7 @@ public static class JobInvoiceEndpoints
             if (line.Quantity < 0)
                 return Results.BadRequest(new { error = $"Quantity for {line.ServiceKey} must be non-negative." });
 
-            var rate = ResolveRate(settings.Fees, line.ServiceKey);
+            var rate = settings.Fees.ResolveInvoiceServiceRate(line.ServiceKey);
             if (rate is null)
                 return Results.BadRequest(new { error = $"Unknown or unpriced service: {line.ServiceKey}." });
 
@@ -131,14 +131,6 @@ public static class JobInvoiceEndpoints
         });
     }
 
-    private static decimal? ResolveRate(AccountFeesDto fees, string key) => key switch
-    {
-        "audit" => fees.Audit,
-        "wipe" => fees.Wipe,
-        "shred" => fees.Shred,
-        "recycle" => fees.Recycle,
-        _ => null,
-    };
 }
 
 public sealed class CreateServiceInvoiceRequest
