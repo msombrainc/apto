@@ -3,6 +3,7 @@ import { AimsButton } from "../Button";
 import { DataTable } from "../DataTable";
 import { FacilityPills } from "../FacilityPills";
 import { PrototypeBanner } from "../PrototypeBanner";
+import { classifyFulfillmentScan } from "../../../fulfillmentScanLogic";
 import { F15_UNSHIPPED_INVOICES, type F15UnshippedInvoice } from "../../../prototype/f15SampleData";
 
 type ScanStep = "pull" | "pack";
@@ -64,14 +65,16 @@ export function OrderFulfillmentPage() {
   }
 
   function submitScan() {
+    if (!invoice) return;
+    const result = classifyFulfillmentScan(scanInput, aptoIds, activeScanned);
     const id = scanInput.trim().toUpperCase();
     setScanInput("");
-    if (!id || !invoice) return;
-    if (!aptoIds.has(id)) {
+    if (result === "empty") return;
+    if (result === "not-on-invoice") {
       setFeedback("not-on-invoice");
       return;
     }
-    if (activeScanned.has(id)) {
+    if (result === "already-scanned") {
       setFeedback("already-scanned");
       return;
     }
