@@ -48,6 +48,15 @@ test("part-numbers module is Demo 2 with admin route", () => {
   assert.equal(partNumbers?.path, "/admin/part-numbers");
 });
 
+test("sla-dashboard module and route (F5)", () => {
+  const sla = AIMS_MODULE_MAP.find((e) => e.id === "sla-dashboard");
+  assert.equal(sla?.path, "/operations/sla-dashboard");
+  const dashSla = AIMS_MODULE_MAP.find((e) => e.id === "sla-dash");
+  assert.equal(dashSla?.path, "/operations/sla-dashboard");
+  assert.equal(viewFromPathname("/operations/sla-dashboard"), "sla-dashboard");
+  assert.equal(isKnownAppPath("/operations/sla-dashboard"), true);
+});
+
 test("viewFromPathname maps deep links", () => {
   assert.equal(viewFromPathname("/admin/reference-data"), "reference-data");
   assert.equal(viewFromPathname("/admin/part-numbers"), "part-numbers");
