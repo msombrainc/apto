@@ -1,4 +1,4 @@
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   createJobAsset,
@@ -167,8 +167,14 @@ export function SpreadsheetImportPage({ jobId }: Props) {
     }
   }, [sheet, mapping, gradeCodes, categoryNames, unknownPartPolicy]);
 
+  const prevUnknownPartPolicyRef = useRef(unknownPartPolicy);
   useEffect(() => {
-    if (step !== "preview" || !sheet) return;
+    if (step !== "preview" || !sheet) {
+      prevUnknownPartPolicyRef.current = unknownPartPolicy;
+      return;
+    }
+    if (prevUnknownPartPolicyRef.current === unknownPartPolicy) return;
+    prevUnknownPartPolicyRef.current = unknownPartPolicy;
     void runValidation();
   }, [unknownPartPolicy, step, sheet, runValidation]);
 

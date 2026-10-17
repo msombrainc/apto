@@ -1,3 +1,5 @@
+import { escapeCsv } from "../jobsListExport";
+
 export const MAX_IMPORT_ROWS = 500;
 
 export type ImportField = "serialNumber" | "partNumber" | "category" | "grade";
@@ -181,17 +183,16 @@ export async function validateImportRows(
 
 export function failedRowsCsv(rows: ValidatedRow[]): string {
   const header = "row,serial,partNumber,category,grade,status,messages";
-  const lines = rows.map((r) => {
-    const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
-    return [
-      r.index + 2,
-      esc(r.serialNumber),
-      esc(r.partNumber),
-      esc(r.category),
-      esc(r.grade),
+  const lines = rows.map((r) =>
+    [
+      String(r.index + 2),
+      escapeCsv(r.serialNumber),
+      escapeCsv(r.partNumber),
+      escapeCsv(r.category),
+      escapeCsv(r.grade),
       r.status,
-      esc(r.messages.join("; ")),
-    ].join(",");
-  });
+      escapeCsv(r.messages.join("; ")),
+    ].join(","),
+  );
   return [header, ...lines].join("\n");
 }
