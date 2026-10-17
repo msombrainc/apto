@@ -248,10 +248,6 @@ body:has(.aims-app) {
   opacity: 1;
 }
 
-.info-icon {
-  opacity: 0.7;
-}
-
 /* —— App shell —— */
 .aims-app {
   display: grid;

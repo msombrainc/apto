@@ -77,6 +77,25 @@ test("sidebar nav links have no underline (apto#123)", () => {
   );
 });
 
+test("table and text-button hovers avoid underline — brightness hover (apto#123)", () => {
+  assert.match(
+    css,
+    /\.data-table a:hover\s*\{[^}]*text-decoration:\s*none/,
+  );
+  assert.match(
+    css,
+    /\.data-table a:hover\s*\{[^}]*filter:\s*brightness\(1\.08\)/,
+  );
+  assert.match(
+    css,
+    /\.text-button:hover\s*\{[^}]*text-decoration:\s*none/,
+  );
+  assert.match(
+    css,
+    /\.text-button:hover\s*\{[^}]*filter:\s*brightness\(1\.08\)/,
+  );
+});
+
 test("aims-main fills shell 1fr column — no 1200px cap (apto#123)", () => {
   // Desktop rule includes padding + width; mobile media also has .aims-main.
   const main = css.match(
