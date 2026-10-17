@@ -18,10 +18,9 @@ public static class JobAssetCountAggregator
             .Select(r => new { r.Code, r.Group })
             .ToListAsync(ct);
 
-        var groupByCode = statusRows.ToDictionary(
-            r => r.Code.Trim().ToUpperInvariant(),
-            r => NormalizeGroup(r.Group),
-            StringComparer.OrdinalIgnoreCase);
+        var groupByCode = statusRows
+            .GroupBy(r => r.Code.Trim().ToUpperInvariant(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => NormalizeGroup(g.First().Group));
 
         var assets = await db.Assets
             .AsNoTracking()

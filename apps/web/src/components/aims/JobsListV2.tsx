@@ -87,13 +87,24 @@ export function JobsListV2({
     return [...set].sort();
   }, [jobs]);
 
+  function applyColumns(next: JobsListColumnId[]) {
+    saveJobsListColumns(next);
+    setColumns(next);
+  }
+
   function toggleColumn(id: JobsListColumnId) {
-    setColumns((prev) => {
-      const next = prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id];
-      const ordered = DEFAULT_JOBS_LIST_COLUMNS.filter((c) => next.includes(c));
-      saveJobsListColumns(ordered);
-      return ordered;
-    });
+    const next = columns.includes(id)
+      ? columns.filter((c) => c !== id)
+      : [...columns, id];
+    applyColumns(next);
+  }
+
+  function moveColumn(index: number, delta: number) {
+    const next = [...columns];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    applyColumns(next);
   }
 
   function onHeaderClick(key: JobsListSortKey) {
@@ -191,6 +202,39 @@ export function JobsListV2({
           <option value="at-risk">At risk</option>
           <option value="overdue">Overdue</option>
         </select>
+        <label>
+          Created from
+          <input
+            type="date"
+            value={filters.createdFrom}
+            onChange={(e) => onFiltersChange({ ...filters, createdFrom: e.target.value })}
+            data-testid="jobs-created-from"
+          />
+        </label>
+        <label>
+          Created to
+          <input
+            type="date"
+            value={filters.createdTo}
+            onChange={(e) => onFiltersChange({ ...filters, createdTo: e.target.value })}
+          />
+        </label>
+        <label>
+          Start from
+          <input
+            type="date"
+            value={filters.startFrom}
+            onChange={(e) => onFiltersChange({ ...filters, startFrom: e.target.value })}
+          />
+        </label>
+        <label>
+          Due to
+          <input
+            type="date"
+            value={filters.dueTo}
+            onChange={(e) => onFiltersChange({ ...filters, dueTo: e.target.value })}
+          />
+        </label>
         <label className="filter-checkbox">
           <input
             type="checkbox"
@@ -247,14 +291,34 @@ export function JobsListV2({
 
       <Modal open={columnPickerOpen} title="Visible columns" onClose={() => setColumnPickerOpen(false)}>
         <ul className="column-picker-list">
-          {DEFAULT_JOBS_LIST_COLUMNS.map((id) => (
+          {columns.map((id, index) => (
             <li key={id}>
               <label>
-                <input
-                  type="checkbox"
-                  checked={columns.includes(id)}
-                  onChange={() => toggleColumn(id)}
-                />
+                <input type="checkbox" checked onChange={() => toggleColumn(id)} />
+                {JOBS_LIST_COLUMN_LABELS[id]}
+              </label>
+              <button
+                type="button"
+                className="link-button"
+                disabled={index === 0}
+                onClick={() => moveColumn(index, -1)}
+              >
+                Up
+              </button>
+              <button
+                type="button"
+                className="link-button"
+                disabled={index === columns.length - 1}
+                onClick={() => moveColumn(index, 1)}
+              >
+                Down
+              </button>
+            </li>
+          ))}
+          {DEFAULT_JOBS_LIST_COLUMNS.filter((id) => !columns.includes(id)).map((id) => (
+            <li key={id}>
+              <label>
+                <input type="checkbox" checked={false} onChange={() => toggleColumn(id)} />
                 {JOBS_LIST_COLUMN_LABELS[id]}
               </label>
             </li>

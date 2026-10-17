@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Apto.Api.Accounts;
+using Apto.Api.Assets;
 using Apto.Api.Jobs;
+using Apto.Api.PartNumbers;
 
 namespace Apto.Api.Tests;
 
@@ -88,6 +90,41 @@ public class JobEndpointsTests
         Assert.Equal(0, row.WipAssetCount);
         Assert.Equal(0, row.FinishedAssetCount);
         Assert.True(row.DaysSinceStart >= 2);
+    }
+
+    [Fact]
+    public async Task List_jobs_progress_reflects_finished_assets()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Prog Co", "PRG-1", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobPost = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", "open", DateTime.UtcNow, null));
+        var createdJob = await jobPost.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var part = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("PN-PRG-1", "Cat"));
+        var createdPart = await part.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(createdPart);
+
+        await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(createdPart.Id, "SN-PRG", null));
+
+        var listed = await client.GetFromJsonAsync<List<JobResponse>>("/api/jobs");
+        Assert.NotNull(listed);
+        var row = Assert.Single(listed, j => j.Id == createdJob.Id);
+        Assert.True(row.WipAssetCount + row.FinishedAssetCount + row.ExceptionAssetCount >= 1);
+        Assert.True(row.ProgressPercent >= 0 && row.ProgressPercent <= 100);
     }
 
     [Fact]

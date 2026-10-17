@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { filterJobs, isOpenJob } from "../../apps/web/src/jobFilters.ts";
+import { filterJobs, isOpenJob, sortJobs } from "../../apps/web/src/jobFilters.ts";
+import { buildJobsCsv, escapeCsv } from "../../apps/web/src/jobsListExport.ts";
 import type { Job } from "../../apps/web/src/api.ts";
 
 const baseJob: Job = {
@@ -50,4 +51,23 @@ test("filterJobs openOnly default", () => {
   });
   assert.equal(filtered.length, 1);
   assert.equal(filtered[0].id, "j1");
+});
+
+test("sortJobs orders by numeric column", () => {
+  const jobs = [
+    { ...baseJob, id: "a", progressPercent: 10 },
+    { ...baseJob, id: "b", progressPercent: 90 },
+  ];
+  const sorted = sortJobs(jobs, "progressPercent", "desc");
+  assert.equal(sorted[0].id, "b");
+});
+
+test("escapeCsv quotes commas", () => {
+  assert.equal(escapeCsv("a,b"), '"a,b"');
+});
+
+test("buildJobsCsv includes header and values", () => {
+  const csv = buildJobsCsv([baseJob], ["account", "progressPercent"]);
+  assert.match(csv, /^account,progressPercent/);
+  assert.match(csv, /Acme,0/);
 });
