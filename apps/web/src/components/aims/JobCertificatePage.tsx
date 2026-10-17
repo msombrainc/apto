@@ -45,7 +45,8 @@ function complianceText(type: CertificateType): string {
 
 export function JobCertificatePage({ jobId }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const typeParam = parseCertificateType(searchParams.get("type"));
+  const rawType = searchParams.get("type");
+  const typeParam = parseCertificateType(rawType);
   const [job, setJob] = useState<Job | null>(null);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [statuses, setStatuses] = useState<ReferenceItem[]>([]);
@@ -59,7 +60,7 @@ export function JobCertificatePage({ jobId }: Props) {
       const [j, rows, ref] = await Promise.all([
         getJob(jobId),
         listJobAssets(jobId),
-        listReferenceItems("asset-status", { pageSize: 100 }),
+        listReferenceItems("asset-status", { pageSize: 200 }),
       ]);
       setJob(j);
       setAssets(rows);
@@ -75,6 +76,12 @@ export function JobCertificatePage({ jobId }: Props) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (rawType && !typeParam) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [rawType, typeParam, setSearchParams]);
 
   const split = useMemo(() => {
     if (!typeParam) return null;

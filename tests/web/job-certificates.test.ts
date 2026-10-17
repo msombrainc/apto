@@ -39,6 +39,20 @@ const statuses: ReferenceItem[] = [
   {
     id: "3",
     type: "asset-status",
+    code: "SHREDDED",
+    name: "Shredded",
+    parentId: null,
+    parentCode: null,
+    parentName: null,
+    group: "Finished",
+    certificateGroup: "Shredded",
+    sortOrder: 3,
+    isActive: true,
+    inUseCount: 0,
+  },
+  {
+    id: "4",
+    type: "asset-status",
     code: "AUDIT",
     name: "Audit",
     parentId: null,
@@ -88,7 +102,11 @@ test("splitAssetsForCertificate classifies by reference certificateGroup", () =>
   assert.equal(recycling.covered.length, 1);
   assert.equal(recycling.excludedCount, 2);
 
-  const destruction = splitAssetsForCertificate(rows, "data-destruction", statuses);
-  assert.equal(destruction.covered.length, 1);
-  assert.equal(destruction.covered[0].status, "WIPED");
+  const withShredded = [...rows, asset("SHREDDED")];
+  const destruction = splitAssetsForCertificate(withShredded, "data-destruction", statuses);
+  assert.equal(destruction.covered.length, 2);
+  assert.deepEqual(
+    destruction.covered.map((a) => a.status).sort(),
+    ["SHREDDED", "WIPED"],
+  );
 });
