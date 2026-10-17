@@ -4,3 +4,5 @@
 - [x] Gate + MR
 - [x] `tests/web/shell-layout.test.ts` shell scroll contract
 - [x] `tests/web/jobs-list-shell.test.ts` Jobs panel wrap contract
+- [x] Page-content scroll lock (toolbar/KPI fixed; table-only scroll in `.data-table-wrap`)
+- [x] Dark table links + status-pill elevated chips (second operator pass)
