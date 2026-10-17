@@ -4,6 +4,7 @@ import {
   AIMS_MODULE_MAP,
   moduleGroups,
   isKnownAppPath,
+  parseAccountId,
   parseInventoryAssetId,
   viewFromPathname,
 } from "../../apps/web/src/routing/moduleMap.ts";
@@ -44,6 +45,7 @@ test("viewFromPathname maps deep links", () => {
   assert.equal(viewFromPathname("/operations/scan"), "scan");
   assert.equal(viewFromPathname("/inventory/assets/abc"), "inventory");
   assert.equal(viewFromPathname("/accounts"), "accounts");
+  assert.equal(parseAccountId("/accounts/abc-123"), "abc-123");
   assert.equal(viewFromPathname("/jobs"), "jobs");
 });
 

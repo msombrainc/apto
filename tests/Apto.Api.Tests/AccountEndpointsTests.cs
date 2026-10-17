@@ -20,7 +20,7 @@ public class AccountEndpointsTests
         Assert.NotNull(created);
         Assert.Equal("skipped", created.QboSyncStatus);
 
-        var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts");
+        var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?status=Both");
         Assert.NotNull(listed);
         Assert.Contains(listed, a => a.Code == "ACME-01" && a.Name == "Acme Corp");
     }
@@ -52,7 +52,7 @@ public class AccountEndpointsTests
             "/api/accounts",
             new AccountWriteRequest("Other LLC", "OTHER", 0, 0, 0));
 
-        var results = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?q=acme");
+        var results = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?status=Both&q=acme");
         Assert.NotNull(results);
         Assert.Single(results);
         Assert.Equal("ZZZ-ONLY", results[0].Code);
@@ -67,7 +67,7 @@ public class AccountEndpointsTests
         await client.PostAsJsonAsync("/api/accounts", new AccountWriteRequest("Beta LLC", "BETA", 0, 0, 0));
         await client.PostAsJsonAsync("/api/accounts", new AccountWriteRequest("Gamma Inc", "GAMMA", 0, 0, 0));
 
-        var results = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?q=beta");
+        var results = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?status=Both&q=beta");
         Assert.NotNull(results);
         Assert.Single(results);
         Assert.Equal("BETA", results[0].Code);
@@ -252,5 +252,97 @@ public class AccountEndpointsTests
             new AccountWriteRequest("X", "Y", 0, 0, 0));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_by_id_returns_account_with_settings()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Detail Co", "DET-01", 30, 30, 60));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var get = await client.GetFromJsonAsync<AccountResponse>($"/api/accounts/{created.Id}");
+        Assert.NotNull(get);
+        Assert.Equal("Active", get.Status);
+        Assert.Equal(0, get.Settings.AptoPercentage);
+    }
+
+    [Fact]
+    public async Task Get_unknown_returns_not_found()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/accounts/{Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_writes_change_log_for_name()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Before", "CHG-01", 1, 1, 1));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("After", "CHG-01", 1, 1, 1));
+
+        var changes = await client.GetFromJsonAsync<AccountChangeLogListResponse>(
+            $"/api/accounts/{created.Id}/changes");
+        Assert.NotNull(changes);
+        Assert.Contains(changes.Items, c => c.FieldName == "Name" && c.NewValue == "After");
+    }
+
+    [Fact]
+    public async Task List_status_filter_inactive()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var active = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Active Co", "ACT-1", 0, 0, 0, Status: "Active"));
+        var inactive = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Inactive Co", "INA-1", 0, 0, 0, Status: "Inactive"));
+        Assert.Equal(HttpStatusCode.Created, active.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, inactive.StatusCode);
+
+        var listed = await client.GetFromJsonAsync<List<AccountResponse>>("/api/accounts?status=Inactive");
+        Assert.NotNull(listed);
+        Assert.All(listed, a => Assert.Equal("Inactive", a.Status));
+        Assert.Contains(listed, a => a.Code == "INA-1");
+        Assert.DoesNotContain(listed, a => a.Code == "ACT-1");
+    }
+
+    [Fact]
+    public async Task Put_invalid_apto_percentage_returns_bad_request()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Valid", "PCT-1", 0, 0, 0));
+        var created = await post.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(created);
+
+        var badSettings = new AccountSettingsDto { AptoPercentage = 150 };
+        var response = await client.PutAsJsonAsync(
+            $"/api/accounts/{created.Id}",
+            new AccountWriteRequest("Valid", "PCT-1", 0, 0, 0, Settings: badSettings));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

@@ -1,13 +1,68 @@
 import { DEMO_USER } from "./demoAuth";
 
+export type AccountBillingAddress = {
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
+export type AccountFees = {
+  audit?: number | null;
+  wipe?: number | null;
+  shred?: number | null;
+  recycle?: number | null;
+  bulk?: number | null;
+  bulkRecycle?: number | null;
+  storage?: number | null;
+  teardown?: number | null;
+  repair?: number | null;
+  osInstall?: number | null;
+  redeploy?: number | null;
+};
+
+export type AccountRules = {
+  requireProcessingApproval: boolean;
+  requireRecycleApproval: boolean;
+  requireSalesApproval: boolean;
+  redeployOnly: boolean;
+  redeployBypass: boolean;
+  shredAllDrives: boolean;
+  recycleOnly: boolean;
+  requireShredPictures: boolean;
+  requireDamagePictures: boolean;
+};
+
+export type AccountServices = {
+  osInstallImaging: boolean;
+  memoryInstall: boolean;
+  partsReplacement: boolean;
+};
+
+export type AccountSettings = {
+  aptoPercentage: number;
+  fees: AccountFees;
+  rules: AccountRules;
+  services: AccountServices;
+  billingAddress: AccountBillingAddress;
+};
+
 export type Account = {
   id: string;
   name: string;
   code: string;
+  status: string;
   slaReceivingDays: number;
   slaProcessingDays: number;
   slaShippingDays: number;
+  settings: AccountSettings;
   createdAtUtc: string;
+  qboCustomerId?: string | null;
+  qboSyncStatus?: string;
+  qboSyncError?: string | null;
+  qboLastSyncAtUtc?: string | null;
 };
 
 export type AccountWrite = {
@@ -16,16 +71,122 @@ export type AccountWrite = {
   slaReceivingDays: number;
   slaProcessingDays: number;
   slaShippingDays: number;
+  status?: string;
+  settings?: AccountSettings;
 };
+
+export type AccountChangeLogEntry = {
+  fieldName: string;
+  oldValue: string | null;
+  newValue: string | null;
+  changedBy: string;
+  changedAtUtc: string;
+};
+
+export type AccountChangeLogList = {
+  items: AccountChangeLogEntry[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+export function defaultAccountSettings(): AccountSettings {
+  return {
+    aptoPercentage: 0,
+    fees: {},
+    rules: {
+      requireProcessingApproval: false,
+      requireRecycleApproval: false,
+      requireSalesApproval: false,
+      redeployOnly: false,
+      redeployBypass: false,
+      shredAllDrives: false,
+      recycleOnly: false,
+      requireShredPictures: false,
+      requireDamagePictures: false,
+    },
+    services: {
+      osInstallImaging: false,
+      memoryInstall: false,
+      partsReplacement: false,
+    },
+    billingAddress: {
+      line1: "",
+      line2: null,
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "US",
+    },
+  };
+}
 
 const base = "";
 
-export async function listAccounts(q?: string): Promise<Account[]> {
-  const url = q?.trim()
-    ? `${base}/api/accounts?q=${encodeURIComponent(q.trim())}`
-    : `${base}/api/accounts`;
-  const res = await fetch(url);
+export async function listAccounts(
+  q?: string,
+  status: "Active" | "Inactive" | "Both" = "Active",
+): Promise<Account[]> {
+  const qs = buildQuery({
+    q: q?.trim() || undefined,
+    status,
+  });
+  const res = await fetch(`${base}/api/accounts${qs}`);
   if (!res.ok) throw new Error(`list failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getAccount(id: string): Promise<Account> {
+  const res = await fetch(`${base}/api/accounts/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error(`get account failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAccount(id: string, body: AccountWrite): Promise<Account> {
+  const res = await fetch(`${base}/api/accounts/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `update account failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function listAccountChanges(
+  accountId: string,
+  params: {
+    field?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<AccountChangeLogList> {
+  const qs = buildQuery({
+    field: params.field,
+    from: params.from,
+    to: params.to,
+    page: params.page,
+    pageSize: params.pageSize,
+  });
+  const res = await fetch(
+    `${base}/api/accounts/${encodeURIComponent(accountId)}/changes${qs}`,
+  );
+  if (!res.ok) throw new Error(`account changes failed: ${res.status}`);
+  return res.json();
+}
+
+export async function postAccountQboSync(accountId: string): Promise<{ requestId: string }> {
+  const res = await fetch(`${base}/api/accounts/${encodeURIComponent(accountId)}/qbo-sync`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `qbo sync failed: ${res.status}`);
+  }
   return res.json();
 }
 

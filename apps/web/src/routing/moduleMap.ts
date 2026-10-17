@@ -198,6 +198,13 @@ export function parseInventoryAssetId(pathname: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+export function parseAccountId(pathname: string): string | null {
+  const match = /^\/accounts\/([^/]+)/.exec(pathname);
+  if (!match) return null;
+  const id = decodeURIComponent(match[1]);
+  return id === "" ? null : id;
+}
+
 export function isKnownAppPath(pathname: string): boolean {
   if (pathname === "/" || pathname === "") return true;
   return (

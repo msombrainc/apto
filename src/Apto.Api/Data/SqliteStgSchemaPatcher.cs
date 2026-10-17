@@ -28,6 +28,8 @@ public static class SqliteStgSchemaPatcher
                 return;
 
             EnsureAccountsQboColumns(sqlite);
+            EnsureAccountsF2Columns(sqlite);
+            EnsureAccountChangeLogsTable(sqlite);
             EnsureQboConnectionsTable(sqlite);
             EnsureJobsTable(sqlite);
             EnsureCategoriesTable(sqlite);
@@ -64,6 +66,45 @@ public static class SqliteStgSchemaPatcher
                 connection,
                 "ALTER TABLE \"Accounts\" ADD COLUMN \"QboSyncStatus\" TEXT NOT NULL DEFAULT 'skipped';");
         }
+    }
+
+    private static void EnsureAccountsF2Columns(SqliteConnection connection)
+    {
+        if (!ColumnExists(connection, "Accounts", "Status"))
+        {
+            Execute(
+                connection,
+                "ALTER TABLE \"Accounts\" ADD COLUMN \"Status\" TEXT NOT NULL DEFAULT 'Active';");
+        }
+
+        if (!ColumnExists(connection, "Accounts", "Settings"))
+        {
+            Execute(
+                connection,
+                "ALTER TABLE \"Accounts\" ADD COLUMN \"Settings\" TEXT NOT NULL DEFAULT '{}';");
+        }
+    }
+
+    private static void EnsureAccountChangeLogsTable(SqliteConnection connection)
+    {
+        if (TableExists(connection, "AccountChangeLogs"))
+            return;
+
+        Execute(
+            connection,
+            """
+            CREATE TABLE "AccountChangeLogs" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_AccountChangeLogs" PRIMARY KEY,
+                "AccountId" TEXT NOT NULL,
+                "FieldName" TEXT NOT NULL,
+                "OldValue" TEXT NULL,
+                "NewValue" TEXT NULL,
+                "ChangedBy" TEXT NOT NULL,
+                "ChangedAtUtc" TEXT NOT NULL,
+                CONSTRAINT "FK_AccountChangeLogs_Accounts_AccountId" FOREIGN KEY ("AccountId") REFERENCES "Accounts" ("Id") ON DELETE CASCADE
+            );
+            """);
+        Execute(connection, """CREATE INDEX "IX_AccountChangeLogs_AccountId" ON "AccountChangeLogs" ("AccountId");""");
     }
 
     private static void EnsureQboConnectionsTable(SqliteConnection connection)

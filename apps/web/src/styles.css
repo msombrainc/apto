@@ -1402,3 +1402,136 @@ tr.row-selected {
   font-size: 0.85rem;
   font-weight: 600;
 }
+
+/* F2 account detail (apto#51) */
+.account-detail-header {
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.account-detail-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  flex: 1;
+  min-width: 12rem;
+}
+
+.account-detail-title h1 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.account-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem 1.25rem;
+}
+
+.tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--aims-border);
+  margin-bottom: 0;
+}
+
+.tab-bar__tab {
+  padding: 0.5rem 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--aims-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-bar__tab:hover {
+  color: var(--aims-text);
+}
+
+.tab-bar__tab--active {
+  color: var(--aims-accent);
+  border-bottom-color: var(--aims-accent);
+  font-weight: 600;
+}
+
+.fee-grid table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.fee-grid th,
+.fee-grid td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--aims-border);
+}
+
+.fee-grid input[type="number"] {
+  width: 100%;
+  max-width: 8rem;
+}
+
+.rules-grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.save-status {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--aims-radius, 8px);
+  background: var(--sla-pill-on-track-bg, rgba(34, 197, 94, 0.12));
+  color: var(--aims-text);
+  font-size: 0.9rem;
+}
+
+.status-pill--inactive {
+  opacity: 0.75;
+}
+
+.numeric-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.account-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.text-button {
+  color: var(--aims-accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.text-button:hover {
+  text-decoration: underline;
+}
+
+.qbo-account-panel {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
+
+.filter-bar__select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}

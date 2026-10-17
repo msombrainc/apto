@@ -13,6 +13,7 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
     public DbSet<QboConnection> QboConnections => Set<QboConnection>();
     public DbSet<QboSyncRequest> QboSyncRequests => Set<QboSyncRequest>();
     public DbSet<AssetChangeLog> AssetChangeLogs => Set<AssetChangeLog>();
+    public DbSet<AccountChangeLog> AccountChangeLogs => Set<AccountChangeLog>();
     public DbSet<ReferenceItem> ReferenceItems => Set<ReferenceItem>();
     public DbSet<AptoIdSequence> AptoIdSequences => Set<AptoIdSequence>();
 
@@ -26,6 +27,8 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
             e.Property(x => x.QboCustomerId).HasMaxLength(50);
             e.Property(x => x.QboSyncStatus).HasMaxLength(20);
             e.Property(x => x.QboSyncError).HasMaxLength(2000);
+            e.Property(x => x.Status).HasMaxLength(16).HasDefaultValue("Active");
+            e.Property(x => x.Settings).IsRequired();
         });
 
         modelBuilder.Entity<QboConnection>(e =>
@@ -109,6 +112,16 @@ public class AptoDbContext(DbContextOptions<AptoDbContext> options) : DbContext(
             e.Property(x => x.NewValue).HasMaxLength(500);
             e.Property(x => x.ChangedBy).HasMaxLength(100);
             e.HasIndex(x => x.AssetId);
+        });
+
+        modelBuilder.Entity<AccountChangeLog>(e =>
+        {
+            e.HasOne(x => x.Account).WithMany().HasForeignKey(x => x.AccountId);
+            e.Property(x => x.FieldName).HasMaxLength(100);
+            e.Property(x => x.OldValue).HasMaxLength(500);
+            e.Property(x => x.NewValue).HasMaxLength(500);
+            e.Property(x => x.ChangedBy).HasMaxLength(100);
+            e.HasIndex(x => x.AccountId);
         });
     }
 }

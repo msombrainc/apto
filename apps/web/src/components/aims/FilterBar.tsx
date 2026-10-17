@@ -1,9 +1,12 @@
+import type { ReactNode } from "react";
+
 type FilterBarProps = {
   searchPlaceholder: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
   countLabel: string;
   searchId?: string;
+  children?: ReactNode;
 };
 
 export function FilterBar({
@@ -12,6 +15,7 @@ export function FilterBar({
   onSearchChange,
   countLabel,
   searchId = "aims-filter-search",
+  children,
 }: FilterBarProps) {
   return (
     <div className="filter-bar">
@@ -25,6 +29,7 @@ export function FilterBar({
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </label>
+      {children}
       <span className="filter-bar__meta muted" aria-live="polite">{countLabel}</span>
     </div>
   );

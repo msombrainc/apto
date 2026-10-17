@@ -41,7 +41,8 @@ test("listAccounts encodes search query in URL", async () => {
   };
 
   await listAccounts("acme co");
-  assert.ok(requested.includes("q=acme%20co"));
+  assert.match(requested, /q=acme(\+|%20)co/);
+  assert.ok(requested.includes("status=Active"));
 
   globalThis.fetch = original;
 });
