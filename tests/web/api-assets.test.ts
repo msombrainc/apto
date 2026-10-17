@@ -4,6 +4,7 @@ import {
   createJobAsset,
   getAsset,
   listInventoryAssets,
+  listInventoryAssetsPaged,
   listJobAssets,
   searchPartNumbers,
   updateAsset,
@@ -150,6 +151,59 @@ test("listInventoryAssets builds query string", async () => {
   assert.ok(requested.includes("q=sn-1"));
   assert.ok(requested.includes("accountId=acc"));
   assert.ok(requested.includes("facilityCode=GA"));
+
+  globalThis.fetch = original;
+});
+
+test("listInventoryAssetsPaged parses paged JSON and query keys", async () => {
+  const original = globalThis.fetch;
+  let requested = "";
+  globalThis.fetch = async (input: RequestInfo | URL) => {
+    requested = typeof input === "string" ? input : input.toString();
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        items: [{
+          id: "1",
+          aptoId: "A1",
+          jobId: "j",
+          serialNumber: null,
+          partNumber: null,
+          categoryName: null,
+          grade: null,
+          status: null,
+          locationId: null,
+          locationName: null,
+          accountName: "Acme",
+          facilityCode: "GA",
+          createdAtUtc: "2026-01-01T00:00:00Z",
+        }],
+        page: 2,
+        pageSize: 25,
+        total: 99,
+        notFoundCodes: ["X"],
+      }),
+    } as Response;
+  };
+
+  const result = await listInventoryAssetsPaged({
+    q: "sn",
+    grade: "A",
+    codes: "A1\nB2",
+    page: 2,
+    pageSize: 25,
+    sortBy: "serial",
+    sortDir: "asc",
+  });
+  assert.equal(result.page, 2);
+  assert.equal(result.total, 99);
+  assert.equal(result.items.length, 1);
+  assert.deepEqual(result.notFoundCodes, ["X"]);
+  assert.ok(requested.includes("page=2"));
+  assert.ok(requested.includes("pageSize=25"));
+  assert.ok(requested.includes("grade=A"));
+  assert.ok(requested.includes("sortBy=serial"));
 
   globalThis.fetch = original;
 });

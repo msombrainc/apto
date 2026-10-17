@@ -97,6 +97,37 @@ test("buildInventoryListParams omits empty account and facility", () => {
       sortDir: "asc",
     },
   );
+  assert.deepEqual(
+    buildInventoryListParams(
+      "",
+      "",
+      "",
+      "A",
+      "WIPED",
+      "",
+      "laptops",
+      "2026-01-01",
+      "2026-01-31",
+      "A1\nB2",
+      1,
+      50,
+      "created",
+      "desc",
+    ),
+    {
+      q: "",
+      grade: "A",
+      status: "WIPED",
+      category: "laptops",
+      createdFrom: "2026-01-01",
+      createdTo: "2026-01-31",
+      codes: "A1\nB2",
+      page: 1,
+      pageSize: 50,
+      sortBy: "created",
+      sortDir: "desc",
+    },
+  );
 });
 
 test("debounceSchedule defers callback until delay", async () => {

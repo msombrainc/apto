@@ -45,14 +45,19 @@ export function buildJobsCsv(jobs: Job[], columns: JobsListColumnId[]): string {
   return [header, ...rows].join("\n");
 }
 
-export function exportJobsCsv(jobs: Job[], columns: JobsListColumnId[]): void {
-  const blob = new Blob([buildJobsCsv(jobs, columns)], {
-    type: "text/csv;charset=utf-8",
-  });
+export function downloadCsvFile(csvContent: string, filename: string): void {
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `apto-jobs-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export function exportJobsCsv(jobs: Job[], columns: JobsListColumnId[]): void {
+  downloadCsvFile(
+    buildJobsCsv(jobs, columns),
+    `apto-jobs-${new Date().toISOString().slice(0, 10)}.csv`,
+  );
 }

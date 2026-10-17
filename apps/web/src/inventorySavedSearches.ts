@@ -1,4 +1,5 @@
 import type { InventoryListParams } from "./inventoryListParams";
+import { downloadCsvFile, escapeCsv } from "./jobsListExport";
 
 export type SavedInventorySearch = {
   id: string;
@@ -25,22 +26,35 @@ export function persistSavedInventorySearches(searches: SavedInventorySearch[]):
   localStorage.setItem(STORAGE_KEY, JSON.stringify(searches));
 }
 
-export function exportInventoryCsv(
-  rows: { aptoId: string; serialNumber: string | null; partNumber: string | null; categoryName: string | null; grade: string | null; status: string | null; locationName: string | null; accountName: string; facilityCode: string | null; jobId: string; createdAtUtc: string }[],
-): void {
-  const header = [
-    "Apto ID",
-    "Serial",
-    "Part #",
-    "Category",
-    "Grade",
-    "Status",
-    "Location",
-    "Account",
-    "Facility",
-    "Job ID",
-    "Created",
-  ];
+export type InventoryCsvRow = {
+  aptoId: string;
+  serialNumber: string | null;
+  partNumber: string | null;
+  categoryName: string | null;
+  grade: string | null;
+  status: string | null;
+  locationName: string | null;
+  accountName: string;
+  facilityCode: string | null;
+  jobId: string;
+  createdAtUtc: string;
+};
+
+const CSV_HEADERS = [
+  "Apto ID",
+  "Serial",
+  "Part #",
+  "Category",
+  "Grade",
+  "Status",
+  "Location",
+  "Account",
+  "Facility",
+  "Job ID",
+  "Created",
+];
+
+export function buildInventoryCsv(rows: InventoryCsvRow[]): string {
   const lines = rows.map((r) =>
     [
       r.aptoId,
@@ -55,14 +69,15 @@ export function exportInventoryCsv(
       r.jobId,
       r.createdAtUtc,
     ]
-      .map((c) => `"${String(c).replace(/"/g, '""')}"`)
+      .map((c) => escapeCsv(String(c)))
       .join(","),
   );
-  const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `inventory-export-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  return [CSV_HEADERS.join(","), ...lines].join("\n");
+}
+
+export function exportInventoryCsv(rows: InventoryCsvRow[]): void {
+  downloadCsvFile(
+    buildInventoryCsv(rows),
+    `inventory-export-${new Date().toISOString().slice(0, 10)}.csv`,
+  );
 }

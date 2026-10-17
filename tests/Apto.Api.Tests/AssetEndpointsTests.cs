@@ -690,6 +690,62 @@ public class AssetEndpointsTests
     }
 
     [Fact]
+    public async Task Inventory_list_v2_filters_grade_status_category_location()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Filt Co", "FLT", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var part = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("PN-FILT-1", "Laptops"));
+        var createdPart = await part.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(createdPart);
+
+        var job = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", null, DateTime.UtcNow, null));
+        var createdJob = await job.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{createdJob.Id}/assets",
+            new AssetWriteRequest(createdPart.Id, "FILT-SN", null));
+        var asset = await post.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(asset);
+
+        var facilities = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            "/api/reference/facility?pageSize=10");
+        Assert.NotNull(facilities);
+        var gaFacility = facilities.Items.First(f => f.Code == "GA");
+        var locations = await client.GetFromJsonAsync<ReferenceData.ReferenceListResponse>(
+            $"/api/reference/location?facilityId={gaFacility.Id}&pageSize=50");
+        Assert.NotNull(locations);
+        var location = locations.Items.First();
+
+        await client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new AssetWriteRequest(null, null, null, "A", "WIPED", location.Id));
+
+        var from = DateTime.UtcNow.AddDays(-1).ToString("O");
+        var to = DateTime.UtcNow.AddDays(1).ToString("O");
+        var url =
+            $"/api/assets?grade=A&status=WIPED&category=laptops&locationId={location.Id}"
+            + $"&createdFrom={Uri.EscapeDataString(from)}&createdTo={Uri.EscapeDataString(to)}"
+            + "&page=1&pageSize=50";
+        var result = await client.GetFromJsonAsync<AssetInventoryListResponse>(url);
+        Assert.NotNull(result);
+        Assert.Single(result.Items);
+        Assert.Equal("FILT-SN", result.Items[0].SerialNumber);
+        Assert.Equal("Laptops", result.Items[0].CategoryName);
+    }
+
+    [Fact]
     public async Task Lookup_by_apto_id_returns_asset()
     {
         await using var factory = new AptoWebApplicationFactory();

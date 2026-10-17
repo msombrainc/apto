@@ -231,6 +231,20 @@ export function App() {
   }, [loggedIn, view, routeAccountId, debouncedQuery, accountStatusFilter, refreshAccounts, refreshJobs]);
 
   useEffect(() => {
+    setInventoryPage(1);
+  }, [
+    debouncedInventoryQuery,
+    inventoryAccountId,
+    inventoryFacility,
+    inventoryGrade,
+    inventoryStatus,
+    inventoryCategory,
+    inventoryCreatedFrom,
+    inventoryCreatedTo,
+    inventoryPasteCodes,
+  ]);
+
+  useEffect(() => {
     if (!loggedIn || view !== "inventory") return;
     void refreshInventory();
   }, [loggedIn, view, refreshInventory]);
