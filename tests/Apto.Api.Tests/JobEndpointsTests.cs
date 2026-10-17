@@ -116,15 +116,31 @@ public class JobEndpointsTests
         var createdPart = await part.Content.ReadFromJsonAsync<PartNumberResponse>();
         Assert.NotNull(createdPart);
 
-        await client.PostAsJsonAsync(
+        var assetPost = await client.PostAsJsonAsync(
             $"/api/jobs/{createdJob.Id}/assets",
-            new AssetWriteRequest(createdPart.Id, "SN-PRG", null));
+            new AssetWriteRequest(createdPart.Id, "SN-PRG", null, Status: "RECEIVED"));
+        var createdAsset = await assetPost.Content.ReadFromJsonAsync<AssetResponse>();
+        Assert.NotNull(createdAsset);
 
         var listed = await client.GetFromJsonAsync<List<JobResponse>>("/api/jobs");
         Assert.NotNull(listed);
         var row = Assert.Single(listed, j => j.Id == createdJob.Id);
-        Assert.True(row.WipAssetCount + row.FinishedAssetCount + row.ExceptionAssetCount >= 1);
-        Assert.True(row.ProgressPercent >= 0 && row.ProgressPercent <= 100);
+        Assert.Equal(1, row.WipAssetCount);
+        Assert.Equal(0, row.FinishedAssetCount);
+        Assert.Equal(0, row.ExceptionAssetCount);
+        Assert.Equal(0, row.ProgressPercent);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/assets/{createdAsset.Id}",
+            new AssetWriteRequest(null, null, null, Status: "RECYCLED"));
+        Assert.Equal(HttpStatusCode.OK, put.StatusCode);
+
+        var afterFinished = await client.GetFromJsonAsync<List<JobResponse>>("/api/jobs");
+        Assert.NotNull(afterFinished);
+        var finishedRow = Assert.Single(afterFinished, j => j.Id == createdJob.Id);
+        Assert.Equal(0, finishedRow.WipAssetCount);
+        Assert.Equal(1, finishedRow.FinishedAssetCount);
+        Assert.Equal(100, finishedRow.ProgressPercent);
     }
 
     [Fact]
