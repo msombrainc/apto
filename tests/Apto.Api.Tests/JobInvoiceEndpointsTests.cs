@@ -207,6 +207,35 @@ public class JobInvoiceEndpointsTests
     }
 
     [Fact]
+    public async Task Create_invoice_when_qbo_not_configured_returns_503_and_marks_failed()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var (jobId, _) = await SeedJobWithFeesAsync(factory);
+        var client = factory.CreateClient();
+
+        var post = await client.PostAsJsonAsync(
+            $"/api/jobs/{jobId}/invoices",
+            new CreateServiceInvoiceRequest
+            {
+                Lines = [new CreateServiceInvoiceLine { ServiceKey = "audit", Quantity = 1 }],
+            });
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, post.StatusCode);
+        var body = await post.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("Failed", body.GetProperty("status").GetString());
+        Assert.Contains(
+            "not configured",
+            body.GetProperty("lastError").GetString(),
+            StringComparison.OrdinalIgnoreCase);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
+        var invoice = await db.ServiceInvoices.AsNoTracking().SingleAsync(i => i.JobId == jobId);
+        Assert.Equal("Failed", invoice.Status);
+        Assert.Contains("not configured", invoice.LastError, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(10m, invoice.Total);
+    }
+
+    [Fact]
     public async Task Create_invoice_all_zero_qty_returns_400()
     {
         await using var factory = new AptoWebApplicationFactory(o =>
