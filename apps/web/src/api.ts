@@ -868,8 +868,15 @@ export async function createJobInvoice(
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? `create invoice failed: ${res.status}`);
+    const err = await res.json().catch(() => ({})) as {
+      error?: string;
+      lastError?: string;
+    };
+    const message =
+      err.error ??
+      err.lastError ??
+      `create invoice failed: ${res.status}`;
+    throw new Error(message);
   }
   return res.json();
 }

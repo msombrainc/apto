@@ -436,6 +436,9 @@ public static class SqliteStgSchemaPatcher
         Execute(
             connection,
             """CREATE INDEX "IX_ServiceInvoices_JobId" ON "ServiceInvoices" ("JobId");""");
+        Execute(
+            connection,
+            """CREATE INDEX "IX_ServiceInvoices_AccountId" ON "ServiceInvoices" ("AccountId");""");
     }
 
     private static void EnsureCategoriesIsActiveColumn(SqliteConnection connection)

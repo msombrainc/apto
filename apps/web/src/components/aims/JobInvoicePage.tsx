@@ -10,6 +10,7 @@ import {
   type ServiceInvoiceRow,
 } from "../../api";
 import { ROUTES, accountPath, jobPath } from "../../routing/paths";
+import { AlertBanner } from "./AlertBanner";
 import { AimsButton } from "./Button";
 
 type Props = { jobId: string };
@@ -57,6 +58,7 @@ export function JobInvoicePage({ jobId }: Props) {
       setHistory(invoices);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load invoice preview");
+      setJob(null);
     } finally {
       setLoading(false);
     }
@@ -96,8 +98,13 @@ export function JobInvoicePage({ jobId }: Props) {
     return <p className="muted">Loading invoice preview…</p>;
   }
 
-  if (!job) {
-    return <p className="error">Job not found.</p>;
+  if (error || !job) {
+    return (
+      <div data-testid="f11-invoice-page">
+        <AlertBanner variant="error">{error ?? "Job not found"}</AlertBanner>
+        <Link to={jobPath(jobId)}>Back to job</Link>
+      </div>
+    );
   }
 
   return (
