@@ -20,6 +20,21 @@ test("urgentJobsSorted orders by daysRemaining ascending", () => {
   assert.deepEqual(urgent.map((j) => j.id), ["b", "d", "a"]);
 });
 
+test("breakdownByAccount groups SLA counts and account labels", () => {
+  const jobs = [
+    jobFixture({ id: "1", accountId: "a1", accountName: "Acme", slaStatus: "on-track" }),
+    jobFixture({ id: "2", accountId: "a1", accountName: "Acme", slaStatus: "at-risk", daysRemaining: 1 }),
+    jobFixture({ id: "3", accountId: "a2", accountName: "Beta Co", slaStatus: "overdue", daysRemaining: -2 }),
+  ];
+  const rows = breakdownByAccount(jobs);
+  assert.equal(rows.length, 2);
+  const acme = rows.find((r) => r.key === "a1");
+  assert.equal(acme?.label, "Acme");
+  assert.equal(acme?.onTrack, 1);
+  assert.equal(acme?.atRisk, 1);
+  assert.equal(rows.find((r) => r.key === "a2")?.overdue, 1);
+});
+
 test("breakdownByFacility groups SLA counts", () => {
   const jobs = [
     jobFixture({ id: "1", facilityCode: "GA", slaStatus: "on-track" }),

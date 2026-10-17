@@ -57,7 +57,7 @@ export function SlaDashboardPage({
           </select>
         </label>
         <FacilityPills
-          facilities={facilities}
+          facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
           value={facilityCode}
           onChange={setFacilityCode}
         />
