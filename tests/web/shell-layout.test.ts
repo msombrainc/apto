@@ -63,6 +63,12 @@ test("mobile breakpoint resets fixed shell heights (apto#107)", () => {
   assert.match(block, /\.aims-sidebar\s*\{[^}]*height:\s*auto/);
   assert.match(block, /\.aims-main\s*\{[^}]*height:\s*auto/);
 });
+test("dark data tables use elevated header + link tokens (apto#107)", () => {
+  assert.match(css, /--aims-table-header:\s*#d1dae8/);
+  assert.match(css, /--aims-link:\s*#ffc49a/);
+  assert.match(css, /\.modal-form input,\s*\n\.modal-form select/);
+});
+
 test("AppShell installs document scroll lock helper (apto#112)", () => {
   const shellPath = join(
     dirname(fileURLToPath(import.meta.url)),
