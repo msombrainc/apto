@@ -20,6 +20,7 @@ import {
   parseAccountId,
   parseInventoryAssetId,
   parseJobId,
+  parseJobBulkUnserialized,
   parseJobSpreadsheetImport,
   viewFromPathname,
   type AppView,
@@ -35,6 +36,7 @@ import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/A
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobDetailPage } from "./components/aims/JobDetailPage";
+import { BulkUnserializedPage } from "./components/aims/BulkUnserializedPage";
 import { SpreadsheetImportPage } from "./components/aims/SpreadsheetImportPage";
 import { JobsListV2 } from "./components/aims/JobsListV2";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
@@ -57,6 +59,7 @@ export function App() {
   const routeAccountId = parseAccountId(location.pathname);
   const routeJobId = parseJobId(location.pathname);
   const spreadsheetImportJobId = parseJobSpreadsheetImport(location.pathname);
+  const bulkUnserializedJobId = parseJobBulkUnserialized(location.pathname);
   const [query, setQuery] = useState("");
   const [accountStatusFilter, setAccountStatusFilter] = useState<AccountStatusFilter>("Active");
   const debouncedQuery = useDebounced(query, 300);
@@ -350,7 +353,10 @@ export function App() {
       {view === "jobs" && spreadsheetImportJobId && (
         <SpreadsheetImportPage jobId={spreadsheetImportJobId} />
       )}
-      {view === "jobs" && routeJobId && !spreadsheetImportJobId && (
+      {view === "jobs" && bulkUnserializedJobId && (
+        <BulkUnserializedPage jobId={bulkUnserializedJobId} />
+      )}
+      {view === "jobs" && routeJobId && !spreadsheetImportJobId && !bulkUnserializedJobId && (
         <JobDetailPage jobId={routeJobId} accounts={accounts} />
       )}
 

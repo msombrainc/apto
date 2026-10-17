@@ -15,7 +15,13 @@ import {
   updateJob,
   type ReferenceItem,
 } from "../../api";
-import { ROUTES, accountPath, inventoryAssetPath, jobSpreadsheetImportPath } from "../../routing/paths";
+import {
+  ROUTES,
+  accountPath,
+  inventoryAssetPath,
+  jobBulkUnserializedPath,
+  jobSpreadsheetImportPath,
+} from "../../routing/paths";
 import {
   formatSlaDaysRemaining,
   jobTotalAssetCount,
@@ -216,9 +222,13 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           >
             Import spreadsheet
           </Link>
-          <AimsButton variant="secondary" data-testid="f3-action-bulk" onClick={() => setStubAction("bulk")}>
+          <Link
+            to={jobBulkUnserializedPath(jobId)}
+            className="aims-btn aims-btn--secondary"
+            data-testid="f3-action-bulk"
+          >
             Bulk unserialized
-          </AimsButton>
+          </Link>
           <AimsButton variant="secondary" data-testid="f3-action-certificate" onClick={() => setStubAction("certificate")}>
             Certificate
           </AimsButton>
@@ -386,7 +396,6 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
 
       <Modal open={stubAction !== null} title="Coming in a later slice" onClose={() => setStubAction(null)}>
         <p>
-          {stubAction === "bulk" && "Bulk unserialized creation (F7) is tracked on apto#55."}
           {stubAction === "certificate" && "Certificates (F10) is tracked on apto#58."}
           {stubAction === "invoice" && "Service invoice (F11) is tracked on apto#59."}
         </p>
