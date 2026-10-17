@@ -2,9 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Apto.Api.Accounts;
+using Apto.Api.Assets;
 using Apto.Api.Data;
 using Apto.Api.Data.Entities;
 using Apto.Api.Jobs;
+using Apto.Api.PartNumbers;
 using Apto.Api.QuickBooks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,6 +66,122 @@ public class JobInvoiceEndpointsTests
         Assert.Equal("qbo-cust-1", json.GetProperty("qboCustomerId").GetString());
         var lines = json.GetProperty("lines");
         Assert.True(lines.GetArrayLength() >= 1);
+    }
+
+    [Fact]
+    public async Task Invoice_preview_default_quantities_match_asset_certificate_groups()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var settings = new AccountSettingsDto
+        {
+            Fees = new AccountFeesDto { Audit = 10m, Wipe = 5m, Shred = 3m, Recycle = 2m },
+        };
+        var accountPost = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Qty Co", "QTY-01", 1, 1, 1, Settings: settings));
+        var createdAccount = await accountPost.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobPost = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(
+                createdAccount.Id,
+                "TX",
+                "WIP",
+                DateTime.UtcNow.AddDays(-1),
+                null));
+        var createdJob = await jobPost.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var part = await client.PostAsJsonAsync(
+            "/api/part-numbers",
+            new PartNumberWriteRequest("PN-INV-QTY", "Laptops"));
+        var createdPart = await part.Content.ReadFromJsonAsync<PartNumberResponse>();
+        Assert.NotNull(createdPart);
+
+        async Task AddAssetAsync(string serial, string status)
+        {
+            var post = await client.PostAsJsonAsync(
+                $"/api/jobs/{createdJob.Id}/assets",
+                new AssetWriteRequest(createdPart.Id, serial, null, null, status));
+            Assert.Equal(HttpStatusCode.Created, post.StatusCode);
+        }
+
+        await AddAssetAsync("SN-R1", "RECEIVED");
+        await AddAssetAsync("SN-W1", "WIPED");
+        await AddAssetAsync("SN-W2", "WIPED");
+        await AddAssetAsync("SN-S1", "SHREDDED");
+        await AddAssetAsync("SN-C1", "RECYCLED");
+
+        var res = await client.GetAsync($"/api/jobs/{createdJob.Id}/invoice-preview");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+        var lines = json.GetProperty("lines");
+        Assert.Equal(4, lines.GetArrayLength());
+
+        static JsonElement? LineByKey(JsonElement lines, string key)
+        {
+            foreach (var line in lines.EnumerateArray())
+            {
+                if (line.GetProperty("serviceKey").GetString() == key)
+                    return line;
+            }
+
+            return null;
+        }
+
+        var audit = LineByKey(lines, "audit");
+        Assert.NotNull(audit);
+        Assert.Equal(5, audit.Value.GetProperty("defaultQuantity").GetInt32());
+        Assert.Contains("5 assets on job", audit.Value.GetProperty("quantityHint").GetString());
+
+        var wipe = LineByKey(lines, "wipe");
+        Assert.NotNull(wipe);
+        Assert.Equal(2, wipe.Value.GetProperty("defaultQuantity").GetInt32());
+        Assert.Contains("2 assets with status Wiped", wipe.Value.GetProperty("quantityHint").GetString());
+
+        var shred = LineByKey(lines, "shred");
+        Assert.NotNull(shred);
+        Assert.Equal(1, shred.Value.GetProperty("defaultQuantity").GetInt32());
+
+        var recycle = LineByKey(lines, "recycle");
+        Assert.NotNull(recycle);
+        Assert.Equal(1, recycle.Value.GetProperty("defaultQuantity").GetInt32());
+    }
+
+    [Fact]
+    public async Task Invoice_preview_omits_lines_without_account_fee_rates()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+        var settings = new AccountSettingsDto
+        {
+            Fees = new AccountFeesDto { Audit = 10m },
+        };
+        var accountPost = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Fee Co", "FEE-01", 1, 1, 1, Settings: settings));
+        var createdAccount = await accountPost.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var jobPost = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(
+                createdAccount.Id,
+                "TX",
+                "WIP",
+                DateTime.UtcNow.AddDays(-1),
+                null));
+        var createdJob = await jobPost.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(createdJob);
+
+        var res = await client.GetAsync($"/api/jobs/{createdJob.Id}/invoice-preview");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var json = await res.Content.ReadFromJsonAsync<JsonElement>();
+        var lines = json.GetProperty("lines");
+        Assert.Equal(1, lines.GetArrayLength());
+        Assert.Equal("audit", lines[0].GetProperty("serviceKey").GetString());
     }
 
     [Fact]
