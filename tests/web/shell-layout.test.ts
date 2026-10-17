@@ -23,6 +23,24 @@ test("app shell uses full-viewport grid with hidden overflow (apto#107)", () => 
     css,
     /\.dashboard-panel:has\(\.data-table-wrap\)\s+\.data-table-wrap\s*\{[^}]*overflow:\s*auto/,
   );
+  assert.match(
+    css,
+    /\.dashboard-panel:has\(\.data-table-wrap\)\s+\.data-table-wrap\s*\{[^}]*overscroll-behavior:\s*contain/,
+  );
+  assert.match(
+    css,
+    /\.dashboard-panel:has\(\.data-table-wrap\)\s+\.filter-bar\s*\{[^}]*max-height:/,
+  );
+  assert.match(css, /\.aims-main\s*\{[^}]*overscroll-behavior:\s*none/);
+  assert.match(css, /\.page-content\s*\{[^}]*overscroll-behavior:\s*none/);
+  assert.match(
+    css,
+    /\.dashboard-panel:has\(\.data-table-wrap\)\s*\{[^}]*overflow:\s*hidden/,
+  );
+  assert.match(
+    css,
+    /\.dashboard-panel:has\(\.data-table-wrap\)\s+\.filter-bar\s*\{[^}]*overscroll-behavior:\s*contain/,
+  );
   assert.doesNotMatch(
     css,
     /\.data-table-wrap\s*\{[^}]*max-height:\s*min\(70vh/,
