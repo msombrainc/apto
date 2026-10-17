@@ -14,6 +14,7 @@ test("app shell uses full-viewport grid with hidden overflow (apto#107)", () => 
   assert.match(css, /\.aims-app\s*\{[^}]*height:\s*100vh/);
   assert.match(css, /\.aims-app\s*\{[^}]*overflow:\s*hidden/);
   assert.match(css, /\.page-content\s*\{[^}]*overflow-y:\s*auto/);
+  assert.match(css, /html:has\(\.aims-app\)[^}]*overflow:\s*hidden/);
   assert.match(
     css,
     /\.dashboard-panel:has\(\.data-table-wrap\)\s+\.data-table-wrap\s*\{[^}]*overflow:\s*auto/,

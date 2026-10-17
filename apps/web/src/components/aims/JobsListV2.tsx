@@ -152,6 +152,14 @@ export function JobsListV2({
         </AimsButton>
       </div>
 
+      <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
+        <StatCard label="Matching" value={String(filtered.length)} />
+        <StatCard label="On track" value={String(onTrack)} />
+        <StatCard label="At risk" value={String(atRisk)} />
+        <StatCard label="Overdue" value={String(overdue)} />
+      </div>
+
+      <section className="dashboard-panel" aria-label="Jobs list">
       <div className="filter-bar" data-testid="jobs-filters">
         <input
           type="search"
@@ -284,13 +292,6 @@ export function JobsListV2({
         </button>
       </div>
 
-      <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
-        <StatCard label="Matching" value={String(filtered.length)} />
-        <StatCard label="On track" value={String(onTrack)} />
-        <StatCard label="At risk" value={String(atRisk)} />
-        <StatCard label="Overdue" value={String(overdue)} />
-      </div>
-
       <DataTable
         ariaLabel="Jobs"
         tableTestId="jobs-table"
@@ -304,6 +305,7 @@ export function JobsListV2({
         onRowClick={(j) => navigate(jobPath(j.id))}
         emptyState={<p>No jobs match the current filters.</p>}
       />
+      </section>
 
       <Modal open={columnPickerOpen} title="Visible columns" onClose={() => setColumnPickerOpen(false)}>
         <ul className="column-picker-list">
