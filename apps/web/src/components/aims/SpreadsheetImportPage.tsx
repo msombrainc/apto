@@ -12,6 +12,7 @@ import {
 } from "../../api";
 import { jobPath } from "../../routing/paths";
 import {
+  MAX_IMPORT_ROWS,
   type ColumnMapping,
   type ImportField,
   type ParsedSheet,
@@ -103,6 +104,11 @@ export function SpreadsheetImportPage({ jobId }: Props) {
       if (parsed.rows.length === 0) {
         throw new Error("No data rows found in file.");
       }
+      if (parsed.rows.length > MAX_IMPORT_ROWS) {
+        throw new Error(
+          `File has ${parsed.rows.length} rows; maximum is ${MAX_IMPORT_ROWS}.`,
+        );
+      }
       setSheet(parsed);
       setMapping(guessColumnMapping(parsed.headers));
       setStep("map");
@@ -156,6 +162,11 @@ export function SpreadsheetImportPage({ jobId }: Props) {
       setValidating(false);
     }
   }, [sheet, mapping, gradeCodes, categoryNames, unknownPartPolicy]);
+
+  useEffect(() => {
+    if (step !== "preview" || !sheet) return;
+    void runValidation();
+  }, [unknownPartPolicy, step, sheet, runValidation]);
 
   const okRows = useMemo(
     () => validated.filter((r) => r.status === "ok"),
