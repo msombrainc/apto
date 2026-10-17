@@ -10,3 +10,10 @@ The authenticated app shell SHALL keep the sidebar and page header visible while
 - **THEN** the sidebar navigation, theme toggle, and operator footer remain visible
 - **AND** the page title and filter bar remain visible without scrolling off-screen
 - **AND** only the table body scrolls within the main content region
+
+#### Scenario: Jobs list scroll
+
+- **WHEN** the operator scrolls a long jobs table on STG (including at 1280×500 viewport)
+- **THEN** `document.documentElement.scrollTop` does not increase
+- **AND** the sidebar and page header remain visible
+- **AND** only the jobs table body scrolls inside `.data-table-wrap` within `.dashboard-panel`

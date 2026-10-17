@@ -69,8 +69,15 @@ body {
   background: var(--aims-bg);
 }
 
-#root {
-  min-height: 100vh;
+html:has(.aims-app),
+body:has(.aims-app) {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root:has(.aims-app) {
+  height: 100%;
+  overflow: hidden;
 }
 
 .muted {
@@ -475,7 +482,7 @@ body {
 .page-content {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding-top: 1rem;
   padding-bottom: 1.5rem;
 }
