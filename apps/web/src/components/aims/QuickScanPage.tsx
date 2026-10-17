@@ -7,6 +7,7 @@ import {
   updateAsset,
 } from "../../api";
 import { DEMO_USER } from "../../demoAuth";
+import { newId } from "../../id";
 import { AlertBanner } from "./AlertBanner";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
@@ -128,7 +129,7 @@ export function QuickScanPage() {
   useEffect(() => {
     if (presets.length === 0) {
       const seed: ScanPreset = {
-        id: crypto.randomUUID(),
+        id: newId(),
         name: "Audit intake",
         isGlobal: true,
         createdBy: DEMO_USER,
@@ -202,7 +203,7 @@ export function QuickScanPage() {
   const appendLog = (row: Omit<SessionLogRow, "id" | "time">) => {
     setSessionLog((prev) => [
       {
-        id: crypto.randomUUID(),
+        id: newId(),
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         ...row,
       },
@@ -348,7 +349,7 @@ export function QuickScanPage() {
     e.preventDefault();
     const name = editorName.trim() || "New preset";
     const preset: ScanPreset = {
-      id: selectedPreset?.id && editorOpen ? selectedPreset.id : crypto.randomUUID(),
+      id: selectedPreset?.id && editorOpen ? selectedPreset.id : newId(),
       name,
       isGlobal: editorGlobal,
       createdBy: DEMO_USER,
