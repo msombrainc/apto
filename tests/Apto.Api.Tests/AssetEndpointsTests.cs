@@ -52,6 +52,7 @@ public class AssetEndpointsTests
             $"/api/jobs/{createdJob.Id}/assets");
         Assert.NotNull(listed);
         Assert.Single(listed);
+        Assert.Equal("Laptops", listed[0].Category);
 
         var loaded = await client.GetFromJsonAsync<AssetResponse>($"/api/assets/{asset.Id}");
         Assert.NotNull(loaded);

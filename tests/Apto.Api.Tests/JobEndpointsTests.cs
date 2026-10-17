@@ -220,6 +220,31 @@ public class JobEndpointsTests
     }
 
     [Fact]
+    public async Task Put_rejects_invalid_ops_status()
+    {
+        await using var factory = new AptoWebApplicationFactory();
+        var client = factory.CreateClient();
+
+        var account = await client.PostAsJsonAsync(
+            "/api/accounts",
+            new AccountWriteRequest("Ops Put", "OPS-P", 1, 1, 1));
+        var createdAccount = await account.Content.ReadFromJsonAsync<AccountResponse>();
+        Assert.NotNull(createdAccount);
+
+        var start = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);
+        var post = await client.PostAsJsonAsync(
+            "/api/jobs",
+            new JobWriteRequest(createdAccount.Id, "GA", "WIP", start, null));
+        var created = await post.Content.ReadFromJsonAsync<JobResponse>();
+        Assert.NotNull(created);
+
+        var put = await client.PutAsJsonAsync(
+            $"/api/jobs/{created.Id}",
+            new JobWriteRequest(createdAccount.Id, "GA", "not-valid", start, null));
+        Assert.Equal(HttpStatusCode.BadRequest, put.StatusCode);
+    }
+
+    [Fact]
     public async Task Post_rejects_invalid_ops_status()
     {
         await using var factory = new AptoWebApplicationFactory();

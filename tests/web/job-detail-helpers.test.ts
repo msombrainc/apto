@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  formatSlaDaysRemaining,
   jobTotalAssetCount,
   needsAddAssetConfirm,
 } from "../../apps/web/src/jobDetailHelpers.ts";
@@ -28,6 +29,12 @@ const baseJob: Job = {
 
 test("jobTotalAssetCount sums buckets", () => {
   assert.equal(jobTotalAssetCount(baseJob), 7);
+});
+
+test("formatSlaDaysRemaining copy", () => {
+  assert.equal(formatSlaDaysRemaining(-2), "2d overdue");
+  assert.equal(formatSlaDaysRemaining(0), "Due today");
+  assert.equal(formatSlaDaysRemaining(5), "5d left");
 });
 
 test("needsAddAssetConfirm for In Transit and Ops Complete", () => {

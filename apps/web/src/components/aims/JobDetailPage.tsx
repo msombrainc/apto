@@ -41,13 +41,29 @@ function toDateInput(iso: string | null): string {
 }
 
 function jobToWrite(job: Job): JobWrite {
+  if (!job.startDateUtc) {
+    throw new Error("job missing startDateUtc");
+  }
   return {
     accountId: job.accountId,
     facilityCode: job.facilityCode ?? undefined,
     opsStatus: job.opsStatus ?? undefined,
-    startDateUtc: job.startDateUtc ?? new Date().toISOString(),
+    startDateUtc: job.startDateUtc,
     dueDateUtc: job.dueDateUtc,
   };
+}
+
+function opsStatusSelectValue(
+  opsStatus: string | null | undefined,
+  items: ReferenceItem[],
+): string {
+  if (!opsStatus) return "";
+  const match = items.find(
+    (s) =>
+      s.code.toLowerCase() === opsStatus.toLowerCase()
+      || s.name.toLowerCase() === opsStatus.toLowerCase(),
+  );
+  return match?.code ?? opsStatus;
 }
 
 export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPageProps) {
@@ -247,12 +263,12 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
           <label>
             Ops status
             <select
-              value={draft.opsStatus ?? ""}
+              value={opsStatusSelectValue(draft.opsStatus, opsStatuses)}
               onChange={(e) => setDraft({ ...draft, opsStatus: e.target.value || undefined })}
             >
               <option value="">—</option>
               {opsStatuses.map((s) => (
-                <option key={s.id} value={s.name}>{s.name}</option>
+                <option key={s.id} value={s.code}>{s.name}</option>
               ))}
             </select>
           </label>

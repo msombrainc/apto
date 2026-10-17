@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createJob, listJobs } from "../../apps/web/src/api.ts";
+import { createJob, getJob, listJobs, updateJob } from "../../apps/web/src/api.ts";
 
 test("listJobs encodes accountId filter", async () => {
   const original = globalThis.fetch;
@@ -89,6 +89,41 @@ test("createJob returns parsed job on success", async () => {
     facilityCode: "GA",
   });
   assert.equal(result.slaStatus, "on-track");
+
+  globalThis.fetch = original;
+});
+
+test("getJob throws job not found on 404", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
+    ({
+      ok: false,
+      status: 404,
+    }) as Response;
+
+  await assert.rejects(() => getJob("missing-id"), /job not found/);
+
+  globalThis.fetch = original;
+});
+
+test("updateJob surfaces API error message", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
+    ({
+      ok: false,
+      status: 400,
+      json: async () => ({ error: "ops status is not an active reference value." }),
+    }) as Response;
+
+  await assert.rejects(
+    () =>
+      updateJob("job-1", {
+        accountId: "a",
+        startDateUtc: "2026-10-01T00:00:00Z",
+        opsStatus: "bad",
+      }),
+    /ops status is not an active/,
+  );
 
   globalThis.fetch = original;
 });
