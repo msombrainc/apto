@@ -55,6 +55,7 @@ if (useDatabase)
         {
             var db = scope.ServiceProvider.GetRequiredService<AptoDbContext>();
             await ReferenceDataSeeder.SeedIfEmptyAsync(db);
+            await UnidentifiedPartSeeder.SeedIfMissingAsync(db);
         }
 
         if (useSqlite)
