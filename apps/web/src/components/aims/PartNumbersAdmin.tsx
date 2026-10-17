@@ -162,6 +162,7 @@ export function PartNumbersAdmin() {
       }
       setModalOpen(false);
       await refresh();
+      setLiveMessage(`Saved part number ${number}`);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Save failed");
     }

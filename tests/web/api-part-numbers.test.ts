@@ -127,6 +127,25 @@ test("deletePartNumberAdmin encodes replacementId query", async () => {
   globalThis.fetch = original;
 });
 
+test("deletePartNumberAdmin sends X-Apto-User header", async () => {
+  const original = globalThis.fetch;
+  let userHeader: string | undefined;
+  globalThis.fetch = async (_input: RequestInfo | URL, init) => {
+    const h = init?.headers;
+    if (h instanceof Headers) {
+      userHeader = h.get("X-Apto-User") ?? undefined;
+    } else if (h && typeof h === "object") {
+      userHeader = (h as Record<string, string>)["X-Apto-User"];
+    }
+    return { ok: true, status: 204 } as Response;
+  };
+
+  await deletePartNumberAdmin("pn-del", "pn-repl");
+  assert.equal(userHeader, DEMO_USER);
+
+  globalThis.fetch = original;
+});
+
 test("searchPartNumbers accepts legacy array and paged items shape", async () => {
   const original = globalThis.fetch;
   const legacy = [{ id: "1", number: "A", categoryName: null }];

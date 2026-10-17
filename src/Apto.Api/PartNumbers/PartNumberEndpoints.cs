@@ -64,12 +64,18 @@ public static class PartNumberEndpoints
         var total = await ordered.CountAsync(ct);
         var rows = await ordered.Skip((pg - 1) * size).Take(size).ToListAsync(ct);
 
-        var items = new List<PartNumberRowResponse>();
-        foreach (var row in rows)
-        {
-            var assetCount = await db.Assets.AsNoTracking().CountAsync(a => a.PartNumberId == row.Id, ct);
-            items.Add(ToRowResponse(row, assetCount));
-        }
+        var pageIds = rows.Select(r => r.Id).ToList();
+        var assetCounts = pageIds.Count == 0
+            ? new Dictionary<Guid, int>()
+            : await db.Assets.AsNoTracking()
+                .Where(a => a.PartNumberId != null && pageIds.Contains(a.PartNumberId.Value))
+                .GroupBy(a => a.PartNumberId!.Value)
+                .Select(g => new { PartNumberId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.PartNumberId, x => x.Count, ct);
+
+        var items = rows
+            .Select(row => ToRowResponse(row, assetCounts.GetValueOrDefault(row.Id, 0)))
+            .ToList();
 
         var payload = new PartNumberListResponse(items, pg, size, total);
 

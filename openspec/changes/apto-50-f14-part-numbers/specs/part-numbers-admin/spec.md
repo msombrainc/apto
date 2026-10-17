@@ -17,6 +17,10 @@ and per-row `assetCount`.
 The API SHALL support admin create/update via `categoryId`, 409 on duplicate create, and DELETE
 with mandatory `replacementId` when assets reference the part number.
 
+Admin POST omits JSON property `categoryName`; legacy search/create POST includes `categoryName`
+and may return 200 with an existing row on duplicate. Clients MUST NOT send both shapes on one request.
+Unpaged GET (query `q` only) remains supported for legacy callers (array response, default cap).
+
 #### Scenario: Reassign on delete
 
 - **WHEN** DELETE is called with a valid replacement and assets assigned
