@@ -2,8 +2,6 @@
 description: Apto factory — Vercel AIMS preview is mandatory UI SoT until Figma MCP
 globs:
   - apps/**/*
-  - components/**/*
-  - app/**/*
   - public/**/*
   - DESIGN.md
   - docs/ux/**/*

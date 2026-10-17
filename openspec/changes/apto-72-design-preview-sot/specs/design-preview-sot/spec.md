@@ -28,5 +28,5 @@ When `ux-charter-first` is on the ticket, Athena SHALL browser-review matching p
 
 #### Scenario: Charter gate
 
-- **WHEN** `check_ux_kick_gate` blocks implement for missing `UX_CHARTER_READY`
+- **WHEN** the dev-engine UX kick gate blocks implement for missing `UX_CHARTER_READY` (see `FACTORY.md` / `dev-agent` `scripts/check_ux_kick_gate.sh`)
 - **THEN** Athena Mode B SHALL use browser MCP against the preview, not STG alone
