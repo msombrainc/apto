@@ -1,5 +1,7 @@
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import type { Account, AccountWrite } from "../../api";
+import { accountPath } from "../../routing/paths";
 import { AccountAvatar } from "./AccountAvatar";
 import { AimsButton } from "./Button";
 import { CodePill } from "./CodePill";
@@ -8,12 +10,16 @@ import { EmptyState } from "./EmptyState";
 import { FilterBar } from "./FilterBar";
 import { IconClock, IconPlus, IconRefresh, IconUsers } from "./icons";
 import { Modal } from "./Modal";
-import { SlaSegmentBar, slaTotalDays } from "./SlaSegmentBar";
+import { slaTotalDays } from "./SlaSegmentBar";
 import { StatCard } from "./StatCard";
+
+export type AccountStatusFilter = "Active" | "Inactive" | "Both";
 
 type AccountsDashboardProps = {
   accounts: Account[];
   query: string;
+  statusFilter: AccountStatusFilter;
+  onStatusFilterChange: (status: AccountStatusFilter) => void;
   onQueryChange: (q: string) => void;
   loading: boolean;
   form: AccountWrite;
@@ -33,9 +39,28 @@ function averageSlaDays(accounts: Account[]): number {
   return Math.round((sum / accounts.length) * 10) / 10;
 }
 
+function statusPillClass(status: string): string {
+  return status === "Inactive"
+    ? "status-pill status-pill--inactive"
+    : "status-pill status-pill--active";
+}
+
+function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
+  switch (statusFilter) {
+    case "Inactive":
+      return "Inactive customer records";
+    case "Both":
+      return "All customer records";
+    default:
+      return "Active customer records";
+  }
+}
+
 export function AccountsDashboard({
   accounts,
   query,
+  statusFilter,
+  onStatusFilterChange,
   onQueryChange,
   loading,
   form,
@@ -62,13 +87,13 @@ export function AccountsDashboard({
         <StatCard
           label="Accounts"
           value={accounts.length}
-          sublabel="Active customer records"
+          sublabel={accountsKpiSublabel(statusFilter)}
           icon={<IconUsers />}
         />
         <StatCard
           label="Average SLA"
           value={accounts.length === 0 ? "—" : `${avg}d`}
-          sublabel="Receiving + processing + shipping"
+          sublabel="Input + settlement + sales"
           icon={<IconClock />}
         />
       </div>
@@ -80,7 +105,20 @@ export function AccountsDashboard({
           onSearchChange={onQueryChange}
           countLabel={`${accounts.length} account${accounts.length === 1 ? "" : "s"}`}
           searchId="accounts-filter"
-        />
+        >
+          <label className="filter-bar__select">
+            Status
+            <select
+              data-testid="f2-accounts-filter-status"
+              value={statusFilter}
+              onChange={(e) => onStatusFilterChange(e.target.value as AccountStatusFilter)}
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="Both">Both</option>
+            </select>
+          </label>
+        </FilterBar>
         <DataTable
           ariaLabel="Customer accounts"
           loading={loading}
@@ -93,7 +131,12 @@ export function AccountsDashboard({
               cell: (a) => (
                 <span className="account-cell">
                   <AccountAvatar name={a.name} size="sm" />
-                  <span>{a.name}</span>
+                  <Link
+                    to={accountPath(a.id)}
+                    data-testid={`f2-accounts-row-link-${a.id}`}
+                  >
+                    {a.name}
+                  </Link>
                 </span>
               ),
             },
@@ -103,15 +146,35 @@ export function AccountsDashboard({
               cell: (a) => <CodePill code={a.code} />,
             },
             {
-              id: "sla",
-              header: "SLA",
+              id: "status",
+              header: "Status",
               cell: (a) => (
-                <SlaSegmentBar
-                  receivingDays={a.slaReceivingDays}
-                  processingDays={a.slaProcessingDays}
-                  shippingDays={a.slaShippingDays}
-                />
+                <span className={statusPillClass(a.status)}>{a.status}</span>
               ),
+            },
+            {
+              id: "apto",
+              header: "Apto %",
+              cell: (a) => (
+                <span className="numeric-cell">
+                  {Math.round(a.settings?.aptoPercentage ?? 0)}%
+                </span>
+              ),
+            },
+            {
+              id: "inputSla",
+              header: "Input SLA",
+              cell: (a) => <span className="numeric-cell">{a.slaReceivingDays}</span>,
+            },
+            {
+              id: "settlementSla",
+              header: "Settlement SLA",
+              cell: (a) => <span className="numeric-cell">{a.slaProcessingDays}</span>,
+            },
+            {
+              id: "salesSla",
+              header: "Sales SLA",
+              cell: (a) => <span className="numeric-cell">{a.slaShippingDays}</span>,
             },
           ]}
           emptyState={
@@ -139,7 +202,17 @@ export function AccountsDashboard({
             />
           </label>
           <label>
-            SLA receiving (days)
+            Status
+            <select
+              value={form.status ?? "Active"}
+              onChange={(e) => onFormChange({ ...form, status: e.target.value })}
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </label>
+          <label>
+            Input SLA (days)
             <input
               type="number"
               min={0}
@@ -150,7 +223,7 @@ export function AccountsDashboard({
             />
           </label>
           <label>
-            SLA processing (days)
+            Settlement SLA (days)
             <input
               type="number"
               min={0}
@@ -161,13 +234,31 @@ export function AccountsDashboard({
             />
           </label>
           <label>
-            SLA shipping (days)
+            Sales SLA (days)
             <input
               type="number"
               min={0}
               value={form.slaShippingDays}
               onChange={(e) =>
                 onFormChange({ ...form, slaShippingDays: Number(e.target.value) })
+              }
+            />
+          </label>
+          <label>
+            Apto %
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={form.settings?.aptoPercentage ?? 0}
+              onChange={(e) =>
+                onFormChange({
+                  ...form,
+                  settings: {
+                    ...(form.settings ?? { aptoPercentage: 0 }),
+                    aptoPercentage: Number(e.target.value),
+                  },
+                })
               }
             />
           </label>

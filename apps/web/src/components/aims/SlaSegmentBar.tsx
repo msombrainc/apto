@@ -11,7 +11,7 @@ export function slaTotalDays(r: number, p: number, s: number): number {
 export function formatSlaSummary(r: number, p: number, s: number): string {
   const total = slaTotalDays(r, p, s);
   if (total <= 0) return "Not set";
-  return `${r}d · ${p}d · ${s}d = ${total}d`;
+  return `${r}d input · ${p}d settlement · ${s}d sales = ${total}d`;
 }
 
 export function SlaSegmentBar({ receivingDays, processingDays, shippingDays }: SlaSegmentBarProps) {

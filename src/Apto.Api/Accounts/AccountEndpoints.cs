@@ -7,11 +7,15 @@ namespace Apto.Api.Accounts;
 
 public static class AccountEndpoints
 {
+    private const string DemoChangedBy = "demo";
+
     public static RouteGroupBuilder MapAccountEndpoints(this IEndpointRouteBuilder routes)
     {
         var group = routes.MapGroup("/api/accounts");
 
         group.MapGet("/", ListAccounts);
+        group.MapGet("/{id:guid}", GetAccount);
+        group.MapGet("/{id:guid}/changes", ListAccountChanges);
         group.MapPost("/", CreateAccount);
         group.MapPut("/{id:guid}", UpdateAccount);
         group.MapPost("/{id:guid}/qbo-sync", ManualQboSync);
@@ -19,9 +23,28 @@ public static class AccountEndpoints
         return group;
     }
 
-    private static async Task<IResult> ListAccounts(string? q, AptoDbContext db, CancellationToken ct)
+    private static async Task<IResult> ListAccounts(
+        string? q,
+        string? status,
+        AptoDbContext db,
+        CancellationToken ct)
     {
         var query = db.Accounts.AsNoTracking();
+        var statusFilter = string.IsNullOrWhiteSpace(status) ? AccountStatuses.Active : status.Trim();
+
+        if (!string.Equals(statusFilter, "Both", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!string.Equals(statusFilter, AccountStatuses.Active, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(statusFilter, AccountStatuses.Inactive, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.BadRequest(new { error = "status must be Active, Inactive, or Both." });
+            }
+
+            var normalizedStatus = string.Equals(statusFilter, AccountStatuses.Active, StringComparison.OrdinalIgnoreCase)
+                ? AccountStatuses.Active
+                : AccountStatuses.Inactive;
+            query = query.Where(a => a.Status == normalizedStatus);
+        }
 
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -30,12 +53,63 @@ public static class AccountEndpoints
                 a.Name.ToLower().Contains(term) || a.Code.ToLower().Contains(term));
         }
 
-        var items = await query
-            .OrderBy(a => a.Name)
-            .Select(a => ToResponse(a))
-            .ToListAsync(ct);
+        var accounts = await query.OrderBy(a => a.Name).ToListAsync(ct);
+        var items = accounts.Select(a => ToResponse(a, null)).ToList();
 
         return Results.Ok(items);
+    }
+
+    private static async Task<IResult> GetAccount(Guid id, AptoDbContext db, CancellationToken ct)
+    {
+        var account = await db.Accounts.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id, ct);
+        if (account is null)
+            return Results.NotFound();
+
+        var lastSync = await LoadQboLastSyncAtUtcAsync(db, id, ct);
+        return Results.Ok(ToResponse(account, lastSync));
+    }
+
+    private static async Task<IResult> ListAccountChanges(
+        Guid id,
+        string? field,
+        DateTime? from,
+        DateTime? to,
+        int? page,
+        int? pageSize,
+        AptoDbContext db,
+        CancellationToken ct)
+    {
+        if (!await db.Accounts.AsNoTracking().AnyAsync(a => a.Id == id, ct))
+            return Results.NotFound();
+
+        var p = page is null or < 1 ? 1 : page.Value;
+        var size = pageSize is null or < 1 ? 25 : Math.Min(pageSize.Value, 100);
+
+        var query = db.AccountChangeLogs.AsNoTracking().Where(l => l.AccountId == id);
+
+        if (!string.IsNullOrWhiteSpace(field))
+            query = query.Where(l => l.FieldName == field.Trim());
+
+        if (from is not null)
+            query = query.Where(l => l.ChangedAtUtc >= from.Value);
+
+        if (to is not null)
+            query = query.Where(l => l.ChangedAtUtc <= to.Value);
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(l => l.ChangedAtUtc)
+            .Skip((p - 1) * size)
+            .Take(size)
+            .Select(l => new AccountChangeLogEntry(
+                l.FieldName,
+                l.OldValue,
+                l.NewValue,
+                l.ChangedBy,
+                l.ChangedAtUtc))
+            .ToListAsync(ct);
+
+        return Results.Ok(new AccountChangeLogListResponse(items, p, size, total));
     }
 
     private static async Task<IResult> CreateAccount(
@@ -51,14 +125,22 @@ public static class AccountEndpoints
         if (await db.Accounts.AnyAsync(a => a.Code == normalizedCode, ct))
             return Results.Conflict(new { error = "account code already exists." });
 
+        var (slaR, slaP, slaS) = AccountValidation.NormalizeSlaDays(
+            request.SlaReceivingDays,
+            request.SlaProcessingDays,
+            request.SlaShippingDays);
+        var settings = AccountValidation.MergeSettings(request.Settings);
+
         var account = new Account
         {
             Id = Guid.NewGuid(),
             Name = request.Name.Trim(),
             Code = normalizedCode,
-            SlaReceivingDays = request.SlaReceivingDays,
-            SlaProcessingDays = request.SlaProcessingDays,
-            SlaShippingDays = request.SlaShippingDays,
+            Status = AccountValidation.NormalizeStatus(request.Status),
+            SlaReceivingDays = slaR,
+            SlaProcessingDays = slaP,
+            SlaShippingDays = slaS,
+            Settings = AccountSettingsJson.Serialize(settings),
             CreatedAtUtc = DateTime.UtcNow,
         };
 
@@ -71,7 +153,7 @@ public static class AccountEndpoints
 
         await db.SaveChangesAsync(ct);
 
-        return Results.Created($"/api/accounts/{account.Id}", ToResponse(account));
+        return Results.Created($"/api/accounts/{account.Id}", ToResponse(account, null));
     }
 
     private static async Task<IResult> UpdateAccount(
@@ -92,21 +174,74 @@ public static class AccountEndpoints
         if (await db.Accounts.AnyAsync(a => a.Id != id && a.Code == normalizedCode, ct))
             return Results.Conflict(new { error = "account code already exists." });
 
-        var nameChanged = !string.Equals(account.Name, request.Name.Trim(), StringComparison.Ordinal);
-        var codeChanged = !string.Equals(account.Code, normalizedCode, StringComparison.Ordinal);
+        var beforeSettings = AccountSettingsJson.Parse(account.Settings);
+        var afterSettings = request.Settings is null
+            ? beforeSettings
+            : AccountValidation.MergeSettings(request.Settings);
+        var beforeName = account.Name;
+        var beforeBillingSame = AccountSettingsJson.BillingAddressEquals(beforeSettings, afterSettings);
 
-        account.Name = request.Name.Trim();
+        var newName = request.Name.Trim();
+        var newStatus = AccountValidation.NormalizeStatus(request.Status);
+
+        AppendScalarChange(db, account.Id, "Name", account.Name, newName);
+        AppendScalarChange(db, account.Id, "Code", account.Code, normalizedCode);
+        AppendScalarChange(db, account.Id, "Status", account.Status, newStatus);
+        var (slaR, slaP, slaS) = AccountValidation.NormalizeSlaDays(
+            request.SlaReceivingDays,
+            request.SlaProcessingDays,
+            request.SlaShippingDays);
+
+        AppendScalarChange(
+            db,
+            account.Id,
+            "SlaReceivingDays",
+            account.SlaReceivingDays.ToString(),
+            slaR.ToString());
+        AppendScalarChange(
+            db,
+            account.Id,
+            "SlaProcessingDays",
+            account.SlaProcessingDays.ToString(),
+            slaP.ToString());
+        AppendScalarChange(
+            db,
+            account.Id,
+            "SlaShippingDays",
+            account.SlaShippingDays.ToString(),
+            slaS.ToString());
+
+        foreach (var (field, oldVal, newVal) in AccountSettingsJson.DiffLeaves(beforeSettings, afterSettings))
+        {
+            db.AccountChangeLogs.Add(new AccountChangeLog
+            {
+                Id = Guid.NewGuid(),
+                AccountId = account.Id,
+                FieldName = field,
+                OldValue = oldVal,
+                NewValue = newVal,
+                ChangedBy = DemoChangedBy,
+                ChangedAtUtc = DateTime.UtcNow,
+            });
+        }
+
+        account.Name = newName;
         account.Code = normalizedCode;
-        account.SlaReceivingDays = request.SlaReceivingDays;
-        account.SlaProcessingDays = request.SlaProcessingDays;
-        account.SlaShippingDays = request.SlaShippingDays;
+        account.Status = newStatus;
+        account.SlaReceivingDays = slaR;
+        account.SlaProcessingDays = slaP;
+        account.SlaShippingDays = slaS;
+        account.Settings = AccountSettingsJson.Serialize(afterSettings);
 
         await db.SaveChangesAsync(ct);
 
-        if (nameChanged || codeChanged)
+        var nameChanged = !string.Equals(beforeName, newName, StringComparison.Ordinal);
+        var billingChanged = !beforeBillingSame;
+        if (nameChanged || billingChanged)
             await enqueue.EnqueueAccountCustomerAsync(account, isCreate: false, ct);
 
-        return Results.Ok(ToResponse(account));
+        var lastSync = await LoadQboLastSyncAtUtcAsync(db, id, ct);
+        return Results.Ok(ToResponse(account, lastSync));
     }
 
     private static async Task<IResult> ManualQboSync(
@@ -126,16 +261,56 @@ public static class AccountEndpoints
         return Results.Accepted($"/api/qbo/requests/{row.Id}", new { requestId = row.Id });
     }
 
-    private static AccountResponse ToResponse(Account account) =>
+    private static void AppendScalarChange(
+        AptoDbContext db,
+        Guid accountId,
+        string field,
+        string? oldValue,
+        string? newValue)
+    {
+        if (string.Equals(oldValue, newValue, StringComparison.Ordinal))
+            return;
+
+        db.AccountChangeLogs.Add(new AccountChangeLog
+        {
+            Id = Guid.NewGuid(),
+            AccountId = accountId,
+            FieldName = field,
+            OldValue = oldValue,
+            NewValue = newValue,
+            ChangedBy = DemoChangedBy,
+            ChangedAtUtc = DateTime.UtcNow,
+        });
+    }
+
+    private static async Task<DateTime?> LoadQboLastSyncAtUtcAsync(
+        AptoDbContext db,
+        Guid accountId,
+        CancellationToken ct) =>
+        await db.QboSyncRequests.AsNoTracking()
+            .Where(r =>
+                r.EntityId == accountId
+                && r.EntityType == QboSyncEntityTypes.Account
+                && r.Status == QboSyncRequestStatus.Sent
+                && (r.Operation == QboSyncOperations.CreateCustomer
+                    || r.Operation == QboSyncOperations.UpdateCustomer))
+            .OrderByDescending(r => r.SentAtUtc)
+            .Select(r => r.SentAtUtc)
+            .FirstOrDefaultAsync(ct);
+
+    private static AccountResponse ToResponse(Account account, DateTime? qboLastSyncAtUtc) =>
         new(
             account.Id,
             account.Name,
             account.Code,
+            account.Status,
             account.SlaReceivingDays,
             account.SlaProcessingDays,
             account.SlaShippingDays,
+            AccountSettingsJson.Parse(account.Settings),
             account.CreatedAtUtc,
             account.QboCustomerId,
             account.QboSyncStatus,
-            account.QboSyncError);
+            account.QboSyncError,
+            qboLastSyncAtUtc);
 }

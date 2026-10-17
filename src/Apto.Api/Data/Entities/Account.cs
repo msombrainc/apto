@@ -14,6 +14,10 @@ public class Account
 
     public int SlaShippingDays { get; set; }
 
+    public string Status { get; set; } = "Active";
+
+    public string Settings { get; set; } = "{}";
+
     public DateTime CreatedAtUtc { get; set; }
 
     public string? QboCustomerId { get; set; }

@@ -21,7 +21,7 @@ test("accountInitials edge cases", () => {
 test("slaTotalDays and formatSlaSummary", () => {
   assert.equal(slaTotalDays(2, 5, 3), 10);
   assert.equal(formatSlaSummary(0, 0, 0), "Not set");
-  assert.equal(formatSlaSummary(2, 5, 3), "2d · 5d · 3d = 10d");
+  assert.equal(formatSlaSummary(2, 5, 3), "2d input · 5d settlement · 3d sales = 10d");
 });
 
 test("filterJobs applies account, facility, and search haystack", () => {

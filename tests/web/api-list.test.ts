@@ -41,7 +41,29 @@ test("listAccounts encodes search query in URL", async () => {
   };
 
   await listAccounts("acme co");
-  assert.ok(requested.includes("q=acme%20co"));
+  assert.match(requested, /q=acme(\+|%20)co/);
+  assert.ok(requested.includes("status=Active"));
+
+  globalThis.fetch = original;
+});
+
+test("listAccounts encodes status filter in URL", async () => {
+  const original = globalThis.fetch;
+  const requested: string[] = [];
+  globalThis.fetch = async (input: RequestInfo | URL) => {
+    requested.push(typeof input === "string" ? input : input.toString());
+    return {
+      ok: true,
+      status: 200,
+      json: async () => [],
+    } as Response;
+  };
+
+  await listAccounts(undefined, "Both");
+  assert.ok(requested[0]?.includes("status=Both"));
+
+  await listAccounts(undefined, "Inactive");
+  assert.ok(requested[1]?.includes("status=Inactive"));
 
   globalThis.fetch = original;
 });

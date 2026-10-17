@@ -8,6 +8,7 @@ import {
   createAccount,
   createJob,
   createJobAsset,
+  defaultAccountSettings,
   getAsset,
   listAccounts,
   listFacilities,
@@ -21,6 +22,7 @@ import {
 import { AppShell } from "./AppShell";
 import {
   isKnownAppPath,
+  parseAccountId,
   parseInventoryAssetId,
   viewFromPathname,
   type AppView,
@@ -31,7 +33,8 @@ import { isDemoLogin } from "./demoAuth";
 import { buildInventoryListParams } from "./inventoryListParams";
 import { filterJobs } from "./jobFilters";
 import { useDebounced } from "./useDebounced";
-import { AccountsDashboard } from "./components/aims/AccountsDashboard";
+import { AccountDetailPage } from "./components/aims/AccountDetailPage";
+import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobsDashboard } from "./components/aims/JobsDashboard";
@@ -52,7 +55,9 @@ export function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const view: AppView = viewFromPathname(location.pathname);
   const routeAssetId = parseInventoryAssetId(location.pathname);
+  const routeAccountId = parseAccountId(location.pathname);
   const [query, setQuery] = useState("");
+  const [accountStatusFilter, setAccountStatusFilter] = useState<AccountStatusFilter>("Active");
   const debouncedQuery = useDebounced(query, 300);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(false);
@@ -65,9 +70,11 @@ export function App() {
   const [form, setForm] = useState({
     name: "",
     code: "",
-    slaReceivingDays: 2,
-    slaProcessingDays: 5,
-    slaShippingDays: 3,
+    status: "Active",
+    slaReceivingDays: 30,
+    slaProcessingDays: 30,
+    slaShippingDays: 60,
+    settings: defaultAccountSettings(),
   });
   const [jobForm, setJobForm] = useState({
     accountId: "",
@@ -96,11 +103,11 @@ export function App() {
   const [inventoryRows, setInventoryRows] = useState<AssetInventoryRow[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(false);
 
-  const refreshAccounts = useCallback(async (q: string) => {
+  const refreshAccounts = useCallback(async (q: string, status: AccountStatusFilter) => {
     setError(null);
     setAccountsLoading(true);
     try {
-      setAccounts(await listAccounts(q));
+      setAccounts(await listAccounts(q, status));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load accounts");
     } finally {
@@ -174,22 +181,22 @@ export function App() {
 
   useEffect(() => {
     if (!loggedIn) return;
-    if (view === "accounts") {
-      void refreshAccounts(debouncedQuery);
+    if (view === "accounts" && !routeAccountId) {
+      void refreshAccounts(debouncedQuery, accountStatusFilter);
       return;
     }
     if (view === "jobs") {
-      void refreshAccounts("");
+      void refreshAccounts("", "Both");
       void refreshJobs();
       return;
     }
     if (view === "inventory") {
-      void refreshAccounts("");
+      void refreshAccounts("", "Both");
       void listFacilities()
         .then(setFacilities)
         .catch(() => setFacilities(["GA", "TX", "CA"]));
     }
-  }, [loggedIn, view, debouncedQuery, refreshAccounts, refreshJobs]);
+  }, [loggedIn, view, routeAccountId, debouncedQuery, accountStatusFilter, refreshAccounts, refreshJobs]);
 
   useEffect(() => {
     if (!loggedIn || view !== "inventory") return;
@@ -241,9 +248,17 @@ export function App() {
     setError(null);
     try {
       await createAccount(form);
-      setForm({ name: "", code: "", slaReceivingDays: 2, slaProcessingDays: 5, slaShippingDays: 3 });
+      setForm({
+        name: "",
+        code: "",
+        status: "Active",
+        slaReceivingDays: 30,
+        slaProcessingDays: 30,
+        slaShippingDays: 60,
+        settings: defaultAccountSettings(),
+      });
       setAccountCreateOpen(false);
-      await refreshAccounts(debouncedQuery);
+      await refreshAccounts(debouncedQuery, accountStatusFilter);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create failed");
     }
@@ -327,7 +342,9 @@ export function App() {
   }
 
   const pageTitle =
-    view === "accounts"
+    view === "accounts" && routeAccountId
+      ? "Account detail"
+      : view === "accounts"
       ? "Customer accounts"
       : view === "jobs"
         ? "Jobs & SLA"
@@ -341,7 +358,9 @@ export function App() {
                 ? "QuickBooks sync"
                 : "Inventory browse";
   const pageSubtitle =
-    view === "accounts"
+    view === "accounts" && routeAccountId
+      ? "View and edit customer profile, fees, billing, and QuickBooks sync."
+      : view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
       : view === "jobs"
         ? "Track facility jobs and SLA countdown from intake through shipping."
@@ -366,17 +385,23 @@ export function App() {
       title={pageTitle}
       subtitle={pageSubtitle}
     >
-      {view === "accounts" && (
+      {view === "accounts" && routeAccountId && (
+        <AccountDetailPage accountId={routeAccountId} />
+      )}
+
+      {view === "accounts" && !routeAccountId && (
         <AccountsDashboard
           accounts={accounts}
           query={query}
+          statusFilter={accountStatusFilter}
+          onStatusFilterChange={setAccountStatusFilter}
           onQueryChange={setQuery}
           loading={accountsLoading}
           form={form}
           onFormChange={setForm}
           createOpen={accountCreateOpen}
           onCreateOpenChange={setAccountCreateOpen}
-          onRefresh={() => void refreshAccounts(debouncedQuery)}
+          onRefresh={() => void refreshAccounts(debouncedQuery, accountStatusFilter)}
           onCreate={onCreateAccount}
         />
       )}
