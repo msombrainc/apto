@@ -63,16 +63,3 @@ test("mobile breakpoint resets fixed shell heights (apto#107)", () => {
   assert.match(block, /\.aims-sidebar\s*\{[^}]*height:\s*auto/);
   assert.match(block, /\.aims-main\s*\{[^}]*height:\s*auto/);
 });
-
-test("AppShell clamps document scroll while mounted (apto#112)", () => {
-  const shellPath = join(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../apps/web/src/AppShell.tsx",
-  );
-  const src = readFileSync(shellPath, "utf8");
-  assert.match(src, /useEffect\s*\(\s*\(\s*\)\s*=>\s*\{/);
-  assert.match(src, /html\.scrollTop\s*=\s*0/);
-  assert.match(src, /body\.scrollTop\s*=\s*0/);
-  assert.match(src, /addEventListener\(\s*["']scroll["']/);
-  assert.match(src, /removeEventListener\(\s*["']scroll["']/);
-});

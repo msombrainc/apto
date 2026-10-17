@@ -7,6 +7,11 @@ import { GlobalAssetLookup } from "./components/aims/GlobalAssetLookup";
 import { ModuleMapNav } from "./components/aims/ModuleMapNav";
 import { ROUTES } from "./routing/paths";
 import type { AppView } from "./routing/moduleMap";
+import { installDocumentScrollLock } from "./shellScrollLock";
+import {
+  handleDocumentScroll,
+  resetDocumentScrollTops,
+} from "./shellDocumentScrollClamp";
 
 type AppShellProps = {
   view: AppView;
@@ -59,12 +64,8 @@ export function AppShell({
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
-    html.scrollTop = 0;
-    body.scrollTop = 0;
-    const onScroll = () => {
-      if (html.scrollTop !== 0) html.scrollTop = 0;
-      if (body.scrollTop !== 0) body.scrollTop = 0;
-    };
+    resetDocumentScrollTops(html, body);
+    const onScroll = () => handleDocumentScroll(html, body);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
