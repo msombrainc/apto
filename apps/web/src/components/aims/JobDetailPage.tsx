@@ -187,14 +187,14 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
 
   if (loading || !job || !draft) {
     return (
-      <div className="page-content" data-testid="f3-job-detail-page" aria-busy="true">
+      <div className="dashboard-stack" data-testid="f3-job-detail-page" aria-busy="true">
         <p className="muted">Loading job…</p>
       </div>
     );
   }
 
   return (
-    <div className="page-content dashboard-stack" data-testid="f3-job-detail-page">
+    <div className="dashboard-stack" data-testid="f3-job-detail-page">
       <Link to={ROUTES.jobs} className="back-link">← Jobs</Link>
 
       <header className="dashboard-panel" data-testid="f3-job-header">
