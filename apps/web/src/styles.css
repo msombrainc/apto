@@ -16,7 +16,8 @@
   --aims-input-bg: #0f141c;
   --aims-btn-bg: #2a3444;
   --aims-btn-text: #f8fafc;
-  --aims-link: #f4b08a;
+  --aims-link: #ffc49a;
+  --aims-table-header: #d1dae8;
   --sla-on-track-bg: rgba(34, 197, 94, 0.12);
   --sla-at-risk-bg: rgba(234, 179, 8, 0.14);
   --sla-overdue-bg: rgba(239, 68, 68, 0.14);
@@ -1214,14 +1215,17 @@ tr.row-selected {
 }
 
 .data-table th {
-  color: var(--aims-text);
+  color: var(--aims-table-header, var(--aims-text));
   font-weight: 600;
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 0.65rem 0.5rem;
   border-bottom: 1px solid var(--aims-border);
-  opacity: 0.92;
+}
+
+[data-theme="light"] .data-table th {
+  color: var(--aims-text-muted);
 }
 
 .data-table a {
@@ -1960,7 +1964,10 @@ tr.row-selected {
 .detail-form input,
 .detail-form select,
 .form-grid input,
-.form-grid select {
+.form-grid select,
+.modal-form input,
+.modal-form select,
+.modal-form .aims-select {
   max-width: 28rem;
 }
 
