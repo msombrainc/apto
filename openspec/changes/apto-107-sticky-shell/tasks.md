@@ -1,0 +1,4 @@
+- [x] Charter (`docs/ux/apto-107-sticky-shell-charter.md`)
+- [x] Shell layout CSS (`AppShell` / `styles.css`)
+- [x] Dark contrast + table link tokens
+- [ ] Gate + MR
