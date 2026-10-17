@@ -41,6 +41,25 @@ test("validateImportRows flags duplicate serials in file", async () => {
   assert.equal(dupes.length, 2);
 });
 
+test("validateImportRows flags serial lookup failures", async () => {
+  const sheet = parseCsvText("part,serial\nP-1,S1");
+  const mapping = guessColumnMapping(sheet.headers);
+  const rows = await validateImportRows(sheet, mapping, {
+    gradeCodes: new Set(),
+    categoryNames: new Set(),
+    serialsInFile: buildSerialIndex(sheet, mapping),
+    unknownPartPolicy: "create",
+    lookupSerial: async () => {
+      throw new Error("lookup failed: 503");
+    },
+    resolvePartNumber: async () => ({ id: "pn-1" }),
+  });
+  assert.equal(rows[0].status, "error");
+  assert.ok(
+    rows[0].messages.some((m) => m.includes("Could not verify serial uniqueness.")),
+  );
+});
+
 test("validateImportRows flags serial already in AIMS", async () => {
   const sheet = parseCsvText("part,serial\nP-1,EXISTING");
   const mapping = guessColumnMapping(sheet.headers);

@@ -138,8 +138,12 @@ export function SpreadsheetImportPage({ jobId }: Props) {
           try {
             await lookupAssetByCode(serial);
             return true;
-          } catch {
-            return false;
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : "";
+            if (msg.includes("no asset found") || /lookup failed: 404\b/.test(msg)) {
+              return false;
+            }
+            throw e;
           }
         },
         resolvePartNumber: async (part) => {
