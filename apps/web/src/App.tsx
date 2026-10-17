@@ -33,7 +33,7 @@ import { AccountDetailPage } from "./components/aims/AccountDetailPage";
 import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
-import { JobDetailPlaceholder } from "./components/aims/JobDetailPlaceholder";
+import { JobDetailPage } from "./components/aims/JobDetailPage";
 import { JobsListV2 } from "./components/aims/JobsListV2";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 import { PartNumbersAdmin } from "./components/aims/PartNumbersAdmin";
@@ -340,7 +340,9 @@ export function App() {
         />
       )}
 
-      {view === "jobs" && routeJobId && <JobDetailPlaceholder jobId={routeJobId} />}
+      {view === "jobs" && routeJobId && (
+        <JobDetailPage jobId={routeJobId} accounts={accounts} />
+      )}
 
       {view === "jobs" && !routeJobId && (
         <JobsListV2

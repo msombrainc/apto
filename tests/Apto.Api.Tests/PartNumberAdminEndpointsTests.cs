@@ -168,7 +168,7 @@ public class PartNumberAdminEndpointsTests
         Assert.NotNull(acct);
         var job = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(acct.Id, "GA", "Receiving", DateTime.UtcNow, null));
+            new JobWriteRequest(acct.Id, "GA", "Received", DateTime.UtcNow, null));
         var jobBody = await job.Content.ReadFromJsonAsync<JobResponse>();
         Assert.NotNull(jobBody);
 
@@ -251,7 +251,7 @@ public class PartNumberAdminEndpointsTests
 
         var job = await client.PostAsJsonAsync(
             "/api/jobs",
-            new JobWriteRequest(acct.Id, "GA", "Receiving", DateTime.UtcNow, null));
+            new JobWriteRequest(acct.Id, "GA", "Received", DateTime.UtcNow, null));
         var jobBody = await job.Content.ReadFromJsonAsync<JobResponse>();
         Assert.NotNull(jobBody);
 

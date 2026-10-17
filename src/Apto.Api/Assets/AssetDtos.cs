@@ -14,6 +14,7 @@ public record AssetResponse(
     Guid JobId,
     Guid? PartNumberId,
     string? PartNumber,
+    string? Category,
     string? SerialNumber,
     string? Grade,
     string? Status,

@@ -72,7 +72,8 @@ public static class JobEndpoints
         CancellationToken ct)
     {
         var facilityCodes = await ReferenceItemEndpoints.GetActiveFacilityCodesAsync(db, ct);
-        if (!JobValidation.TryValidate(request, facilityCodes, out var error))
+        var opsTokens = await JobOpsStatusTokensAsync(db, ct);
+        if (!JobValidation.TryValidate(request, facilityCodes, opsTokens, out var error))
             return Results.BadRequest(new { error });
 
         var account = await db.Accounts.AsNoTracking()
@@ -108,7 +109,8 @@ public static class JobEndpoints
         CancellationToken ct)
     {
         var facilityCodes = await ReferenceItemEndpoints.GetActiveFacilityCodesAsync(db, ct);
-        if (!JobValidation.TryValidate(request, facilityCodes, out var error))
+        var opsTokens = await JobOpsStatusTokensAsync(db, ct);
+        if (!JobValidation.TryValidate(request, facilityCodes, opsTokens, out var error))
             return Results.BadRequest(new { error });
 
         var job = await db.Jobs.Include(j => j.Account).FirstOrDefaultAsync(j => j.Id == id, ct);
@@ -145,6 +147,20 @@ public static class JobEndpoints
         if (string.IsNullOrWhiteSpace(facilityCode))
             return null;
         return facilityCode.Trim().ToUpperInvariant();
+    }
+
+    private static async Task<IReadOnlyList<string>> JobOpsStatusTokensAsync(
+        AptoDbContext db,
+        CancellationToken ct)
+    {
+        var statuses = await ReferenceItemEndpoints.GetActiveJobStatusesAsync(db, ct);
+        var tokens = new List<string>(statuses.Count * 2);
+        foreach (var s in statuses)
+        {
+            tokens.Add(s.Code);
+            tokens.Add(s.Name);
+        }
+        return tokens;
     }
 
     private static JobResponse ToResponse(

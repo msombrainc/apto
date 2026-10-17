@@ -132,6 +132,7 @@ public static class AssetEndpoints
 
         var assets = await db.Assets.AsNoTracking()
             .Include(a => a.PartNumber)
+            .ThenInclude(p => p!.Category)
             .Include(a => a.Location)
             .Where(a => a.JobId == jobId)
             .OrderBy(a => a.CreatedAtUtc)
@@ -518,6 +519,7 @@ public static class AssetEndpoints
             asset.JobId,
             asset.PartNumberId,
             asset.PartNumber?.Number,
+            asset.PartNumber?.Category?.Name,
             asset.SerialNumber,
             asset.Grade,
             asset.Status,
