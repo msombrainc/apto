@@ -34,7 +34,7 @@
   --aims-surface-elevated: #ffffff;
   --aims-border: #d8dee8;
   --aims-text: #0f172a;
-  --aims-text-muted: #64748b;
+  --aims-text-muted: #5c6578;
   --aims-accent: #e85d2b;
   --aims-cta-bg: #0f172a;
   --aims-cta-text: #f8fafc;
@@ -1839,11 +1839,15 @@ tr.row-selected {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.85rem;
+  flex: 0 0 auto;
+  min-width: 12rem;
 }
 
 .filter-bar__select .aims-select,
 .filter-bar__select select {
-  width: min(100%, 13rem);
+  width: 100%;
+  min-width: 12rem;
+  max-width: 14rem;
 }
 
 .dashboard-stack label:not(.filter-bar__search) input,
