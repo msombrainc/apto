@@ -13,7 +13,8 @@ and inline errors are shown.
 ## R-F7-03 Create loop
 
 WHEN the operator confirms create THEN the client issues N sequential asset creates without
-serial and shows progress `created / N`.
+serial and shows progress `created / N`. WHEN job ops status requires add confirmation (FR-34,
+same as F3 single add) THEN bulk create requires the same confirm modal before the loop.
 
 ## R-F7-04 Results
 

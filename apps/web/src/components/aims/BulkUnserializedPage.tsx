@@ -15,10 +15,12 @@ import {
   createdAptoIdsCsv,
   parseBulkQuantity,
 } from "../../lib/bulkUnserialized";
+import { needsAddAssetConfirm } from "../../jobDetailHelpers";
 import { jobPath } from "../../routing/paths";
 import { AimsButton } from "./Button";
 import { AlertBanner } from "./AlertBanner";
 import { DataTable } from "./DataTable";
+import { Modal } from "./Modal";
 
 type Props = {
   jobId: string;
@@ -45,6 +47,7 @@ export function BulkUnserializedPage({ jobId }: Props) {
   const [progress, setProgress] = useState(0);
   const [total, setTotal] = useState(0);
   const [createdIds, setCreatedIds] = useState<string[]>([]);
+  const [confirmAdd, setConfirmAdd] = useState(false);
 
   const quantity = useMemo(() => parseBulkQuantity(quantityRaw), [quantityRaw]);
 
@@ -82,7 +85,7 @@ export function BulkUnserializedPage({ jobId }: Props) {
   }, []);
 
   const facilityLocations = useMemo(() => {
-    if (!facilityId) return locations;
+    if (!facilityId) return [];
     return locations.filter((l) => l.parentId === facilityId);
   }, [locations, facilityId]);
 
@@ -92,8 +95,13 @@ export function BulkUnserializedPage({ jobId }: Props) {
       setPartOptions([]);
       return;
     }
-    const items = await searchPartNumbers(q);
-    setPartOptions(items.map((p) => ({ id: p.id, number: p.number })));
+    try {
+      const items = await searchPartNumbers(q);
+      setPartOptions(items.map((p) => ({ id: p.id, number: p.number })));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Part search failed");
+      setPartOptions([]);
+    }
   }, [partQuery]);
 
   const selectPart = (id: string, number: string) => {
@@ -123,9 +131,7 @@ export function BulkUnserializedPage({ jobId }: Props) {
   const canSubmit =
     partNumberId !== "" && quantity !== null && phase === "form";
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!canSubmit || quantity === null) return;
+  async function runBulkCreate(quantity: number) {
     setError(null);
     setPhase("creating");
     setTotal(quantity);
@@ -145,9 +151,21 @@ export function BulkUnserializedPage({ jobId }: Props) {
       setCreatedIds(ids);
       setPhase("results");
     } catch (err) {
+      setCreatedIds(ids);
       setError(err instanceof Error ? err.message : "Bulk create failed");
-      setPhase("form");
+      setPhase(ids.length > 0 ? "results" : "form");
     }
+  }
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!canSubmit || quantity === null || !job) return;
+    if (needsAddAssetConfirm(job.opsStatus) && !confirmAdd) {
+      setConfirmAdd(true);
+      return;
+    }
+    setConfirmAdd(false);
+    await runBulkCreate(quantity);
   }
 
   function downloadCsv() {
@@ -259,6 +277,16 @@ export function BulkUnserializedPage({ jobId }: Props) {
           Creating {progress} of {total}…
         </p>
       )}
+
+      <Modal open={confirmAdd} title="Confirm bulk add" onClose={() => setConfirmAdd(false)}>
+        <p>This job is {job?.opsStatus}. Create {quantity ?? 0} assets anyway?</p>
+        <AimsButton
+          variant="primary"
+          onClick={() => quantity !== null && void runBulkCreate(quantity)}
+        >
+          Confirm
+        </AimsButton>
+      </Modal>
 
       {phase === "results" && (
         <section>
