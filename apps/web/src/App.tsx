@@ -10,7 +10,7 @@ import {
   getAsset,
   listAccounts,
   listFacilities,
-  listInventoryAssets,
+  listInventoryAssetsPaged,
   listJobs,
   AssetInventoryRow,
 } from "./api";
@@ -34,7 +34,7 @@ import { useDebounced } from "./useDebounced";
 import { AccountDetailPage } from "./components/aims/AccountDetailPage";
 import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
-import { InventoryDashboard } from "./components/aims/InventoryDashboard";
+import { INVENTORY_COLUMN_IDS, InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobDetailPage } from "./components/aims/JobDetailPage";
 import { BulkUnserializedPage } from "./components/aims/BulkUnserializedPage";
 import { SpreadsheetImportPage } from "./components/aims/SpreadsheetImportPage";
@@ -104,6 +104,19 @@ export function App() {
   const debouncedInventoryQuery = useDebounced(inventoryQuery, 300);
   const [inventoryAccountId, setInventoryAccountId] = useState("");
   const [inventoryFacility, setInventoryFacility] = useState("");
+  const [inventoryGrade, setInventoryGrade] = useState("");
+  const [inventoryStatus, setInventoryStatus] = useState("");
+  const [inventoryCategory, setInventoryCategory] = useState("");
+  const [inventoryCreatedFrom, setInventoryCreatedFrom] = useState("");
+  const [inventoryCreatedTo, setInventoryCreatedTo] = useState("");
+  const [inventoryPasteCodes, setInventoryPasteCodes] = useState("");
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const [inventoryPageSize, setInventoryPageSize] = useState(50);
+  const [inventoryTotal, setInventoryTotal] = useState(0);
+  const [inventoryNotFoundCodes, setInventoryNotFoundCodes] = useState<string[]>([]);
+  const [inventoryVisibleColumns, setInventoryVisibleColumns] = useState<string[]>([
+    ...INVENTORY_COLUMN_IDS,
+  ]);
   const [inventoryRows, setInventoryRows] = useState<AssetInventoryRow[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
@@ -136,23 +149,47 @@ export function App() {
     setError(null);
     setInventoryLoading(true);
     try {
-      const rows = await listInventoryAssets(
-        buildInventoryListParams(
-          debouncedInventoryQuery,
-          inventoryAccountId,
-          inventoryFacility,
-        ),
+      const params = buildInventoryListParams(
+        debouncedInventoryQuery,
+        inventoryAccountId,
+        inventoryFacility,
+        inventoryGrade,
+        inventoryStatus,
+        "",
+        inventoryCategory,
+        inventoryCreatedFrom,
+        inventoryCreatedTo,
+        inventoryPasteCodes,
+        inventoryPage,
+        inventoryPageSize,
+        "created",
+        "desc",
       );
-      setInventoryRows(rows);
+      const result = await listInventoryAssetsPaged(params);
+      setInventoryRows(result.items);
+      setInventoryTotal(result.total);
+      setInventoryNotFoundCodes(result.notFoundCodes ?? []);
       setSelectedAsset((current) =>
-        current && !rows.some((r) => r.id === current.id) ? null : current,
+        current && !result.items.some((r) => r.id === current.id) ? null : current,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load inventory");
     } finally {
       setInventoryLoading(false);
     }
-  }, [debouncedInventoryQuery, inventoryAccountId, inventoryFacility]);
+  }, [
+    debouncedInventoryQuery,
+    inventoryAccountId,
+    inventoryFacility,
+    inventoryGrade,
+    inventoryStatus,
+    inventoryCategory,
+    inventoryCreatedFrom,
+    inventoryCreatedTo,
+    inventoryPasteCodes,
+    inventoryPage,
+    inventoryPageSize,
+  ]);
 
   const loadAssetDetail = useCallback(async (assetId: string) => {
     setError(null);
@@ -396,6 +433,26 @@ export function App() {
           onInventoryAccountIdChange={setInventoryAccountId}
           inventoryFacility={inventoryFacility}
           onInventoryFacilityChange={setInventoryFacility}
+          inventoryGrade={inventoryGrade}
+          onInventoryGradeChange={setInventoryGrade}
+          inventoryStatus={inventoryStatus}
+          onInventoryStatusChange={setInventoryStatus}
+          inventoryCategory={inventoryCategory}
+          onInventoryCategoryChange={setInventoryCategory}
+          createdFrom={inventoryCreatedFrom}
+          onCreatedFromChange={setInventoryCreatedFrom}
+          createdTo={inventoryCreatedTo}
+          onCreatedToChange={setInventoryCreatedTo}
+          pasteCodes={inventoryPasteCodes}
+          onPasteCodesChange={setInventoryPasteCodes}
+          inventoryPage={inventoryPage}
+          onInventoryPageChange={setInventoryPage}
+          inventoryPageSize={inventoryPageSize}
+          onInventoryPageSizeChange={setInventoryPageSize}
+          inventoryTotal={inventoryTotal}
+          notFoundCodes={inventoryNotFoundCodes}
+          visibleColumns={inventoryVisibleColumns}
+          onVisibleColumnsChange={setInventoryVisibleColumns}
           inventoryRows={inventoryRows}
           loading={inventoryLoading}
           onRefresh={() => void refreshInventory()}

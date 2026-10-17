@@ -81,12 +81,22 @@ test("isCreatedTodayUtc respects UTC day boundary", () => {
 });
 
 test("buildInventoryListParams omits empty account and facility", () => {
-  assert.deepEqual(buildInventoryListParams("widget", "", ""), { q: "widget" });
-  assert.deepEqual(buildInventoryListParams("q", "acc-1", "GA"), {
-    q: "q",
-    accountId: "acc-1",
-    facilityCode: "GA",
-  });
+  assert.deepEqual(
+    buildInventoryListParams("widget", "", "", "", "", "", "", "", "", "", 1, 50, "created", "desc"),
+    { q: "widget", page: 1, pageSize: 50, sortBy: "created", sortDir: "desc" },
+  );
+  assert.deepEqual(
+    buildInventoryListParams("q", "acc-1", "GA", "", "", "", "", "", "", "", 2, 25, "serial", "asc"),
+    {
+      q: "q",
+      accountId: "acc-1",
+      facilityCode: "GA",
+      page: 2,
+      pageSize: 25,
+      sortBy: "serial",
+      sortDir: "asc",
+    },
+  );
 });
 
 test("debounceSchedule defers callback until delay", async () => {

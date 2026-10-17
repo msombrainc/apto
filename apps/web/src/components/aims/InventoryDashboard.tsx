@@ -1,3 +1,5 @@
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import type { Account, Asset, AssetInventoryRow } from "../../api";
 import { AssetChangeLogTable } from "../../AssetChangeLogTable";
 import { AccountAvatar } from "./AccountAvatar";
@@ -8,7 +10,28 @@ import { FacilityPills } from "./FacilityPills";
 import { FilterBar } from "./FilterBar";
 import { IconBox, IconClock, IconPart, IconRefresh, IconUsers } from "./icons";
 import { isCreatedTodayUtc } from "../../inventoryDates";
+import {
+  exportInventoryCsv,
+  loadSavedInventorySearches,
+  persistSavedInventorySearches,
+  type SavedInventorySearch,
+} from "../../inventorySavedSearches";
+import { jobPath } from "../../routing/paths";
 import { StatCard } from "./StatCard";
+
+export const INVENTORY_COLUMN_IDS = [
+  "apto",
+  "serial",
+  "part",
+  "category",
+  "grade",
+  "status",
+  "location",
+  "account",
+  "facility",
+  "job",
+  "created",
+] as const;
 
 type InventoryDashboardProps = {
   accounts: Account[];
@@ -19,6 +42,26 @@ type InventoryDashboardProps = {
   onInventoryAccountIdChange: (v: string) => void;
   inventoryFacility: string;
   onInventoryFacilityChange: (v: string) => void;
+  inventoryGrade: string;
+  onInventoryGradeChange: (v: string) => void;
+  inventoryStatus: string;
+  onInventoryStatusChange: (v: string) => void;
+  inventoryCategory: string;
+  onInventoryCategoryChange: (v: string) => void;
+  createdFrom: string;
+  onCreatedFromChange: (v: string) => void;
+  createdTo: string;
+  onCreatedToChange: (v: string) => void;
+  pasteCodes: string;
+  onPasteCodesChange: (v: string) => void;
+  inventoryPage: number;
+  onInventoryPageChange: (v: number) => void;
+  inventoryPageSize: number;
+  onInventoryPageSizeChange: (v: number) => void;
+  inventoryTotal: number;
+  notFoundCodes: string[];
+  visibleColumns: string[];
+  onVisibleColumnsChange: (cols: string[]) => void;
   inventoryRows: AssetInventoryRow[];
   loading: boolean;
   onRefresh: () => void;
@@ -35,36 +78,208 @@ export function InventoryDashboard({
   onInventoryAccountIdChange,
   inventoryFacility,
   onInventoryFacilityChange,
+  inventoryGrade,
+  onInventoryGradeChange,
+  inventoryStatus,
+  onInventoryStatusChange,
+  inventoryCategory,
+  onInventoryCategoryChange,
+  createdFrom,
+  onCreatedFromChange,
+  createdTo,
+  onCreatedToChange,
+  pasteCodes,
+  onPasteCodesChange,
+  inventoryPage,
+  onInventoryPageChange,
+  inventoryPageSize,
+  onInventoryPageSizeChange,
+  inventoryTotal,
+  notFoundCodes,
+  visibleColumns,
+  onVisibleColumnsChange,
   inventoryRows,
   loading,
   onRefresh,
   selectedAsset,
   onSelectAsset,
 }: InventoryDashboardProps) {
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [savedSearches, setSavedSearches] = useState<SavedInventorySearch[]>(() =>
+    loadSavedInventorySearches(),
+  );
+
   const createdToday = inventoryRows.filter((r) => isCreatedTodayUtc(r.createdAtUtc)).length;
-  const accountCount = new Set(inventoryRows.map((r) => r.accountName)).size;
+  const pageCount = Math.max(1, Math.ceil(inventoryTotal / inventoryPageSize));
+
+  const allColumns = useMemo(
+    () => [
+      {
+        id: "apto",
+        header: "Apto ID",
+        cell: (r: AssetInventoryRow) => <span className="mono">{r.aptoId}</span>,
+      },
+      {
+        id: "serial",
+        header: "Serial",
+        cell: (r: AssetInventoryRow) => r.serialNumber ?? "—",
+      },
+      {
+        id: "part",
+        header: "Part #",
+        cell: (r: AssetInventoryRow) => (
+          <span className="part-cell">
+            <IconPart />
+            <span>{r.partNumber ?? "—"}</span>
+          </span>
+        ),
+      },
+      {
+        id: "category",
+        header: "Category",
+        cell: (r: AssetInventoryRow) => r.categoryName ?? "—",
+      },
+      {
+        id: "grade",
+        header: "Grade",
+        cell: (r: AssetInventoryRow) => r.grade ?? "—",
+      },
+      {
+        id: "status",
+        header: "Status",
+        cell: (r: AssetInventoryRow) => r.status ?? "—",
+      },
+      {
+        id: "location",
+        header: "Location",
+        cell: (r: AssetInventoryRow) => r.locationName ?? "—",
+      },
+      {
+        id: "account",
+        header: "Account",
+        cell: (r: AssetInventoryRow) => (
+          <span className="account-cell">
+            <AccountAvatar name={r.accountName} size="sm" />
+            <span>{r.accountName}</span>
+          </span>
+        ),
+      },
+      {
+        id: "facility",
+        header: "Facility",
+        cell: (r: AssetInventoryRow) => (
+          <span className="facility-cell muted">@ {r.facilityCode ?? "—"}</span>
+        ),
+      },
+      {
+        id: "job",
+        header: "Job",
+        cell: (r: AssetInventoryRow) => (
+          <Link to={jobPath(r.jobId)} className="text-link" onClick={(e) => e.stopPropagation()}>
+            {r.jobId.slice(0, 8)}…
+          </Link>
+        ),
+      },
+      {
+        id: "created",
+        header: "Created",
+        cell: (r: AssetInventoryRow) => new Date(r.createdAtUtc).toLocaleString(),
+      },
+    ],
+    [],
+  );
+
+  const columns = allColumns.filter((c) => visibleColumns.includes(c.id));
+
+  function saveCurrentSearch() {
+    const name = window.prompt("Name this search");
+    if (!name?.trim()) return;
+    const entry: SavedInventorySearch = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      params: {
+        q: inventoryQuery,
+        accountId: inventoryAccountId || undefined,
+        facilityCode: inventoryFacility || undefined,
+        grade: inventoryGrade || undefined,
+        status: inventoryStatus || undefined,
+        category: inventoryCategory || undefined,
+        createdFrom: createdFrom || undefined,
+        createdTo: createdTo || undefined,
+        codes: pasteCodes.trim() || undefined,
+        pageSize: inventoryPageSize,
+        sortBy: "created",
+        sortDir: "desc",
+      },
+      visibleColumns,
+    };
+    const next = [...savedSearches, entry];
+    setSavedSearches(next);
+    persistSavedInventorySearches(next);
+  }
+
+  function applySavedSearch(id: string) {
+    const s = savedSearches.find((x) => x.id === id);
+    if (!s) return;
+    onInventoryQueryChange(s.params.q);
+    onInventoryAccountIdChange(s.params.accountId ?? "");
+    onInventoryFacilityChange(s.params.facilityCode ?? "");
+    onInventoryGradeChange(s.params.grade ?? "");
+    onInventoryStatusChange(s.params.status ?? "");
+    onInventoryCategoryChange(s.params.category ?? "");
+    onCreatedFromChange(s.params.createdFrom ?? "");
+    onCreatedToChange(s.params.createdTo ?? "");
+    onPasteCodesChange(s.params.codes ?? "");
+    onInventoryPageSizeChange(s.params.pageSize ?? 50);
+    onVisibleColumnsChange(s.visibleColumns);
+    onInventoryPageChange(1);
+    onRefresh();
+  }
 
   return (
     <div className="dashboard-stack">
       <div className="dashboard-actions dashboard-actions--end">
+        <AimsButton variant="secondary" onClick={() => exportInventoryCsv(inventoryRows)}>
+          Export CSV
+        </AimsButton>
+        <AimsButton variant="secondary" onClick={saveCurrentSearch}>
+          Save search
+        </AimsButton>
+        {savedSearches.length > 0 && (
+          <label className="inventory-account-select">
+            Saved
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) applySavedSearch(e.target.value);
+                e.target.value = "";
+              }}
+            >
+              <option value="">Load…</option>
+              {savedSearches.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <AimsButton variant="secondary" icon={<IconRefresh />} onClick={onRefresh}>
           Refresh
         </AimsButton>
       </div>
 
       <div className="kpi-row kpi-row--3" role="region" aria-label="Inventory summary">
-        <StatCard label="Assets" value={inventoryRows.length} icon={<IconBox />} />
-        <StatCard label="Created today" value={createdToday} icon={<IconClock />} />
-        <StatCard label="Accounts" value={accountCount} icon={<IconUsers />} />
+        <StatCard label="On page" value={inventoryRows.length} icon={<IconBox />} />
+        <StatCard label="Created today (page)" value={createdToday} icon={<IconClock />} />
+        <StatCard label="Total matching" value={inventoryTotal} icon={<IconUsers />} />
       </div>
 
       <section className="dashboard-panel">
         <div className="inventory-filters-row">
           <FilterBar
-            searchPlaceholder="Search serial or part number"
+            searchPlaceholder="Search Apto ID, serial, or part #"
             searchValue={inventoryQuery}
             onSearchChange={onInventoryQueryChange}
-            countLabel={`${inventoryRows.length} asset${inventoryRows.length === 1 ? "" : "s"} shown (API max 200)`}
+            countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"} total · page ${inventoryPage} of ${pageCount}`}
             searchId="inventory-filter"
           />
           <label className="inventory-account-select" htmlFor="inventory-account-filter">
@@ -87,6 +302,76 @@ export function InventoryDashboard({
           />
         </div>
 
+        <div className="inventory-filters-row">
+          <label className="inventory-account-select">
+            Grade
+            <input value={inventoryGrade} onChange={(e) => onInventoryGradeChange(e.target.value)} />
+          </label>
+          <label className="inventory-account-select">
+            Status
+            <input value={inventoryStatus} onChange={(e) => onInventoryStatusChange(e.target.value)} />
+          </label>
+          <label className="inventory-account-select">
+            Category
+            <input value={inventoryCategory} onChange={(e) => onInventoryCategoryChange(e.target.value)} />
+          </label>
+          <label className="inventory-account-select">
+            Created from
+            <input type="date" value={createdFrom} onChange={(e) => onCreatedFromChange(e.target.value)} />
+          </label>
+          <label className="inventory-account-select">
+            Created to
+            <input type="date" value={createdTo} onChange={(e) => onCreatedToChange(e.target.value)} />
+          </label>
+        </div>
+
+        <div className="inventory-paste-panel">
+          <button
+            type="button"
+            className="aims-btn aims-btn--ghost"
+            aria-expanded={pasteOpen}
+            onClick={() => setPasteOpen((o) => !o)}
+          >
+            Paste Apto IDs / serials
+          </button>
+          {pasteOpen && (
+            <div className="inventory-paste-body">
+              <textarea
+                aria-label="Paste list of Apto IDs or serials"
+                rows={4}
+                value={pasteCodes}
+                onChange={(e) => onPasteCodesChange(e.target.value)}
+                placeholder="One code per line"
+              />
+              {notFoundCodes.length > 0 && (
+                <p className="muted" role="status">
+                  Not found: {notFoundCodes.join(", ")}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <fieldset className="inventory-column-chooser">
+          <legend>Columns</legend>
+          {INVENTORY_COLUMN_IDS.map((id) => (
+            <label key={id}>
+              <input
+                type="checkbox"
+                checked={visibleColumns.includes(id)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    onVisibleColumnsChange([...visibleColumns, id]);
+                  } else {
+                    onVisibleColumnsChange(visibleColumns.filter((c) => c !== id));
+                  }
+                }}
+              />
+              {id}
+            </label>
+          ))}
+        </fieldset>
+
         <DataTable
           ariaLabel="Cross-job inventory"
           loading={loading}
@@ -94,78 +379,45 @@ export function InventoryDashboard({
           rowKey={(r) => r.id}
           selectedKey={selectedAsset?.id ?? null}
           onRowClick={(r) => onSelectAsset(r.id)}
-          columns={[
-            {
-              id: "part",
-              header: "Part #",
-              cell: (r) => (
-                <span className="part-cell">
-                  <IconPart />
-                  <span>{r.partNumber ?? "—"}</span>
-                </span>
-              ),
-            },
-            {
-              id: "apto",
-              header: "Apto ID",
-              cell: (r) => r.aptoId ?? "—",
-            },
-            {
-              id: "serial",
-              header: "Serial",
-              cell: (r) => r.serialNumber ?? "—",
-            },
-            {
-              id: "grade",
-              header: "Grade",
-              cell: (r) => r.grade ?? "—",
-            },
-            {
-              id: "status",
-              header: "Status",
-              cell: (r) => r.status ?? "—",
-            },
-            {
-              id: "location",
-              header: "Location",
-              cell: (r) => r.locationName ?? "—",
-            },
-            {
-              id: "account",
-              header: "Account",
-              cell: (r) => (
-                <span className="account-cell">
-                  <AccountAvatar name={r.accountName} size="sm" />
-                  <span>{r.accountName}</span>
-                </span>
-              ),
-            },
-            {
-              id: "facility",
-              header: "Facility",
-              cell: (r) => (
-                <span className="facility-cell muted">
-                  @ {r.facilityCode ?? "—"}
-                </span>
-              ),
-            },
-            {
-              id: "job",
-              header: "Job",
-              cell: (r) => (
-                <span className="job-link">{r.jobId.slice(0, 8)}…</span>
-              ),
-            },
-            {
-              id: "created",
-              header: "Created",
-              cell: (r) => new Date(r.createdAtUtc).toLocaleString(),
-            },
-          ]}
+          columns={columns}
           emptyState={
-            <EmptyState title="No matching assets" message="Try adjusting search or facility filters." />
+            <EmptyState title="No matching assets" message="Try adjusting search or filters." />
           }
         />
+
+        <div className="inventory-paging" role="navigation" aria-label="Inventory paging">
+          <AimsButton
+            variant="secondary"
+            disabled={inventoryPage <= 1 || loading}
+            onClick={() => onInventoryPageChange(inventoryPage - 1)}
+          >
+            Previous
+          </AimsButton>
+          <span className="muted">
+            Page {inventoryPage} / {pageCount}
+          </span>
+          <AimsButton
+            variant="secondary"
+            disabled={inventoryPage >= pageCount || loading}
+            onClick={() => onInventoryPageChange(inventoryPage + 1)}
+          >
+            Next
+          </AimsButton>
+          <label className="inventory-account-select">
+            Page size
+            <select
+              value={inventoryPageSize}
+              onChange={(e) => {
+                onInventoryPageSizeChange(Number(e.target.value));
+                onInventoryPageChange(1);
+              }}
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </label>
+        </div>
       </section>
 
       {selectedAsset && (

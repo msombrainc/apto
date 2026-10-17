@@ -328,6 +328,7 @@ export type AssetInventoryRow = {
   jobId: string;
   serialNumber: string | null;
   partNumber: string | null;
+  categoryName: string | null;
   grade: string | null;
   status: string | null;
   locationId: string | null;
@@ -335,6 +336,14 @@ export type AssetInventoryRow = {
   accountName: string;
   facilityCode: string | null;
   createdAtUtc: string;
+};
+
+export type AssetInventoryListResult = {
+  items: AssetInventoryRow[];
+  page: number;
+  pageSize: number;
+  total: number;
+  notFoundCodes?: string[] | null;
 };
 
 export type AssetWrite = {
@@ -465,20 +474,64 @@ export type InventoryQuery = {
   accountId?: string;
   facilityCode?: string;
   jobId?: string;
+  grade?: string;
+  status?: string;
+  locationId?: string;
+  category?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  codes?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
 };
 
 export async function listInventoryAssets(
   params: InventoryQuery = {},
 ): Promise<AssetInventoryRow[]> {
+  const result = await listInventoryAssetsPaged({ ...params, page: 1, pageSize: 200 });
+  return result.items;
+}
+
+export async function listInventoryAssetsPaged(
+  params: InventoryQuery = {},
+): Promise<AssetInventoryListResult> {
   const search = new URLSearchParams();
   if (params.q?.trim()) search.set("q", params.q.trim());
   if (params.accountId) search.set("accountId", params.accountId);
   if (params.facilityCode?.trim()) search.set("facilityCode", params.facilityCode.trim());
   if (params.jobId) search.set("jobId", params.jobId);
+  if (params.grade?.trim()) search.set("grade", params.grade.trim());
+  if (params.status?.trim()) search.set("status", params.status.trim());
+  if (params.locationId) search.set("locationId", params.locationId);
+  if (params.category?.trim()) search.set("category", params.category.trim());
+  if (params.createdFrom) search.set("createdFrom", params.createdFrom);
+  if (params.createdTo) search.set("createdTo", params.createdTo);
+  if (params.codes?.trim()) search.set("codes", params.codes.trim());
+  search.set("page", String(params.page ?? 1));
+  search.set("pageSize", String(params.pageSize ?? 50));
+  if (params.sortBy) search.set("sortBy", params.sortBy);
+  if (params.sortDir) search.set("sortDir", params.sortDir);
   const qs = search.toString();
-  const res = await fetch(`${base}/api/assets${qs ? `?${qs}` : ""}`);
+  const res = await fetch(`${base}/api/assets?${qs}`);
   if (!res.ok) throw new Error(`inventory list failed: ${res.status}`);
-  return res.json();
+  const data = await res.json();
+  if (Array.isArray(data)) {
+    return {
+      items: data,
+      page: 1,
+      pageSize: data.length,
+      total: data.length,
+    };
+  }
+  return {
+    items: data.items ?? [],
+    page: data.page ?? 1,
+    pageSize: data.pageSize ?? 50,
+    total: data.total ?? 0,
+    notFoundCodes: data.notFoundCodes ?? null,
+  };
 }
 
 export async function listJobAssets(jobId: string): Promise<Asset[]> {
