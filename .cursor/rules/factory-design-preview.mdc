@@ -1,0 +1,38 @@
+---
+description: Apto factory — Vercel AIMS preview is mandatory UI SoT until Figma MCP
+globs:
+  - apps/**/*
+  - components/**/*
+  - app/**/*
+  - public/**/*
+  - DESIGN.md
+  - docs/ux/**/*
+alwaysApply: false
+---
+
+# Design preview SoT (factory)
+
+Until Figma MCP is connected, **interactive preview** is the visual source of truth for
+Demo 2 UI work (`ux-charter-first`, `needs-ux-pass`, and any visible React change).
+
+| Field | Value |
+|-------|--------|
+| URL | https://apto-aims-preview.vercel.app |
+| Username | `apto-inventory` |
+| Password | `apto2026` |
+
+## Required (Athena / Hephaestus)
+
+1. **Browser MCP** — sign in, open the ticket’s surfaces in **light and dark** before charter freeze and during polish.
+2. **Baseline** — capture or reference screenshots under `docs/ux/screenshots/` or the ticket UX run folder; preview wins over legacy STG shell for look-and-feel.
+3. **Docs** — `docs/ux/README.md` and root `DESIGN.md` are canonical pointers; do not invent layout from charter prose when the surface exists in preview.
+
+## STG vs preview
+
+- STG login remains `demo` / `demo` for product APIs and Argus — do not conflate with preview credentials.
+- Factory mandate tracking: **apto#72**; engine `projects/apto/project.yaml` → `design_preview`.
+
+## Forbidden
+
+- Shipping UI polish or new screens without preview diff when labels require UX pass.
+- Treating Figma `.fig` or cloud link as primary when preview covers the surface.
