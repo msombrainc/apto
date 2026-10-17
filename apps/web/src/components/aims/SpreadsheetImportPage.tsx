@@ -290,7 +290,7 @@ export function SpreadsheetImportPage({ jobId }: Props) {
           <p>Upload a client `.csv` or `.xlsx` (up to 500 rows).</p>
           <input
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx"
             data-testid="f6-upload-input"
             onChange={onFileInput}
           />
