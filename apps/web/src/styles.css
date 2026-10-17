@@ -720,6 +720,47 @@ tr.sla-overdue {
   color: var(--sla-pill-overdue-text);
 }
 
+.import-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px dashed var(--aims-border, rgba(148, 163, 184, 0.45));
+  border-radius: 0.5rem;
+  background: var(--aims-surface-raised, rgba(15, 23, 42, 0.35));
+}
+
+.import-policy {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--aims-border, rgba(148, 163, 184, 0.35));
+  border-radius: 0.5rem;
+}
+
+.import-status {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.import-status--ok {
+  background: var(--sla-pill-on-track-bg);
+  color: var(--sla-pill-on-track-text);
+}
+
+.import-status--error {
+  background: var(--sla-pill-overdue-bg);
+  color: var(--sla-pill-overdue-text);
+}
+
+.import-status--skipped {
+  background: var(--sla-pill-at-risk-bg);
+  color: var(--sla-pill-at-risk-text);
+}
+
 .row-selectable {
   cursor: pointer;
 }

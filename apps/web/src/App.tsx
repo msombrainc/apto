@@ -20,6 +20,7 @@ import {
   parseAccountId,
   parseInventoryAssetId,
   parseJobId,
+  parseJobSpreadsheetImport,
   viewFromPathname,
   type AppView,
 } from "./routing/moduleMap";
@@ -34,6 +35,7 @@ import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/A
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
 import { JobDetailPage } from "./components/aims/JobDetailPage";
+import { SpreadsheetImportPage } from "./components/aims/SpreadsheetImportPage";
 import { JobsListV2 } from "./components/aims/JobsListV2";
 import { ReferenceDataAdmin } from "./components/aims/ReferenceDataAdmin";
 import { PartNumbersAdmin } from "./components/aims/PartNumbersAdmin";
@@ -54,6 +56,7 @@ export function App() {
   const routeAssetId = parseInventoryAssetId(location.pathname);
   const routeAccountId = parseAccountId(location.pathname);
   const routeJobId = parseJobId(location.pathname);
+  const spreadsheetImportJobId = parseJobSpreadsheetImport(location.pathname);
   const [query, setQuery] = useState("");
   const [accountStatusFilter, setAccountStatusFilter] = useState<AccountStatusFilter>("Active");
   const debouncedQuery = useDebounced(query, 300);
@@ -278,6 +281,8 @@ export function App() {
       ? "Account detail"
       : view === "accounts"
       ? "Customer accounts"
+      : view === "jobs" && spreadsheetImportJobId
+        ? "Import spreadsheet"
       : view === "jobs" && routeJobId
         ? "Job detail"
       : view === "jobs"
@@ -296,6 +301,8 @@ export function App() {
       ? "View and edit customer profile, fees, billing, and QuickBooks sync."
       : view === "accounts"
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
+      : view === "jobs" && spreadsheetImportJobId
+        ? "Map columns, validate rows, and create serialized assets on this job."
       : view === "jobs"
         ? "Track facility jobs and SLA countdown from intake through shipping."
         : view === "scan"
@@ -340,7 +347,10 @@ export function App() {
         />
       )}
 
-      {view === "jobs" && routeJobId && (
+      {view === "jobs" && spreadsheetImportJobId && (
+        <SpreadsheetImportPage jobId={spreadsheetImportJobId} />
+      )}
+      {view === "jobs" && routeJobId && !spreadsheetImportJobId && (
         <JobDetailPage jobId={routeJobId} accounts={accounts} />
       )}
 

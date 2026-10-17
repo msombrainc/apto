@@ -6,10 +6,16 @@ import {
   isKnownAppPath,
   parseAccountId,
   parseJobId,
+  parseJobSpreadsheetImport,
   parseInventoryAssetId,
   viewFromPathname,
 } from "../../apps/web/src/routing/moduleMap.ts";
-import { accountPath, inventoryAssetPath, jobPath } from "../../apps/web/src/routing/paths.ts";
+import {
+  accountPath,
+  inventoryAssetPath,
+  jobPath,
+  jobSpreadsheetImportPath,
+} from "../../apps/web/src/routing/paths.ts";
 
 test("module map includes Demo 2 Operations entries", () => {
   const jobs = AIMS_MODULE_MAP.find((e) => e.id === "jobs");
@@ -73,6 +79,13 @@ test("accountPath round-trips with parseAccountId", () => {
 test("jobPath round-trips with parseJobId", () => {
   const id = "job/with space";
   assert.equal(parseJobId(jobPath(id)), id);
+});
+
+test("jobSpreadsheetImportPath round-trips with parseJobSpreadsheetImport", () => {
+  const id = "job-54";
+  const path = jobSpreadsheetImportPath(id);
+  assert.equal(parseJobSpreadsheetImport(path), id);
+  assert.equal(parseJobId(path), id);
 });
 
 test("parseInventoryAssetId decodes asset segment", () => {

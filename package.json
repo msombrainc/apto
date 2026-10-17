@@ -10,7 +10,8 @@
   },
   "devDependencies": {
     "@fission-ai/openspec": "^0.17.2",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "xlsx": "^0.18.5"
   },
   "engines": { "node": ">=20" }
 }
