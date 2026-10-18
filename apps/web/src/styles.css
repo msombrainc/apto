@@ -1953,6 +1953,35 @@ tr.row-selected {
   filter: brightness(1.08);
 }
 
+.link-button,
+.btn-link {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--aims-accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.link-button:hover,
+.btn-link:hover {
+  filter: brightness(1.08);
+}
+
+.btn-link--danger {
+  color: var(--aims-danger, #c53030);
+}
+
+.btn-link.is-selected {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .qbo-account-panel {
   display: grid;
   gap: 1rem;

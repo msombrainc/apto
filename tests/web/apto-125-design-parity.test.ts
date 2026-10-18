@@ -66,6 +66,27 @@ test("AppShell can hide global asset lookup on list surfaces (apto#125)", () => 
   const app = read("apps/web/src/App.tsx");
   assert.match(app, /hideGlobalLookup/);
   assert.match(app, /showGlobalLookup=\{!hideGlobalLookup\}/);
+  assert.match(app, /view === "accounts"/);
+  assert.match(app, /view === "scan"/);
+});
+
+test("jobs KPI uses Matching when filters active (apto#125 pass 2)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  assert.match(jobs, /jobFiltersActive/);
+  assert.match(jobs, /filtersActive \? "Matching" : "All jobs"/);
+  const filters = read("apps/web/src/jobFilters.ts");
+  assert.match(filters, /export function jobFiltersActive/);
+});
+
+test("admin table actions use tokenized link buttons (apto#125 pass 2)", () => {
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\.btn-link\s*\{[^}]*var\(--aims-accent\)/);
+});
+
+test("job detail back nav matches Jobs & SLA title (apto#125 pass 2)", () => {
+  const detail = read("apps/web/src/components/aims/JobDetailPage.tsx");
+  assert.match(detail, /data-testid="f3-back-jobs"/);
+  assert.match(detail, /Jobs &amp; SLA/);
 });
 
 test("accounts status filter under More filters disclosure (apto#125)", () => {
