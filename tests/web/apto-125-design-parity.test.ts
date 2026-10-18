@@ -137,7 +137,33 @@ test("jobs SLA KPI cards toggle slaFlag filter (apto#125 pass 3)", () => {
 test("accounts average SLA KPI uses whole days (apto#125 pass 3)", () => {
   const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
   assert.match(accounts, /Math\.round\(avg\)/);
-  assert.match(accounts, /days mean commitment/);
+  assert.match(accounts, /sublabel=\{accounts\.length === 0 \? undefined : "days"\}/);
+});
+
+test("accounts table SLA bar-only without summary line (apto#125 pass 4)", () => {
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /variant="bar-only"/);
+  const bar = read("apps/web/src/components/aims/SlaSegmentBar.tsx");
+  assert.match(bar, /variant === "bar-only"/);
+  assert.match(bar, /!barOnly && <span className="sla-summary"/);
+});
+
+test("account detail header shows SLA bar (apto#125 pass 4)", () => {
+  const detail = read("apps/web/src/components/aims/AccountDetailPage.tsx");
+  assert.match(detail, /data-testid="f2-account-header-sla"/);
+  assert.match(detail, /SlaSegmentBar/);
+  assert.match(detail, /from "\.\/accountStatusPill"/);
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /from "\.\/accountStatusPill"/);
+});
+
+test("theme segment shows Dark and Light labels (apto#125 pass 4)", () => {
+  const theme = read("apps/web/src/components/aims/ThemeSegment.tsx");
+  assert.match(theme, /theme-segment-label/);
+  assert.match(theme, /"Dark"/);
+  assert.match(theme, /"Light"/);
+  const login = read("apps/web/src/LoginPage.tsx");
+  assert.match(login, /ThemeSegment/);
 });
 
 test("inventory secondary tools behind disclosure (apto#125 pass 3)", () => {

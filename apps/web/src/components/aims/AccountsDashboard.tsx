@@ -13,8 +13,14 @@ import { IconClock, IconPlus, IconRefresh, IconUsers } from "./icons";
 import { Modal } from "./Modal";
 import { SlaSegmentBar, slaTotalDays } from "./SlaSegmentBar";
 import { StatCard } from "./StatCard";
+import {
+  accountsKpiLabel,
+  accountsKpiSublabel,
+  type AccountStatusFilter,
+} from "../../accountsKpiLabels";
+import { accountStatusPillClass } from "./accountStatusPill";
 
-export type AccountStatusFilter = "Active" | "Inactive" | "Both";
+export type { AccountStatusFilter };
 
 type AccountsDashboardProps = {
   accounts: Account[];
@@ -38,34 +44,6 @@ function averageSlaDays(accounts: Account[]): number {
     0,
   );
   return Math.round((sum / accounts.length) * 10) / 10;
-}
-
-function statusPillClass(status: string): string {
-  return status === "Inactive"
-    ? "status-pill status-pill--inactive"
-    : "status-pill status-pill--active";
-}
-
-function accountsKpiLabel(statusFilter: AccountStatusFilter): string {
-  switch (statusFilter) {
-    case "Inactive":
-      return "Inactive accounts";
-    case "Both":
-      return "Accounts";
-    default:
-      return "Active customers";
-  }
-}
-
-function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
-  switch (statusFilter) {
-    case "Inactive":
-      return "Inactive records";
-    case "Both":
-      return "All records";
-    default:
-      return "Matching filter";
-  }
 }
 
 export function AccountsDashboard({
@@ -100,13 +78,13 @@ export function AccountsDashboard({
         <StatCard
           label={accountsKpiLabel(statusFilter)}
           value={accounts.length}
-          sublabel={accountsKpiSublabel(statusFilter)}
+          sublabel={accountsKpiSublabel(statusFilter, query)}
           icon={<IconUsers />}
         />
         <StatCard
           label="Average SLA"
           value={accounts.length === 0 ? "—" : Math.round(avg)}
-          sublabel={accounts.length === 0 ? undefined : "days mean commitment"}
+          sublabel={accounts.length === 0 ? undefined : "days"}
           icon={<IconClock />}
         />
       </div>
@@ -178,7 +156,7 @@ export function AccountsDashboard({
               id: "status",
               header: "Status",
               cell: (a) => (
-                <span className={statusPillClass(a.status)}>{a.status}</span>
+                <span className={accountStatusPillClass(a.status)}>{a.status}</span>
               ),
             },
             {
@@ -186,6 +164,7 @@ export function AccountsDashboard({
               header: "SLA",
               cell: (a) => (
                 <SlaSegmentBar
+                  variant="bar-only"
                   receivingDays={a.slaReceivingDays}
                   processingDays={a.slaProcessingDays}
                   shippingDays={a.slaShippingDays}

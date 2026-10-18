@@ -1,8 +1,7 @@
 import { type ReactNode, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { BrandMark } from "./BrandMark";
-import { useTheme, type Theme } from "./theme";
-import { IconMoon, IconSun } from "./components/aims/icons";
+import { ThemeSegment } from "./components/aims/ThemeSegment";
 import { GlobalAssetLookup } from "./components/aims/GlobalAssetLookup";
 import { ModuleMapNav } from "./components/aims/ModuleMapNav";
 import { ROUTES } from "./routing/paths";
@@ -55,7 +54,6 @@ export function AppShell({
   showGlobalLookup = true,
   children,
 }: AppShellProps) {
-  const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
 
   // Belt-and-suspenders for apto#112: keep document scroll at 0 while shell is mounted.
@@ -98,22 +96,7 @@ export function AppShell({
           ))}
         </nav>
         <ModuleMapNav />
-        <div className="sidebar-theme" role="group" aria-label="Theme">
-          <div className="theme-segment">
-            {(["dark", "light"] as Theme[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`theme-segment-btn${theme === t ? " is-pressed" : ""}`}
-                aria-pressed={theme === t}
-                aria-label={t === "dark" ? "Dark theme" : "Light theme"}
-                onClick={() => setTheme(t)}
-              >
-                {t === "dark" ? <IconMoon /> : <IconSun />}
-              </button>
-            ))}
-          </div>
-        </div>
+        <ThemeSegment />
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <span className="user-avatar" aria-hidden>DE</span>

@@ -1,5 +1,6 @@
 import { FormEvent } from "react";
 import { BrandMark } from "./BrandMark";
+import { ThemeSegment } from "./components/aims/ThemeSegment";
 import { DEMO_PASSWORD, DEMO_USER } from "./demoAuth";
 
 type LoginPageProps = {
@@ -68,6 +69,7 @@ export function LoginPage({ error, onLogin }: LoginPageProps) {
             </button>
           </form>
           {error && <p className="error" role="alert">{error}</p>}
+          <ThemeSegment className="login-theme-segment" />
         </div>
       </section>
     </div>

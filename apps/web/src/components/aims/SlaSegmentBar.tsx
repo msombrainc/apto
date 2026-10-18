@@ -2,6 +2,8 @@ type SlaSegmentBarProps = {
   receivingDays: number;
   processingDays: number;
   shippingDays: number;
+  /** Table cells use bar-only; detail panels show summary text. */
+  variant?: "full" | "bar-only";
 };
 
 export function slaTotalDays(r: number, p: number, s: number): number {
@@ -14,7 +16,12 @@ export function formatSlaSummary(r: number, p: number, s: number): string {
   return `${r}d input · ${p}d settlement · ${s}d sales = ${total}d`;
 }
 
-export function SlaSegmentBar({ receivingDays, processingDays, shippingDays }: SlaSegmentBarProps) {
+export function SlaSegmentBar({
+  receivingDays,
+  processingDays,
+  shippingDays,
+  variant = "full",
+}: SlaSegmentBarProps) {
   const total = slaTotalDays(receivingDays, processingDays, shippingDays);
   const label = formatSlaSummary(receivingDays, processingDays, shippingDays);
 
@@ -28,9 +35,16 @@ export function SlaSegmentBar({ receivingDays, processingDays, shippingDays }: S
     { key: "s", days: shippingDays, className: "sla-seg sla-seg--shipping" },
   ];
 
+  const barOnly = variant === "bar-only";
+
   return (
-    <div className="sla-segment-cell">
-      <div className="sla-segment-bar" aria-hidden>
+    <div className={`sla-segment-cell${barOnly ? " sla-segment-cell--bar-only" : ""}`}>
+      <div
+        className="sla-segment-bar"
+        aria-hidden={barOnly ? undefined : true}
+        aria-label={barOnly ? label : undefined}
+        role={barOnly ? "img" : undefined}
+      >
         {segments.map((seg) => (
           <span
             key={seg.key}
@@ -39,7 +53,7 @@ export function SlaSegmentBar({ receivingDays, processingDays, shippingDays }: S
           />
         ))}
       </div>
-      <span className="sla-summary">{label}</span>
+      {!barOnly && <span className="sla-summary">{label}</span>}
     </div>
   );
 }

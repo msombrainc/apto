@@ -20,6 +20,8 @@ import { AimsButton } from "./Button";
 import { CodePill } from "./CodePill";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
+import { SlaSegmentBar } from "./SlaSegmentBar";
+import { accountStatusPillClass } from "./accountStatusPill";
 
 type AccountDetailPageProps = {
   accountId: string;
@@ -251,14 +253,20 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
       <div className="dashboard-actions account-detail-header">
         <div className="account-detail-title">
           <AccountAvatar name={loaded.name} size="md" />
-          <div>
+          <div className="account-detail-title__meta">
             <h1>{loaded.name}</h1>
-            <p className="muted">
-              Code {loaded.code} · {loaded.status}
-            </p>
-            <p className="muted">Customer profile · fees · billing · QuickBooks</p>
+            <div className="account-detail-title__row">
+              <CodePill code={loaded.code} />
+              <span className={accountStatusPillClass(loaded.status)}>{loaded.status}</span>
+            </div>
+            <div className="account-detail-sla" data-testid="f2-account-header-sla">
+              <SlaSegmentBar
+                receivingDays={loaded.slaReceivingDays}
+                processingDays={loaded.slaProcessingDays}
+                shippingDays={loaded.slaShippingDays}
+              />
+            </div>
           </div>
-          <CodePill code={loaded.code} />
         </div>
         <div className="dashboard-actions">
           <AimsButton variant="ghost" onClick={onRevert} disabled={!dirty || saving}>
