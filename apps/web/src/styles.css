@@ -811,6 +811,12 @@ button:hover {
   width: 100%;
 }
 
+[data-theme="light"] .login-panel .btn-primary {
+  background: #f1efeb;
+  color: #10151c;
+  border: 1px solid rgba(16, 21, 28, 0.08);
+}
+
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--aims-border);
