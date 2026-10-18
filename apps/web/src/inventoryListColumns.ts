@@ -25,18 +25,18 @@ export const INVENTORY_COLUMN_IDS: InventoryListColumnId[] = [
   "created",
 ];
 
-/** Compact preview SoT default (apto#125) — matches live preview table headers. */
+/** Compact preview SoT default (apto#125 pass 10) — matches authenticated preview table headers. */
 export const INVENTORY_PREVIEW_DEFAULT_COLUMNS: InventoryListColumnId[] = [
-  "part",
+  "apto",
   "serial",
+  "part",
+  "grade",
+  "status",
   "account",
-  "facility",
-  "job",
-  "created",
 ];
 
 export const INVENTORY_COLUMN_LABELS: Record<InventoryListColumnId, string> = {
-  apto: "Apto ID",
+  apto: "APTO",
   serial: "Serial",
   part: "Part number",
   category: "Category",
