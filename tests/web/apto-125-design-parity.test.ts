@@ -260,7 +260,7 @@ test("inventory page subtitle matches preview (apto#125 pass 8)", () => {
   assert.match(app, /Every asset received, across all jobs and facilities/);
 });
 
-test("jobs ops column header matches preview (apto#125 pass 8)", () => {
+test("jobs ops column header matches preview (apto#125 pass 9)", () => {
   assert.equal(JOBS_LIST_COLUMN_LABELS.opsStatus, "Ops status");
 });
 
