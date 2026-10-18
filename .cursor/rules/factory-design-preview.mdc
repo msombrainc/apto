@@ -22,8 +22,9 @@ Demo 2 UI work (`ux-charter-first`, `needs-ux-pass`, and any visible React chang
 ## Required (Athena / Hephaestus)
 
 1. **Browser MCP** — sign in, open the ticket’s surfaces in **light and dark** before charter freeze and during polish.
-2. **Baseline** — capture or reference screenshots under `docs/ux/screenshots/` or the ticket UX run folder; preview wins over legacy STG shell for look-and-feel.
-3. **Docs** — `docs/ux/README.md` and root `DESIGN.md` are canonical pointers; do not invent layout from charter prose when the surface exists in preview.
+2. **Tracker sentinels** — post `DESIGN_PREVIEW_REVIEWED` on the issue after the live preview pass (`BROWSER_REVIEW_SKIP: …` only with reason). `UX_CHARTER_READY` alone does not satisfy the gate when `design_preview` is configured (**apto#126** / dev-agent#147).
+3. **Baseline** — capture or reference screenshots under `docs/ux/screenshots/` or the ticket UX run folder; preview wins over legacy STG shell for look-and-feel.
+4. **Docs** — `docs/ux/README.md` and root `DESIGN.md` are canonical pointers; do not invent layout from charter prose when the surface exists in preview.
 
 ## STG vs preview
 
