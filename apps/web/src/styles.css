@@ -1998,6 +1998,34 @@ tr.row-selected {
   padding: 1rem 1.25rem;
 }
 
+.job-detail-hero {
+  padding: 1rem 1.25rem;
+}
+
+.job-detail-header .account-detail-title__meta h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.35rem;
+}
+
+.job-detail-id {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.job-detail-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+}
+
+.job-detail-days-left {
+  font-size: 0.875rem;
+}
+
+.job-detail-actions {
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .accounts-open-col {
   width: 3.25rem;
   text-align: right;

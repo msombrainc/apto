@@ -36,6 +36,7 @@ import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
 import { Modal } from "./Modal";
 import { StatCard } from "./StatCard";
+import { formatJobSlaStatusLabel, jobSlaPillClass } from "./jobSlaPill";
 import { IconBriefcase, IconPlus } from "./icons";
 
 type JobDetailPageProps = {
@@ -199,25 +200,30 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
         ← Jobs &amp; SLA
       </Link>
 
-      <header className="dashboard-panel" data-testid="f3-job-header">
-        <p className="muted">Job {job.id.slice(0, 8)}</p>
-        <div className="account-detail-header">
-          <AccountAvatar name={job.accountName} />
-          <div>
+      <section className="dashboard-panel job-detail-hero" data-testid="f3-job-header">
+        <div className="account-detail-header job-detail-header">
+          <AccountAvatar name={job.accountName} size="md" />
+          <div className="account-detail-title__meta">
+            <p className="muted job-detail-id">Job {job.id.slice(0, 8)}</p>
             <h1>
               <Link to={accountPath(job.accountId)}>{job.accountName}</Link>
             </h1>
-            <CodePill code={job.accountCode} />
-            {job.facilityCode && <CodePill code={job.facilityCode} />}
+            <div className="account-detail-title__row">
+              <CodePill code={job.accountCode} />
+              {job.facilityCode && <CodePill code={job.facilityCode} />}
+              <span className={jobSlaPillClass(job.slaStatus)} data-testid="f3-job-sla-status">
+                {formatJobSlaStatusLabel(job.slaStatus)}
+              </span>
+              <span className="muted job-detail-days-left">
+                {formatSlaDaysRemaining(job.daysRemaining)}
+              </span>
+            </div>
+            <p className="muted job-detail-meta">
+              Created {new Date(job.createdAtUtc).toLocaleDateString()} · {job.slaTotalDays}-day SLA
+            </p>
           </div>
-          <span className={`sla-pill sla-pill--${job.slaStatus}`}>
-            {formatSlaDaysRemaining(job.daysRemaining)}
-          </span>
         </div>
-        <p className="muted">
-          Created {new Date(job.createdAtUtc).toLocaleDateString()} · {job.slaTotalDays}-day SLA
-        </p>
-        <div className="dashboard-actions">
+        <div className="dashboard-actions job-detail-actions">
           <Link
             to={jobSpreadsheetImportPath(jobId)}
             className="aims-btn aims-btn--secondary"
@@ -247,7 +253,7 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
             Service invoice
           </Link>
         </div>
-      </header>
+      </section>
 
       <div className="kpi-row kpi-row--5" data-testid="f3-job-progress" role="region" aria-label="Job progress">
         <StatCard label="Total assets" value={totalAssets} icon={<IconBriefcase />} />
