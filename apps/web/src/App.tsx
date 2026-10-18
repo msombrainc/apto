@@ -42,7 +42,10 @@ import { AccountDetailPage } from "./components/aims/AccountDetailPage";
 import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
-import { INVENTORY_PREVIEW_DEFAULT_COLUMNS } from "./inventoryListColumns";
+import {
+  INVENTORY_PREVIEW_DEFAULT_COLUMNS,
+  normalizePreviewInventoryColumns,
+} from "./inventoryListColumns";
 import { JobDetailPage } from "./components/aims/JobDetailPage";
 import { BulkUnserializedPage } from "./components/aims/BulkUnserializedPage";
 import { JobCertificatePage } from "./components/aims/JobCertificatePage";
@@ -231,7 +234,7 @@ export function App() {
       setInventoryCreatedTo(p.createdTo ?? "");
       setInventoryPasteCodes(p.codes ?? "");
       setInventoryPageSize(p.pageSize ?? 50);
-      setInventoryVisibleColumns(saved.visibleColumns);
+      setInventoryVisibleColumns(normalizePreviewInventoryColumns(saved.visibleColumns));
       setInventoryPage(1);
       await runInventoryFetch(inventoryListParamsFromSaved(p, 1));
     },

@@ -250,6 +250,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
     <div className="dashboard-stack" data-testid="f2-account-detail-page">
       <Link to={ROUTES.accounts} className="text-button">← Accounts</Link>
 
+      <section className="dashboard-panel account-detail-hero">
       <div className="dashboard-actions account-detail-header">
         <div className="account-detail-title">
           <AccountAvatar name={loaded.name} size="md" />
@@ -261,6 +262,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
             </div>
             <div className="account-detail-sla" data-testid="f2-account-header-sla">
               <SlaSegmentBar
+                variant="bar-only"
                 receivingDays={loaded.slaReceivingDays}
                 processingDays={loaded.slaProcessingDays}
                 shippingDays={loaded.slaShippingDays}
@@ -283,6 +285,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
           </AimsButton>
         </div>
       </div>
+      </section>
 
       {saveMessage && (
         <p className="save-status" role="status">

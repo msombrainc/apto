@@ -1994,6 +1994,37 @@ tr.row-selected {
   max-width: 22rem;
 }
 
+.account-detail-hero {
+  padding: 1rem 1.25rem;
+}
+
+.accounts-open-col {
+  width: 3.25rem;
+  text-align: right;
+}
+
+.inventory-preview-panel .data-table-wrap .data-table td,
+.inventory-preview-panel .data-table-wrap .data-table th {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+.qbo-sync-queue-panel .filter-bar {
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.qbo-sync-queue-panel .filter-bar__select {
+  min-width: 10rem;
+}
+
+[data-testid="qbo-sync-connection"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem 1.25rem;
+}
+
 .login-theme-segment {
   margin-top: 1.25rem;
 }

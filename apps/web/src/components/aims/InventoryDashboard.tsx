@@ -305,7 +305,7 @@ export function InventoryDashboard({
         />
       </div>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel inventory-preview-panel">
         <FilterBar
           searchPlaceholder="Filter by serial or part number"
           searchValue={inventoryQuery}

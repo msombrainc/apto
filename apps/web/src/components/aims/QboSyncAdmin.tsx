@@ -11,6 +11,7 @@ import { AlertBanner } from "./AlertBanner";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
+import { FilterBar } from "./FilterBar";
 import { IconRefresh } from "./icons";
 
 const OPERATION_LABELS: Record<string, string> = {
@@ -300,11 +301,19 @@ export function QboSyncAdmin() {
         )}
       </section>
 
-      <section className="dashboard-panel">
-        <div className="filter-bar">
-          <label className="filter-field">
+      <section className="dashboard-panel qbo-sync-queue-panel">
+        <FilterBar
+          searchPlaceholder=""
+          searchValue=""
+          onSearchChange={() => {}}
+          countLabel={`Showing ${from}–${to} of ${total}`}
+          searchId="qbo-sync-search-hidden"
+          hideSearch
+        >
+          <label className="filter-bar__select">
             Status
-            <select className="aims-select"
+            <select
+              className="aims-select"
               data-testid="qbo-sync-filter-status"
               value={statusFilter}
               onChange={(e) => {
@@ -317,9 +326,10 @@ export function QboSyncAdmin() {
               ))}
             </select>
           </label>
-          <label className="filter-field">
+          <label className="filter-bar__select">
             Type
-            <select className="aims-select"
+            <select
+              className="aims-select"
               data-testid="qbo-sync-filter-type"
               value={typeFilter}
               onChange={(e) => {
@@ -332,10 +342,7 @@ export function QboSyncAdmin() {
               ))}
             </select>
           </label>
-          <span className="filter-bar__meta muted">
-            Showing {from}–{to} of {total}
-          </span>
-        </div>
+        </FilterBar>
 
         <DataTable
           ariaLabel="QuickBooks sync queue"
