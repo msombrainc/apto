@@ -7,7 +7,6 @@ import { AccountAvatar } from "./AccountAvatar";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
-import { FacilityPills } from "./FacilityPills";
 import { FilterBar } from "./FilterBar";
 import { IconBox, IconClock, IconPart, IconRefresh, IconUsers } from "./icons";
 import { isCreatedTodayUtc } from "../../inventoryDates";
@@ -312,11 +311,6 @@ export function InventoryDashboard({
         {advancedOpen && (
           <>
             <div className="inventory-filters-row">
-              <FacilityPills
-                facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
-                value={inventoryFacility}
-                onChange={onInventoryFacilityChange}
-              />
               <label className="filter-field">
                 Grade
                 <input

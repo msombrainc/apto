@@ -82,3 +82,14 @@ test("jobs advanced filters gated behind disclosure (apto#125)", () => {
   assert.match(jobs, /data-testid="jobs-created-from"/);
   assert.match(jobs, /advancedFiltersOpen &&/);
 });
+
+test("inventory advanced filters gated; single facility control (apto#125)", () => {
+  const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
+  assert.match(inv, /advancedOpen/);
+  assert.match(inv, /More filters/);
+  assert.match(inv, /inventory-facility-filter/);
+  assert.doesNotMatch(inv, /FacilityPills/);
+  assert.match(inv, /label="Assets"/);
+  assert.match(inv, /label="Created today"/);
+  assert.match(inv, /label="Accounts"/);
+});
