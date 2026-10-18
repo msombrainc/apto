@@ -106,6 +106,53 @@ test("jobs advanced filters gated behind disclosure (apto#125)", () => {
   assert.match(jobs, /advancedFiltersOpen &&/);
 });
 
+test("jobs export and columns behind more filters (apto#125 pass 3)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  assert.match(jobs, /jobs-advanced-filters__tools/);
+  assert.match(jobs, /data-testid="jobs-export"/);
+  const dashStart = jobs.indexOf('<div className="dashboard-actions">');
+  const dashEnd = jobs.indexOf("</div>", dashStart);
+  const dashBlock = jobs.slice(dashStart, dashEnd);
+  assert.doesNotMatch(dashBlock, /jobs-export/);
+});
+
+test("jobs default FilterBar is search + account only (apto#125 pass 3)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  const barStart = jobs.indexOf("<FilterBar");
+  const barEnd = jobs.indexOf("</FilterBar>", barStart);
+  const barBlock = jobs.slice(barStart, barEnd);
+  assert.doesNotMatch(barBlock, /FacilityPills/);
+  assert.doesNotMatch(barBlock, /All ops statuses/);
+});
+
+test("jobs SLA KPI cards toggle slaFlag filter (apto#125 pass 3)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  const stat = read("apps/web/src/components/aims/StatCard.tsx");
+  assert.match(stat, /stat-card--active/);
+  assert.match(jobs, /slaFlag: filters\.slaFlag === "at-risk" \? "" : "at-risk"/);
+  assert.match(jobs, /filteredForSlaBands/);
+  assert.match(jobs, /countJobsBySla\(filteredForSlaBands\)/);
+});
+
+test("accounts average SLA KPI uses whole days (apto#125 pass 3)", () => {
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /Math\.round\(avg\)/);
+  assert.match(accounts, /days mean commitment/);
+});
+
+test("inventory secondary tools behind disclosure (apto#125 pass 3)", () => {
+  const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
+  assert.match(inv, /data-testid="inventory-more-tools"/);
+  assert.match(inv, /data-testid="inventory-tools-panel"/);
+  assert.match(inv, /moreToolsOpen &&/);
+});
+
+test("pass 3 shared list chrome styles (apto#125)", () => {
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\.accounts-open-chevron/);
+  assert.match(css, /\.dashboard-panel:has\(\.data-table-wrap\) \.data-table td/);
+});
+
 test("inventory advanced filters gated; single facility control (apto#125)", () => {
   const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
   assert.match(inv, /advancedOpen/);

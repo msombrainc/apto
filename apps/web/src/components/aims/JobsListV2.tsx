@@ -76,11 +76,15 @@ export function JobsListV2({
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
 
   const filtered = useMemo(() => filterJobs(jobs, filters), [jobs, filters]);
+  const filteredForSlaBands = useMemo(
+    () => filterJobs(jobs, { ...filters, slaFlag: "" }),
+    [jobs, filters],
+  );
   const sorted = useMemo(
     () => sortJobs(filtered, sortKey, sortDir),
     [filtered, sortKey, sortDir],
   );
-  const { onTrack, atRisk, overdue } = countJobsBySla(filtered);
+  const { onTrack, atRisk, overdue } = countJobsBySla(filteredForSlaBands);
   const filtersActive = jobFiltersActive(filters);
 
   const opsStatuses = useMemo(() => {
@@ -136,16 +140,6 @@ export function JobsListV2({
         <AimsButton variant="secondary" icon={<IconRefresh />} onClick={onRefresh}>
           Refresh
         </AimsButton>
-        <AimsButton variant="secondary" onClick={() => setColumnPickerOpen(true)}>
-          Columns
-        </AimsButton>
-        <AimsButton
-          variant="secondary"
-          onClick={() => exportJobsCsv(sorted, columns)}
-          data-testid="jobs-export"
-        >
-          Export
-        </AimsButton>
         <AimsButton
           variant="primary"
           icon={<IconPlus />}
@@ -161,9 +155,39 @@ export function JobsListV2({
           label={filtersActive ? "Matching" : "All jobs"}
           value={String(filtered.length)}
         />
-        <StatCard label="On track" value={String(onTrack)} />
-        <StatCard label="At risk" value={String(atRisk)} />
-        <StatCard label="Overdue" value={String(overdue)} />
+        <StatCard
+          label="On track"
+          value={String(onTrack)}
+          active={filters.slaFlag === "on-track"}
+          onClick={() =>
+            onFiltersChange({
+              ...filters,
+              slaFlag: filters.slaFlag === "on-track" ? "" : "on-track",
+            })
+          }
+        />
+        <StatCard
+          label="At risk"
+          value={String(atRisk)}
+          active={filters.slaFlag === "at-risk"}
+          onClick={() =>
+            onFiltersChange({
+              ...filters,
+              slaFlag: filters.slaFlag === "at-risk" ? "" : "at-risk",
+            })
+          }
+        />
+        <StatCard
+          label="Overdue"
+          value={String(overdue)}
+          active={filters.slaFlag === "overdue"}
+          onClick={() =>
+            onFiltersChange({
+              ...filters,
+              slaFlag: filters.slaFlag === "overdue" ? "" : "overdue",
+            })
+          }
+        />
       </div>
 
       <section className="dashboard-panel" aria-label="Jobs list">
@@ -190,23 +214,6 @@ export function JobsListV2({
             ))}
           </select>
         </label>
-        <FacilityPills
-          facilities={facilities}
-          value={filters.facilityCode}
-          onChange={(code) => onFiltersChange({ ...filters, facilityCode: code })}
-        />
-        <select
-          className="aims-select"
-          value={filters.opsStatus}
-          onChange={(e) => onFiltersChange({ ...filters, opsStatus: e.target.value })}
-        >
-          <option value="">All ops statuses</option>
-          {opsStatuses.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
       </FilterBar>
       <div className="filter-advanced-toggle">
         <button
@@ -242,6 +249,35 @@ export function JobsListV2({
       </div>
       {advancedFiltersOpen && (
         <div className="jobs-advanced-filters" data-testid="jobs-filters">
+          <div className="jobs-advanced-filters__tools">
+            <AimsButton variant="secondary" onClick={() => setColumnPickerOpen(true)}>
+              Columns
+            </AimsButton>
+            <AimsButton
+              variant="secondary"
+              onClick={() => exportJobsCsv(sorted, columns)}
+              data-testid="jobs-export"
+            >
+              Export
+            </AimsButton>
+          </div>
+          <FacilityPills
+            facilities={facilities}
+            value={filters.facilityCode}
+            onChange={(code) => onFiltersChange({ ...filters, facilityCode: code })}
+          />
+          <select
+            className="aims-select"
+            value={filters.opsStatus}
+            onChange={(e) => onFiltersChange({ ...filters, opsStatus: e.target.value })}
+          >
+            <option value="">All ops statuses</option>
+            {opsStatuses.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
           <select
             className="aims-select"
             value={filters.slaFlag}
@@ -251,6 +287,7 @@ export function JobsListV2({
                 slaFlag: e.target.value as JobFilterState["slaFlag"],
               })
             }
+            data-testid="jobs-sla-flag-select"
           >
             <option value="">All SLA flags</option>
             <option value="on-track">On track</option>
