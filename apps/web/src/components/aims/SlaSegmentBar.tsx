@@ -16,6 +16,13 @@ export function formatSlaSummary(r: number, p: number, s: number): string {
   return `${r}d input · ${p}d settlement · ${s}d sales = ${total}d`;
 }
 
+/** Preview SoT aria label for segmented SLA bars (apto#125). */
+export function formatSlaPreviewAria(r: number, p: number, s: number): string {
+  const total = slaTotalDays(r, p, s);
+  if (total <= 0) return "Not set";
+  return `Receiving ${r} days, processing ${p} days, shipping ${s} days`;
+}
+
 export function SlaSegmentBar({
   receivingDays,
   processingDays,
@@ -24,6 +31,7 @@ export function SlaSegmentBar({
 }: SlaSegmentBarProps) {
   const total = slaTotalDays(receivingDays, processingDays, shippingDays);
   const label = formatSlaSummary(receivingDays, processingDays, shippingDays);
+  const previewAria = formatSlaPreviewAria(receivingDays, processingDays, shippingDays);
 
   if (total <= 0) {
     if (variant === "bar-only") {
@@ -49,7 +57,7 @@ export function SlaSegmentBar({
       <div
         className="sla-segment-bar"
         aria-hidden={barOnly ? undefined : true}
-        aria-label={barOnly ? label : undefined}
+        aria-label={barOnly ? previewAria : undefined}
         role={barOnly ? "img" : undefined}
       >
         {segments.map((seg) => (
@@ -60,7 +68,16 @@ export function SlaSegmentBar({
           />
         ))}
       </div>
-      {!barOnly && <span className="sla-summary">{label}</span>}
+      {barOnly ? (
+        <div className="sla-segment-labels" aria-hidden>
+          <span>{receivingDays}d</span>
+          <span>{processingDays}d</span>
+          <span>{shippingDays}d</span>
+          <span className="sla-segment-labels__total">= {total}d</span>
+        </div>
+      ) : (
+        <span className="sla-summary">{label}</span>
+      )}
     </div>
   );
 }

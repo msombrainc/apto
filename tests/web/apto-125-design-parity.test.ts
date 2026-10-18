@@ -143,12 +143,13 @@ test("accounts average SLA KPI uses whole days (apto#125 pass 3)", () => {
   assert.match(accounts, /sublabel=\{accounts\.length === 0 \? undefined : "days"\}/);
 });
 
-test("accounts table SLA bar-only without summary line (apto#125 pass 4)", () => {
+test("accounts table SLA bar-only uses preview labels not summary line (apto#125 pass 4/13)", () => {
   const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
   assert.match(accounts, /variant="bar-only"/);
   const bar = read("apps/web/src/components/aims/SlaSegmentBar.tsx");
   assert.match(bar, /variant === "bar-only"/);
-  assert.match(bar, /!barOnly && <span className="sla-summary"/);
+  assert.match(bar, /barOnly \? \([\s\S]*sla-segment-labels/);
+  assert.match(bar, /\) : \([\s\S]*sla-summary/);
 });
 
 test("account detail header shows SLA bar (apto#125 pass 4)", () => {
@@ -332,6 +333,27 @@ test("account detail back link matches list title (apto#125 pass 12)", () => {
   const detail = read("apps/web/src/components/aims/AccountDetailPage.tsx");
   assert.match(detail, /← Customer accounts/);
   assert.doesNotMatch(detail, /← Accounts</);
+});
+
+test("SLA bar-only shows preview segment day labels (apto#125 pass 13)", () => {
+  const bar = read("apps/web/src/components/aims/SlaSegmentBar.tsx");
+  assert.match(bar, /sla-segment-labels/);
+  assert.match(bar, /formatSlaPreviewAria/);
+  assert.match(bar, /Receiving \$\{r\} days/);
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\.sla-segment-labels__total/);
+});
+
+test("admin page titles match sidebar nav (apto#125 pass 13)", () => {
+  const app = read("apps/web/src/App.tsx");
+  assert.match(app, /"Reference Data"/);
+  assert.match(app, /"Part Numbers"/);
+  assert.match(app, /"QuickBooks Sync"/);
+});
+
+test("warehouse scan uses preview panel stack class (apto#125 pass 13)", () => {
+  const scan = read("apps/web/src/components/aims/QuickScanPage.tsx");
+  assert.match(scan, /warehouse-scan-preview-panel/);
 });
 
 test("jobs list preview chrome pass 9 (apto#125)", () => {

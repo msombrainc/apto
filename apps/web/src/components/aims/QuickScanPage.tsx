@@ -385,7 +385,7 @@ export function QuickScanPage() {
     : locations;
 
   return (
-    <div className="dashboard-stack" data-testid="f8-scan-page">
+    <div className="dashboard-stack warehouse-scan-preview-panel" data-testid="f8-scan-page">
       {refError && <AlertBanner message={refError} />}
 
       <section className="dashboard-panel">
