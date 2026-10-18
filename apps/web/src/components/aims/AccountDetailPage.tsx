@@ -21,6 +21,7 @@ import { CodePill } from "./CodePill";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
 import { SlaSegmentBar } from "./SlaSegmentBar";
+import { accountStatusPillClass } from "./accountStatusPill";
 
 type AccountDetailPageProps = {
   accountId: string;
@@ -104,12 +105,6 @@ function slaPillClass(status: Job["slaStatus"]): string {
   if (status === "overdue") return "status-pill status-pill--failed";
   if (status === "at-risk") return "status-pill status-pill--pending";
   return "status-pill status-pill--active";
-}
-
-function accountStatusPillClass(status: string): string {
-  return status === "Inactive"
-    ? "status-pill status-pill--inactive"
-    : "status-pill status-pill--active";
 }
 
 export function AccountDetailPage({ accountId }: AccountDetailPageProps) {

@@ -152,6 +152,9 @@ test("account detail header shows SLA bar (apto#125 pass 4)", () => {
   const detail = read("apps/web/src/components/aims/AccountDetailPage.tsx");
   assert.match(detail, /data-testid="f2-account-header-sla"/);
   assert.match(detail, /SlaSegmentBar/);
+  assert.match(detail, /from "\.\/accountStatusPill"/);
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /from "\.\/accountStatusPill"/);
 });
 
 test("theme segment shows Dark and Light labels (apto#125 pass 4)", () => {
