@@ -76,11 +76,15 @@ export function JobsListV2({
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
 
   const filtered = useMemo(() => filterJobs(jobs, filters), [jobs, filters]);
+  const filteredForSlaBands = useMemo(
+    () => filterJobs(jobs, { ...filters, slaFlag: "" }),
+    [jobs, filters],
+  );
   const sorted = useMemo(
     () => sortJobs(filtered, sortKey, sortDir),
     [filtered, sortKey, sortDir],
   );
-  const { onTrack, atRisk, overdue } = countJobsBySla(filtered);
+  const { onTrack, atRisk, overdue } = countJobsBySla(filteredForSlaBands);
   const filtersActive = jobFiltersActive(filters);
 
   const opsStatuses = useMemo(() => {

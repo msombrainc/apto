@@ -130,6 +130,8 @@ test("jobs SLA KPI cards toggle slaFlag filter (apto#125 pass 3)", () => {
   const stat = read("apps/web/src/components/aims/StatCard.tsx");
   assert.match(stat, /stat-card--active/);
   assert.match(jobs, /slaFlag: filters\.slaFlag === "at-risk" \? "" : "at-risk"/);
+  assert.match(jobs, /filteredForSlaBands/);
+  assert.match(jobs, /countJobsBySla\(filteredForSlaBands\)/);
 });
 
 test("accounts average SLA KPI uses whole days (apto#125 pass 3)", () => {
