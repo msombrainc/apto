@@ -384,7 +384,7 @@ export function App() {
     view === "accounts" && routeAccountId
       ? "Account detail"
       : view === "accounts"
-      ? "Accounts"
+      ? "Customer accounts"
       : view === "jobs" && spreadsheetImportJobId
         ? "Import spreadsheet"
       : view === "jobs" && routeJobId

@@ -7,7 +7,7 @@ export function accountsKpiLabel(statusFilter: AccountStatusFilter): string {
     case "Both":
       return "Accounts";
     default:
-      return "Active customers";
+      return "Accounts";
   }
 }
 
@@ -19,5 +19,6 @@ export function accountsKpiSublabel(
   if (trimmed) return "Matching search";
   if (statusFilter === "Inactive") return "Inactive records";
   if (statusFilter === "Both") return "All records";
+  if (statusFilter === "Active") return "Active customers";
   return undefined;
 }

@@ -18,8 +18,6 @@ import {
   accountsKpiSublabel,
   type AccountStatusFilter,
 } from "../../accountsKpiLabels";
-import { accountStatusPillClass } from "./accountStatusPill";
-
 export type { AccountStatusFilter };
 
 type AccountsDashboardProps = {
@@ -85,13 +83,16 @@ export function AccountsDashboard({
           label="Average SLA"
           value={accounts.length === 0 ? "—" : Math.round(avg)}
           sublabel={accounts.length === 0 ? undefined : "days"}
+          footnote={
+            accounts.length === 0 ? undefined : "Receiving + processing + shipping"
+          }
           icon={<IconClock />}
         />
       </div>
 
       <section className="dashboard-panel">
         <FilterBar
-          searchPlaceholder="Search accounts"
+          searchPlaceholder="Filter by name or code"
           searchValue={query}
           onSearchChange={onQueryChange}
           countLabel={`${accounts.length} account${accounts.length === 1 ? "" : "s"}`}
@@ -153,15 +154,8 @@ export function AccountsDashboard({
               cell: (a) => <CodePill code={a.code} />,
             },
             {
-              id: "status",
-              header: "Status",
-              cell: (a) => (
-                <span className={accountStatusPillClass(a.status)}>{a.status}</span>
-              ),
-            },
-            {
               id: "sla",
-              header: "SLA",
+              header: "SLA · receiving / processing / shipping",
               cell: (a) => (
                 <SlaSegmentBar
                   variant="bar-only"
