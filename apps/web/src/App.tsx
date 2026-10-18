@@ -437,7 +437,7 @@ export function App() {
                       ? "Facility output by operator and category with run-rate summary (sample data)."
                       : view === "asset-images"
                         ? "Capture up to three photos per sample asset from this device."
-                        : "Cross-job asset search with compact filters matching the design preview.";
+                        : "Every asset received, across all jobs and facilities.";
 
   const hideGlobalLookup =
     view === "inventory" ||

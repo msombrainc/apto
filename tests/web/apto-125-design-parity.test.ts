@@ -28,12 +28,12 @@ test("App page titles match preview charter (apto#125)", () => {
 
 test("inventory preview default columns are compact six (apto#125)", () => {
   assert.deepEqual(INVENTORY_PREVIEW_DEFAULT_COLUMNS, [
-    "apto",
-    "serial",
     "part",
-    "grade",
-    "status",
+    "serial",
     "account",
+    "facility",
+    "job",
+    "created",
   ]);
   const app = read("apps/web/src/App.tsx");
   assert.match(app, /INVENTORY_PREVIEW_DEFAULT_COLUMNS/);
@@ -242,13 +242,24 @@ test("accounts list preview chrome pass 7 (apto#125)", () => {
   assert.match(accounts, /Receiving \+ processing \+ shipping/);
 });
 
-test("inventory advanced filters gated; single facility control (apto#125)", () => {
+test("inventory advanced filters gated; facility pills match preview (apto#125)", () => {
   const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
   assert.match(inv, /advancedOpen/);
   assert.match(inv, /More filters/);
+  assert.match(inv, /FacilityPills/);
   assert.match(inv, /inventory-facility-filter/);
-  assert.doesNotMatch(inv, /FacilityPills/);
   assert.match(inv, /filtersActive \? "Matching" : "Assets"/);
   assert.match(inv, /label="Created today"/);
   assert.match(inv, /label="Accounts"/);
+  assert.match(inv, /Across all facilities/);
+  assert.match(inv, /Filter by serial or part number/);
+});
+
+test("inventory page subtitle matches preview (apto#125 pass 8)", () => {
+  const app = read("apps/web/src/App.tsx");
+  assert.match(app, /Every asset received, across all jobs and facilities/);
+});
+
+test("jobs ops column header matches preview (apto#125 pass 8)", () => {
+  assert.equal(JOBS_LIST_COLUMN_LABELS.opsStatus, "Ops");
 });

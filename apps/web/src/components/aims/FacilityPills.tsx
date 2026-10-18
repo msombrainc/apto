@@ -3,6 +3,7 @@ type FacilityPillsProps = {
   value: string;
   onChange: (facility: string) => void;
   includeAll?: boolean;
+  testId?: string;
 };
 
 export function FacilityPills({
@@ -10,10 +11,16 @@ export function FacilityPills({
   value,
   onChange,
   includeAll = true,
+  testId,
 }: FacilityPillsProps) {
   const options = includeAll ? ["", ...facilities] : facilities;
   return (
-    <div className="facility-pills" role="group" aria-label="Facility">
+    <div
+      className="facility-pills"
+      role="group"
+      aria-label="Facility"
+      data-testid={testId}
+    >
       {options.map((code) => {
         const label = code === "" ? "All" : code;
         const pressed = value === code;

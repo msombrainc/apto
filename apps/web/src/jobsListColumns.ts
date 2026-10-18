@@ -19,7 +19,7 @@ export const JOBS_LIST_COLUMN_LABELS: Record<JobsListColumnId, string> = {
   account: "Account",
   accountCode: "Account Code",
   facility: "Facility",
-  opsStatus: "Ops status",
+  opsStatus: "Ops",
   daysSinceStart: "Days since start",
   dueDateUtc: "Deadline",
   slaDaysRemaining: "Days left",
