@@ -4,13 +4,28 @@ type StatCardProps = {
   label: string;
   value: string | number;
   sublabel?: string;
+  footnote?: string;
   icon?: ReactNode;
   onClick?: () => void;
   active?: boolean;
 };
 
-export function StatCard({ label, value, sublabel, icon, onClick, active }: StatCardProps) {
-  const ariaLabel = sublabel ? `${label}: ${value}. ${sublabel}` : `${label}: ${value}`;
+export function StatCard({
+  label,
+  value,
+  sublabel,
+  footnote,
+  icon,
+  onClick,
+  active,
+}: StatCardProps) {
+  const ariaLabel = [
+    `${label}: ${value}`,
+    sublabel,
+    footnote,
+  ]
+    .filter(Boolean)
+    .join(". ");
   const interactive = Boolean(onClick);
 
   return (
@@ -43,6 +58,9 @@ export function StatCard({ label, value, sublabel, icon, onClick, active }: Stat
       <div className="stat-card__value" aria-hidden="true">{value}</div>
       {sublabel && (
         <div className="stat-card__sublabel muted" aria-hidden="true">{sublabel}</div>
+      )}
+      {footnote && (
+        <div className="stat-card__footnote muted" aria-hidden="true">{footnote}</div>
       )}
     </div>
   );

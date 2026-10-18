@@ -153,8 +153,6 @@ test("account detail header shows SLA bar (apto#125 pass 4)", () => {
   assert.match(detail, /data-testid="f2-account-header-sla"/);
   assert.match(detail, /SlaSegmentBar/);
   assert.match(detail, /from "\.\/accountStatusPill"/);
-  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
-  assert.match(accounts, /from "\.\/accountStatusPill"/);
 });
 
 test("theme segment shows Dark and Light labels (apto#125 pass 4)", () => {
@@ -227,6 +225,21 @@ test("login sign-in uses cream CTA in light theme (apto#125 pass 6)", () => {
   assert.match(login, /data-testid="login-sign-in"/);
   const css = read("apps/web/src/styles.css");
   assert.match(css, /\[data-theme="light"\]\s*\.login-panel\s*\.btn-primary/);
+});
+
+test("accounts list preview chrome pass 7 (apto#125)", () => {
+  const app = read("apps/web/src/App.tsx");
+  assert.match(app, /"Customer accounts"/);
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /Filter by name or code/);
+  assert.match(accounts, /SLA · receiving \/ processing \/ shipping/);
+  assert.doesNotMatch(accounts, /header: "Status"/);
+  const kpi = read("apps/web/src/accountsKpiLabels.ts");
+  assert.match(kpi, /return "Accounts";/);
+  assert.match(kpi, /return "Active customers";/);
+  const stat = read("apps/web/src/components/aims/StatCard.tsx");
+  assert.match(stat, /footnote\?:/);
+  assert.match(accounts, /Receiving \+ processing \+ shipping/);
 });
 
 test("inventory advanced filters gated; single facility control (apto#125)", () => {
