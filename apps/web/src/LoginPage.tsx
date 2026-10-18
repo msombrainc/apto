@@ -64,7 +64,7 @@ export function LoginPage({ error, onLogin }: LoginPageProps) {
                 defaultValue={DEMO_PASSWORD}
               />
             </label>
-            <button type="submit" className="btn-primary">
+            <button type="submit" className="btn-primary" data-testid="login-sign-in">
               Sign in <span aria-hidden>→</span>
             </button>
           </form>

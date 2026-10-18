@@ -205,13 +205,36 @@ test("QBO sync admin uses btn-link for record and QBO anchors (apto#125 pass 5)"
   assert.match(qbo, /<Link[\s\S]*btn-link/);
 });
 
+test("inventory KPI uses Matching when filters active (apto#125 pass 6)", () => {
+  const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
+  assert.match(inv, /inventoryFiltersActive/);
+  assert.match(inv, /filtersActive \? "Matching" : "Assets"/);
+  const filters = read("apps/web/src/inventoryFilters.ts");
+  assert.match(filters, /export function inventoryFiltersActive/);
+});
+
+test("admin list panels use FilterBar (apto#125 pass 6)", () => {
+  const ref = read("apps/web/src/components/aims/ReferenceDataAdmin.tsx");
+  assert.match(ref, /from "\.\/FilterBar"/);
+  assert.match(ref, /searchId="ref-admin-search"/);
+  const pn = read("apps/web/src/components/aims/PartNumbersAdmin.tsx");
+  assert.match(pn, /searchId="pn-admin-search"/);
+});
+
+test("login sign-in uses cream CTA in light theme (apto#125 pass 6)", () => {
+  const login = read("apps/web/src/LoginPage.tsx");
+  assert.match(login, /data-testid="login-sign-in"/);
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\[data-theme="light"\]\s*\.login-panel\s*\.btn-primary/);
+});
+
 test("inventory advanced filters gated; single facility control (apto#125)", () => {
   const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
   assert.match(inv, /advancedOpen/);
   assert.match(inv, /More filters/);
   assert.match(inv, /inventory-facility-filter/);
   assert.doesNotMatch(inv, /FacilityPills/);
-  assert.match(inv, /label="Assets"/);
+  assert.match(inv, /filtersActive \? "Matching" : "Assets"/);
   assert.match(inv, /label="Created today"/);
   assert.match(inv, /label="Accounts"/);
 });

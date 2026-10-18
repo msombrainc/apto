@@ -16,6 +16,7 @@ import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
 import { IconPlus, IconRefresh } from "./icons";
 import { Modal } from "./Modal";
+import { FilterBar } from "./FilterBar";
 
 type SortKey = "number" | "categoryName" | "assetCount";
 
@@ -286,23 +287,13 @@ export function PartNumbersAdmin() {
       </div>
 
       <section className="dashboard-panel">
-        <div className="filter-bar">
-          <div className="filter-bar__search">
-            <label className="sr-only" htmlFor="pn-admin-search">Search part numbers</label>
-            <input
-              id="pn-admin-search"
-              data-testid="pn-admin-search"
-              type="search"
-              placeholder="Search part number"
-              aria-label="Search part numbers"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <p className="filter-bar__meta" aria-live="polite">
-            {liveMessage || `Showing ${from}–${to} of ${total}`}
-          </p>
-        </div>
+        <FilterBar
+          searchPlaceholder="Search part number"
+          searchValue={search}
+          onSearchChange={setSearch}
+          countLabel={liveMessage || `Showing ${from}–${to} of ${total}`}
+          searchId="pn-admin-search"
+        />
 
         <DataTable
           ariaLabel="Part numbers"

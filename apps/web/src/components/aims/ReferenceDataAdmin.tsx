@@ -18,6 +18,7 @@ import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
 import { IconPlus, IconRefresh } from "./icons";
 import { Modal } from "./Modal";
+import { FilterBar } from "./FilterBar";
 
 type AdminTypeKey =
   | "facility"
@@ -470,20 +471,13 @@ export function ReferenceDataAdmin() {
       </section>
 
       <section className="dashboard-panel">
-        <div className="filter-bar">
-          <div className="filter-bar__search">
-            <input
-              data-testid="ref-admin-search"
-              type="search"
-              placeholder="Search code or name"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <p className="filter-bar__meta" aria-live="polite">
-            {liveMessage || `Showing ${from}–${to} of ${total}`}
-          </p>
-        </div>
+        <FilterBar
+          searchPlaceholder="Search code or name"
+          searchValue={search}
+          onSearchChange={setSearch}
+          countLabel={liveMessage || `Showing ${from}–${to} of ${total}`}
+          searchId="ref-admin-search"
+        />
 
         <DataTable
           ariaLabel="Reference data"

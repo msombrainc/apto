@@ -24,6 +24,7 @@ import {
   type InventoryListColumnId,
 } from "../../inventoryListColumns";
 import { StatCard } from "./StatCard";
+import { inventoryFiltersActive } from "../../inventoryFilters";
 
 type InventoryDashboardProps = {
   accounts: Account[];
@@ -112,6 +113,18 @@ export function InventoryDashboard({
   const [columnPickerOpen, setColumnPickerOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [moreToolsOpen, setMoreToolsOpen] = useState(false);
+
+  const filtersActive = inventoryFiltersActive({
+    search: inventoryQuery,
+    accountId: inventoryAccountId,
+    facility: inventoryFacility,
+    grade: inventoryGrade,
+    status: inventoryStatus,
+    category: inventoryCategory,
+    createdFrom,
+    createdTo,
+    pasteCodes,
+  });
 
   const allColumns = useMemo(
     () =>
@@ -271,7 +284,11 @@ export function InventoryDashboard({
       </div>
 
       <div className="kpi-row kpi-row--3" role="region" aria-label="Inventory summary">
-        <StatCard label="Assets" value={inventoryTotal} icon={<IconBox />} />
+        <StatCard
+          label={filtersActive ? "Matching" : "Assets"}
+          value={inventoryTotal}
+          icon={<IconBox />}
+        />
         <StatCard label="Created today" value={createdToday} icon={<IconClock />} />
         <StatCard label="Accounts" value={distinctAccountsOnPage} icon={<IconUsers />} />
       </div>
