@@ -116,6 +116,15 @@ test("jobs export and columns behind more filters (apto#125 pass 3)", () => {
   assert.doesNotMatch(dashBlock, /jobs-export/);
 });
 
+test("jobs default FilterBar is search + account only (apto#125 pass 3)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  const barStart = jobs.indexOf("<FilterBar");
+  const barEnd = jobs.indexOf("</FilterBar>", barStart);
+  const barBlock = jobs.slice(barStart, barEnd);
+  assert.doesNotMatch(barBlock, /FacilityPills/);
+  assert.doesNotMatch(barBlock, /All ops statuses/);
+});
+
 test("jobs SLA KPI cards toggle slaFlag filter (apto#125 pass 3)", () => {
   const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
   const stat = read("apps/web/src/components/aims/StatCard.tsx");
@@ -134,6 +143,12 @@ test("inventory secondary tools behind disclosure (apto#125 pass 3)", () => {
   assert.match(inv, /data-testid="inventory-more-tools"/);
   assert.match(inv, /data-testid="inventory-tools-panel"/);
   assert.match(inv, /moreToolsOpen &&/);
+});
+
+test("pass 3 shared list chrome styles (apto#125)", () => {
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\.accounts-open-chevron/);
+  assert.match(css, /\.dashboard-panel:has\(\.data-table-wrap\) \.data-table td/);
 });
 
 test("inventory advanced filters gated; single facility control (apto#125)", () => {
