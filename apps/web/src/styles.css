@@ -673,18 +673,27 @@ body:has(.aims-app) {
   min-height: 0;
   flex: 1;
   overflow: hidden;
+  gap: 0.75rem;
+}
+
+.dashboard-panel:has(.data-table-wrap) > :not(.data-table-wrap) {
+  flex-shrink: 0;
 }
 
 .dashboard-panel:has(.data-table-wrap) .filter-bar {
   flex: 0 0 auto;
   min-height: 0;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--aims-surface);
-  margin: -1rem -1.25rem 0;
-  padding: 1rem 1.25rem 0.75rem;
-  border-radius: 12px 12px 0 0;
+  margin: 0;
+  margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.dashboard-panel:has(.data-table-wrap) .facility-pills,
+.dashboard-panel:has(.data-table-wrap) .filter-advanced-toggle,
+.dashboard-panel:has(.data-table-wrap) .jobs-advanced-filters,
+.dashboard-panel:has(.data-table-wrap) .inventory-filters-row {
+  margin: 0;
 }
 
 .dashboard-panel:has(.data-table-wrap) .data-table-wrap {
@@ -692,6 +701,9 @@ body:has(.aims-app) {
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--aims-border);
 }
 
 /* —— Shared form / card —— */
@@ -1820,12 +1832,30 @@ tr.row-selected {
   padding: 0;
 }
 
-.paging-footer {
+.paging-footer,
+.inventory-paging,
+.pagination-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 0.75rem 1rem;
+  margin-top: 0.25rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--aims-border);
+  flex-shrink: 0;
+}
+
+.paging-footer {
   justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 0 0.25rem;
+}
+
+.inventory-paging .inventory-account-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  color: var(--aims-text-muted);
+  margin-left: auto;
 }
 
 .row-actions {
@@ -1913,9 +1943,16 @@ tr.row-selected {
 }
 
 .f8-code-label {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   font-size: 0.85rem;
   font-weight: 600;
+  color: var(--aims-text-muted);
+}
+
+.f8-code-label .f8-code-input {
+  font-weight: 400;
 }
 
 /* F2 account detail (apto#51) */
