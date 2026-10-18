@@ -439,11 +439,6 @@ export function App() {
                         ? "Capture up to three photos per sample asset from this device."
                         : "Cross-job asset search with compact filters matching the design preview.";
 
-  const onJobsSubRoute =
-    spreadsheetImportJobId ||
-    bulkUnserializedJobId ||
-    certificateJobId ||
-    invoiceJobId;
   const hideGlobalLookup =
     view === "inventory" ||
     view === "scan" ||
@@ -452,7 +447,7 @@ export function App() {
     view === "qbo-sync" ||
     view === "sla-dashboard" ||
     view === "accounts" ||
-    (view === "jobs" && (routeJobId || onJobsSubRoute || !routeJobId));
+    view === "jobs";
 
   return (
     <AppShell

@@ -66,8 +66,10 @@ test("AppShell can hide global asset lookup on list surfaces (apto#125)", () => 
   const app = read("apps/web/src/App.tsx");
   assert.match(app, /hideGlobalLookup/);
   assert.match(app, /showGlobalLookup=\{!hideGlobalLookup\}/);
-  assert.match(app, /view === "accounts"/);
-  assert.match(app, /view === "scan"/);
+  const hideBlock = app.slice(app.indexOf("const hideGlobalLookup"), app.indexOf("showGlobalLookup"));
+  assert.match(hideBlock, /view === "accounts"\s*\|\|\s*\n\s*view === "jobs"/);
+  assert.doesNotMatch(hideBlock, /!routeAccountId/);
+  assert.doesNotMatch(hideBlock, /!routeJobId/);
 });
 
 test("jobs KPI uses Matching when filters active (apto#125 pass 2)", () => {
