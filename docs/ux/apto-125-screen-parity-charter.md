@@ -3,7 +3,7 @@
 **Status:** Frozen for implement (`UX_CHARTER_READY`)  
 **Date:** 2026-10-17  
 **Athena run:** `ux-agent/projects/apto/runs/2026-10-17-charter-apto-125/`  
-**SoT:** https://apto-aims-preview.vercel.app (`apto-inventory` / `apto2026`)  
+**SoT:** https://apto-aims-preview.vercel.app (preview login: see `DESIGN.md` / factory `design_preview` — not duplicated here)  
 **STG compare:** http://64.225.115.88:3012 (`demo` / `demo`)
 
 ## DESIGN_PREVIEW_REVIEWED
