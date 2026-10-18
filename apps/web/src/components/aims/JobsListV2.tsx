@@ -5,6 +5,7 @@ import type { Account, Job } from "../../api";
 import {
   countJobsBySla,
   filterJobs,
+  jobFiltersActive,
   sortJobs,
   type JobFilterState,
   type JobsListSortKey,
@@ -80,6 +81,7 @@ export function JobsListV2({
     [filtered, sortKey, sortDir],
   );
   const { onTrack, atRisk, overdue } = countJobsBySla(filtered);
+  const filtersActive = jobFiltersActive(filters);
 
   const opsStatuses = useMemo(() => {
     const set = new Set<string>();
@@ -155,7 +157,10 @@ export function JobsListV2({
       </div>
 
       <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
-        <StatCard label="All jobs" value={String(filtered.length)} />
+        <StatCard
+          label={filtersActive ? "Matching" : "All jobs"}
+          value={String(filtered.length)}
+        />
         <StatCard label="On track" value={String(onTrack)} />
         <StatCard label="At risk" value={String(atRisk)} />
         <StatCard label="Overdue" value={String(overdue)} />

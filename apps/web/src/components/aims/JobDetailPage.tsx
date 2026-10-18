@@ -180,7 +180,7 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
     return (
       <div className="dashboard-panel" data-testid="f3-job-not-found">
         <EmptyState title="Job not found" description={`No job with id ${jobId}.`} />
-        <Link to={ROUTES.jobs}>← Jobs</Link>
+        <Link to={ROUTES.jobs} className="text-button">← Jobs &amp; SLA</Link>
       </div>
     );
   }
@@ -195,7 +195,9 @@ export function JobDetailPage({ jobId, accounts: accountsProp }: JobDetailPagePr
 
   return (
     <div className="dashboard-stack" data-testid="f3-job-detail-page">
-      <Link to={ROUTES.jobs} className="back-link">← Jobs</Link>
+      <Link to={ROUTES.jobs} className="text-button" data-testid="f3-back-jobs">
+        ← Jobs &amp; SLA
+      </Link>
 
       <header className="dashboard-panel" data-testid="f3-job-header">
         <p className="muted">Job {job.id.slice(0, 8)}</p>

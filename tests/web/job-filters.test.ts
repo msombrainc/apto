@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { filterJobs, isOpenJob, sortJobs } from "../../apps/web/src/jobFilters.ts";
+import {
+  filterJobs,
+  isOpenJob,
+  jobFiltersActive,
+  sortJobs,
+  type JobFilterState,
+} from "../../apps/web/src/jobFilters.ts";
 import { buildJobsCsv, escapeCsv } from "../../apps/web/src/jobsListExport.ts";
 import type { Job } from "../../apps/web/src/api.ts";
 import { emptyJobFilters, jobFixture } from "./job-test-fixtures.ts";
@@ -157,4 +163,32 @@ test("filterJobs excludes jobs with null dates when range is set", () => {
     dueTo: "2026-10-31",
   });
   assert.deepEqual(filtered.map((j) => j.id), ["has-due"]);
+});
+
+const appDefaultJobFilters: JobFilterState = {
+  ...emptyJobFilters,
+  openOnly: true,
+};
+
+test("jobFiltersActive is false for App default job filter state", () => {
+  assert.equal(jobFiltersActive(appDefaultJobFilters), false);
+});
+
+test("jobFiltersActive is true when search or account is set", () => {
+  assert.equal(
+    jobFiltersActive({ ...appDefaultJobFilters, search: "acme" }),
+    true,
+  );
+  assert.equal(
+    jobFiltersActive({ ...appDefaultJobFilters, accountId: "a1" }),
+    true,
+  );
+});
+
+test("jobFiltersActive is true when date range or openOnly toggled", () => {
+  assert.equal(
+    jobFiltersActive({ ...appDefaultJobFilters, dueFrom: "2026-10-01" }),
+    true,
+  );
+  assert.equal(jobFiltersActive({ ...appDefaultJobFilters, openOnly: false }), true);
 });

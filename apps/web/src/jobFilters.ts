@@ -36,6 +36,23 @@ function inDateRange(iso: string | null, from: string, to: string): boolean {
   return true;
 }
 
+export function jobFiltersActive(filters: JobFilterState): boolean {
+  return Boolean(
+    filters.search.trim() ||
+      filters.accountId ||
+      filters.facilityCode ||
+      filters.opsStatus ||
+      filters.slaFlag ||
+      !filters.openOnly ||
+      filters.createdFrom ||
+      filters.createdTo ||
+      filters.startFrom ||
+      filters.startTo ||
+      filters.dueFrom ||
+      filters.dueTo,
+  );
+}
+
 export function filterJobs(jobs: Job[], filters: JobFilterState): Job[] {
   const q = filters.search.trim().toLowerCase();
   return jobs.filter((j) => {

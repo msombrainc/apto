@@ -440,9 +440,14 @@ export function App() {
                         : "Cross-job asset search with compact filters matching the design preview.";
 
   const hideGlobalLookup =
-    (view === "accounts" && !routeAccountId) ||
-    (view === "jobs" && !routeJobId && !spreadsheetImportJobId) ||
-    view === "inventory";
+    view === "inventory" ||
+    view === "scan" ||
+    view === "reference-data" ||
+    view === "part-numbers" ||
+    view === "qbo-sync" ||
+    view === "sla-dashboard" ||
+    view === "accounts" ||
+    view === "jobs";
 
   return (
     <AppShell
