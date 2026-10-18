@@ -419,18 +419,6 @@ export function JobsListV2({
   );
 }
 
-function formatSlaStatus(status: Job["slaStatus"]): string {
-  if (status === "on-track") return "On track";
-  if (status === "at-risk") return "At risk";
-  return "Overdue";
-}
-
-function slaStatusPillClass(status: Job["slaStatus"]): string {
-  if (status === "on-track") return "status-pill status-pill--active";
-  if (status === "at-risk") return "status-pill status-pill--inactive";
-  return "status-pill status-pill--inactive";
-}
-
 function cellForColumn(job: Job, col: JobsListColumnId): ReactNode {
   switch (col) {
     case "jobId":
@@ -458,7 +446,12 @@ function cellForColumn(job: Job, col: JobsListColumnId): ReactNode {
     case "slaFlag":
       return job.slaStatus;
     case "slaStatus":
-      return <span className={slaStatusPillClass(job.slaStatus)}>{formatSlaStatus(job.slaStatus)}</span>;
+      return (
+        <span className={`sla-pill sla-pill--${job.slaStatus}`}>
+          <span className="sr-only">SLA status: </span>
+          {job.slaStatus.replace(/-/g, " ")}
+        </span>
+      );
     case "wipAssets":
       return String(job.wipAssetCount);
     case "exceptionAssets":

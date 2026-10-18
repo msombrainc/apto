@@ -23,6 +23,7 @@ export function FilterBar({
         <span className="sr-only">{searchPlaceholder}</span>
         <input
           id={searchId}
+          data-testid={searchId}
           type="search"
           placeholder={searchPlaceholder}
           value={searchValue}
