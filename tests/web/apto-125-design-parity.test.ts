@@ -261,5 +261,31 @@ test("inventory page subtitle matches preview (apto#125 pass 8)", () => {
 });
 
 test("jobs ops column header matches preview (apto#125 pass 8)", () => {
-  assert.equal(JOBS_LIST_COLUMN_LABELS.opsStatus, "Ops");
+  assert.equal(JOBS_LIST_COLUMN_LABELS.opsStatus, "Ops status");
+});
+
+test("jobs list preview chrome pass 9 (apto#125)", () => {
+  const app = read("apps/web/src/App.tsx");
+  assert.match(
+    app,
+    /Pickups in progress, newest first\. Use the cards to focus on at-risk or overdue jobs\./,
+  );
+  assert.match(
+    app,
+    /Every customer Apto collects equipment from, with the SLA they're promised\./,
+  );
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  assert.match(jobs, /Filter by job ID or account/);
+  assert.match(jobs, /Open across facilities/);
+  assert.match(jobs, /Filtered results/);
+  assert.match(jobs, /sublabel="Within SLA window"/);
+  assert.match(jobs, /sublabel="Running out of time"/);
+  assert.match(jobs, /sublabel="SLA breached"/);
+  assert.match(jobs, /testId="jobs-facility-filter"/);
+  const barStart = jobs.indexOf("<FilterBar");
+  const barEnd = jobs.indexOf("</FilterBar>", barStart);
+  const barBlock = jobs.slice(barStart, barEnd);
+  assert.doesNotMatch(barBlock, /FacilityPills/);
+  const afterBar = jobs.slice(barEnd, barEnd + 400);
+  assert.match(afterBar, /FacilityPills/);
 });

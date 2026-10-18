@@ -155,10 +155,12 @@ export function JobsListV2({
         <StatCard
           label={filtersActive ? "Matching" : "All jobs"}
           value={String(filtered.length)}
+          sublabel={filtersActive ? "Filtered results" : "Open across facilities"}
         />
         <StatCard
           label="On track"
           value={String(onTrack)}
+          sublabel="Within SLA window"
           active={filters.slaFlag === "on-track"}
           onClick={() =>
             onFiltersChange({
@@ -170,6 +172,7 @@ export function JobsListV2({
         <StatCard
           label="At risk"
           value={String(atRisk)}
+          sublabel="Running out of time"
           active={filters.slaFlag === "at-risk"}
           onClick={() =>
             onFiltersChange({
@@ -181,6 +184,7 @@ export function JobsListV2({
         <StatCard
           label="Overdue"
           value={String(overdue)}
+          sublabel="SLA breached"
           active={filters.slaFlag === "overdue"}
           onClick={() =>
             onFiltersChange({
@@ -193,7 +197,7 @@ export function JobsListV2({
 
       <section className="dashboard-panel" aria-label="Jobs list">
       <FilterBar
-        searchPlaceholder="Search jobs"
+        searchPlaceholder="Filter by job ID or account"
         searchValue={filters.search}
         onSearchChange={(v) => onFiltersChange({ ...filters, search: v })}
         countLabel={`${filtered.length} job${filtered.length === 1 ? "" : "s"}`}
@@ -216,6 +220,13 @@ export function JobsListV2({
           </select>
         </label>
       </FilterBar>
+      <FacilityPills
+        facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
+        value={filters.facilityCode}
+        onChange={(code) => onFiltersChange({ ...filters, facilityCode: code })}
+        includeAll
+        testId="jobs-facility-filter"
+      />
       <div className="filter-advanced-toggle">
         <button
           type="button"
@@ -262,11 +273,6 @@ export function JobsListV2({
               Export
             </AimsButton>
           </div>
-          <FacilityPills
-            facilities={facilities}
-            value={filters.facilityCode}
-            onChange={(code) => onFiltersChange({ ...filters, facilityCode: code })}
-          />
           <select
             className="aims-select"
             value={filters.opsStatus}
