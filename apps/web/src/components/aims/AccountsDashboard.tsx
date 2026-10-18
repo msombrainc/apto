@@ -105,8 +105,8 @@ export function AccountsDashboard({
         />
         <StatCard
           label="Average SLA"
-          value={accounts.length === 0 ? "—" : `${avg} days`}
-          sublabel="Input + settlement + sales"
+          value={accounts.length === 0 ? "—" : Math.round(avg)}
+          sublabel={accounts.length === 0 ? undefined : "days mean commitment"}
           icon={<IconClock />}
         />
       </div>

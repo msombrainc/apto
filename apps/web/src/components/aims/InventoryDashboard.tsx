@@ -111,6 +111,7 @@ export function InventoryDashboard({
   const pageCount = Math.max(1, Math.ceil(inventoryTotal / inventoryPageSize));
   const [columnPickerOpen, setColumnPickerOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
 
   const allColumns = useMemo(
     () =>
@@ -222,31 +223,47 @@ export function InventoryDashboard({
   return (
     <div className="dashboard-stack">
       <div className="dashboard-actions dashboard-actions--end">
-        <AimsButton variant="secondary" onClick={() => setColumnPickerOpen(true)}>
-          Columns
-        </AimsButton>
-        <AimsButton variant="secondary" onClick={() => exportInventoryCsv(inventoryRows)}>
-          Export page CSV
-        </AimsButton>
-        <AimsButton variant="secondary" onClick={saveCurrentSearch}>
-          Save search
-        </AimsButton>
-        {savedSearches.length > 0 && (
-          <label className="inventory-account-select">
-            Saved
-            <select className="aims-select"
-              defaultValue=""
-              onChange={(e) => {
-                if (e.target.value) applySavedSearch(e.target.value);
-                e.target.value = "";
-              }}
-            >
-              <option value="">Load…</option>
-              {savedSearches.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </label>
+        <button
+          type="button"
+          className="aims-btn aims-btn--ghost"
+          aria-expanded={moreToolsOpen}
+          onClick={() => setMoreToolsOpen((o) => !o)}
+          data-testid="inventory-more-tools"
+        >
+          {moreToolsOpen ? "Hide tools" : "More tools"}
+        </button>
+        {moreToolsOpen && (
+          <div className="inventory-more-tools" data-testid="inventory-tools-panel">
+            <AimsButton variant="secondary" onClick={() => setColumnPickerOpen(true)}>
+              Columns
+            </AimsButton>
+            <AimsButton variant="secondary" onClick={() => exportInventoryCsv(inventoryRows)}>
+              Export page CSV
+            </AimsButton>
+            <AimsButton variant="secondary" onClick={saveCurrentSearch}>
+              Save search
+            </AimsButton>
+            {savedSearches.length > 0 && (
+              <label className="inventory-account-select">
+                Saved
+                <select
+                  className="aims-select"
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (e.target.value) applySavedSearch(e.target.value);
+                    e.target.value = "";
+                  }}
+                >
+                  <option value="">Load…</option>
+                  {savedSearches.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
         )}
         <AimsButton variant="secondary" icon={<IconRefresh />} onClick={onRefresh}>
           Refresh
@@ -264,7 +281,7 @@ export function InventoryDashboard({
           searchPlaceholder="Search Apto ID, serial, or part #"
           searchValue={inventoryQuery}
           onSearchChange={onInventoryQueryChange}
-          countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"} total · page ${inventoryPage} of ${pageCount}`}
+          countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"}`}
           searchId="inventory-filter"
         >
           <label className="filter-bar__select" htmlFor="inventory-account-filter">
