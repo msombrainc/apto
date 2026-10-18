@@ -26,15 +26,17 @@ test("App page titles match preview charter (apto#125)", () => {
   assert.doesNotMatch(app, /"Inventory browse"/);
 });
 
-test("inventory preview default columns are compact six (apto#125)", () => {
+test("inventory preview default columns match charter headers (apto#125 pass 10)", () => {
   assert.deepEqual(INVENTORY_PREVIEW_DEFAULT_COLUMNS, [
-    "part",
+    "apto",
     "serial",
+    "part",
+    "grade",
+    "status",
     "account",
-    "facility",
-    "job",
-    "created",
   ]);
+  const labels = read("apps/web/src/inventoryListColumns.ts");
+  assert.match(labels, /apto:\s*"APTO"/);
   const app = read("apps/web/src/App.tsx");
   assert.match(app, /INVENTORY_PREVIEW_DEFAULT_COLUMNS/);
 });
