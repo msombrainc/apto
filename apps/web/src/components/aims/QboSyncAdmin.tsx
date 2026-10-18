@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   QboRequestRow,
   QboStatus,
@@ -155,12 +155,13 @@ export function QboSyncAdmin() {
         header: "AIMS record",
         cell: (row: QboRequestRow) =>
           row.entityType === "Account" ? (
-            <a
-              href={`/accounts/${row.entityId}`}
+            <Link
+              to={`/accounts/${row.entityId}`}
+              className="btn-link"
               data-testid={`qbo-sync-open-aims-${row.entityId}`}
             >
               {row.entityLabel}
-            </a>
+            </Link>
           ) : (
             row.entityLabel
           ),
@@ -203,6 +204,7 @@ export function QboSyncAdmin() {
               <br />
               <a
                 href={`https://app.sandbox.qbo.intuit.com/app/customerdetail?nameId=${row.qboId}`}
+                className="btn-link"
                 target="_blank"
                 rel="noopener noreferrer"
                 data-testid={`qbo-sync-open-qbo-${row.id}`}
