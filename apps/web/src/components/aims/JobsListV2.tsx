@@ -26,6 +26,7 @@ import { FilterBar } from "./FilterBar";
 import { IconPlus, IconRefresh } from "./icons";
 import { Modal } from "./Modal";
 import { StatCard } from "./StatCard";
+import { formatJobSlaStatusLabel, jobSlaPillClass } from "./jobSlaPill";
 
 type JobFormState = {
   accountId: string;
@@ -489,9 +490,9 @@ function cellForColumn(job: Job, col: JobsListColumnId): ReactNode {
       return job.slaStatus;
     case "slaStatus":
       return (
-        <span className={`sla-pill sla-pill--${job.slaStatus}`}>
+        <span className={jobSlaPillClass(job.slaStatus)}>
           <span className="sr-only">SLA status: </span>
-          {job.slaStatus.replace(/-/g, " ")}
+          {formatJobSlaStatusLabel(job.slaStatus)}
         </span>
       );
     case "wipAssets":

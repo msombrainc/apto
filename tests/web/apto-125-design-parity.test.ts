@@ -179,6 +179,32 @@ test("pass 3 shared list chrome styles (apto#125)", () => {
   assert.match(css, /\.dashboard-panel:has\(\.data-table-wrap\) \.data-table td/);
 });
 
+test("bar-only unset SLA omits sla-summary class (apto#125 pass 5)", () => {
+  const bar = read("apps/web/src/components/aims/SlaSegmentBar.tsx");
+  assert.match(bar, /variant === "bar-only"/);
+  assert.match(bar, /sla-empty/);
+  const barOnlyUnset = bar.slice(
+    bar.indexOf('if (variant === "bar-only")'),
+    bar.indexOf("return <span className=\"sla-summary muted\">Not set</span>"),
+  );
+  assert.doesNotMatch(barOnlyUnset, /sla-summary/);
+});
+
+test("jobs SLA status pill uses shared helper (apto#125 pass 5)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  assert.match(jobs, /from "\.\/jobSlaPill"/);
+  assert.match(jobs, /jobSlaPillClass/);
+  const pill = read("apps/web/src/components/aims/jobSlaPill.ts");
+  assert.match(pill, /export function jobSlaPillClass/);
+});
+
+test("QBO sync admin uses btn-link for record and QBO anchors (apto#125 pass 5)", () => {
+  const qbo = read("apps/web/src/components/aims/QboSyncAdmin.tsx");
+  assert.match(qbo, /className="btn-link"/);
+  assert.match(qbo, /from "react-router-dom"/);
+  assert.match(qbo, /<Link[\s\S]*btn-link/);
+});
+
 test("inventory advanced filters gated; single facility control (apto#125)", () => {
   const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
   assert.match(inv, /advancedOpen/);

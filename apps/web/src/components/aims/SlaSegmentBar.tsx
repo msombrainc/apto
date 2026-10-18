@@ -26,6 +26,13 @@ export function SlaSegmentBar({
   const label = formatSlaSummary(receivingDays, processingDays, shippingDays);
 
   if (total <= 0) {
+    if (variant === "bar-only") {
+      return (
+        <div className="sla-segment-cell sla-segment-cell--bar-only">
+          <span className="sla-empty muted" aria-label="Not set">—</span>
+        </div>
+      );
+    }
     return <span className="sla-summary muted">Not set</span>;
   }
 
