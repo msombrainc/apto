@@ -7,6 +7,7 @@ import { AccountAvatar } from "./AccountAvatar";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
+import { FacilityPills } from "./FacilityPills";
 import { FilterBar } from "./FilterBar";
 import { IconBox, IconClock, IconPart, IconRefresh, IconUsers } from "./icons";
 import { isCreatedTodayUtc } from "../../inventoryDates";
@@ -287,15 +288,26 @@ export function InventoryDashboard({
         <StatCard
           label={filtersActive ? "Matching" : "Assets"}
           value={inventoryTotal}
+          sublabel={filtersActive ? "Filtered results" : "Across all facilities"}
           icon={<IconBox />}
         />
-        <StatCard label="Created today" value={createdToday} icon={<IconClock />} />
-        <StatCard label="Accounts" value={distinctAccountsOnPage} icon={<IconUsers />} />
+        <StatCard
+          label="Created today"
+          value={createdToday}
+          sublabel="Added to a job today"
+          icon={<IconClock />}
+        />
+        <StatCard
+          label="Accounts"
+          value={distinctAccountsOnPage}
+          sublabel="Customers with assets on hand"
+          icon={<IconUsers />}
+        />
       </div>
 
       <section className="dashboard-panel">
         <FilterBar
-          searchPlaceholder="Search Apto ID, serial, or part #"
+          searchPlaceholder="Filter by serial or part number"
           searchValue={inventoryQuery}
           onSearchChange={onInventoryQueryChange}
           countLabel={`${inventoryTotal} asset${inventoryTotal === 1 ? "" : "s"}`}
@@ -315,21 +327,14 @@ export function InventoryDashboard({
               ))}
             </select>
           </label>
-          <label className="filter-bar__select" htmlFor="inventory-facility-filter">
-            Facility
-            <select
-              className="aims-select"
-              id="inventory-facility-filter"
-              value={inventoryFacility}
-              onChange={(e) => onInventoryFacilityChange(e.target.value)}
-            >
-              <option value="">All facilities</option>
-              {(facilities.length ? facilities : ["GA", "TX", "CA"]).map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
-          </label>
         </FilterBar>
+        <FacilityPills
+          facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
+          value={inventoryFacility}
+          onChange={onInventoryFacilityChange}
+          includeAll
+          testId="inventory-facility-filter"
+        />
 
         <div className="filter-advanced-toggle">
           <button
