@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
   INVENTORY_PREVIEW_DEFAULT_COLUMNS,
+  normalizePreviewInventoryColumns,
 } from "../../apps/web/src/inventoryListColumns.ts";
 import {
   PREVIEW_JOBS_LIST_COLUMNS,
@@ -278,9 +279,15 @@ test("account detail hero uses bar-only SLA in panel (apto#125 pass 11)", () => 
   assert.match(detail, /variant="bar-only"/);
 });
 
-test("inventory column normalization helper (apto#125 pass 11)", () => {
-  const mod = read("apps/web/src/inventoryListColumns.ts");
-  assert.match(mod, /export function normalizePreviewInventoryColumns/);
+test("normalizePreviewInventoryColumns restores preview SoT (apto#125 pass 11)", () => {
+  const preview = [...INVENTORY_PREVIEW_DEFAULT_COLUMNS];
+  assert.deepEqual(
+    normalizePreviewInventoryColumns([...preview, "category", "job", "bogus"]),
+    preview,
+  );
+  assert.deepEqual(normalizePreviewInventoryColumns(["category", "job"]), preview);
+  assert.deepEqual(normalizePreviewInventoryColumns([]), preview);
+  assert.deepEqual(normalizePreviewInventoryColumns(["not-a-column"]), preview);
   const app = read("apps/web/src/App.tsx");
   assert.match(app, /normalizePreviewInventoryColumns/);
 });

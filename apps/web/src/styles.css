@@ -2018,6 +2018,13 @@ tr.row-selected {
   min-width: 10rem;
 }
 
+[data-testid="qbo-sync-connection"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem 1.25rem;
+}
+
 .login-theme-segment {
   margin-top: 1.25rem;
 }
