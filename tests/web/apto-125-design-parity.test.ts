@@ -67,3 +67,18 @@ test("AppShell can hide global asset lookup on list surfaces (apto#125)", () => 
   assert.match(app, /hideGlobalLookup/);
   assert.match(app, /showGlobalLookup=\{!hideGlobalLookup\}/);
 });
+
+test("accounts status filter under More filters disclosure (apto#125)", () => {
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /moreFiltersOpen/);
+  assert.match(accounts, /f2-accounts-filter-status/);
+  assert.match(accounts, /More filters/);
+});
+
+test("jobs advanced filters gated behind disclosure (apto#125)", () => {
+  const jobs = read("apps/web/src/components/aims/JobsListV2.tsx");
+  assert.match(jobs, /advancedFiltersOpen/);
+  assert.match(jobs, /data-testid="jobs-filters"/);
+  assert.match(jobs, /data-testid="jobs-created-from"/);
+  assert.match(jobs, /advancedFiltersOpen &&/);
+});

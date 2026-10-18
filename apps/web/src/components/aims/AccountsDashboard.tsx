@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Account, AccountWrite } from "../../api";
 import { accountPath } from "../../routing/paths";
@@ -70,6 +71,7 @@ export function AccountsDashboard({
   onRefresh,
   onCreate,
 }: AccountsDashboardProps) {
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
   const avg = averageSlaDays(accounts);
 
   return (
@@ -106,6 +108,35 @@ export function AccountsDashboard({
           countLabel={`${accounts.length} account${accounts.length === 1 ? "" : "s"}`}
           searchId="accounts-filter"
         />
+        <div className="filter-advanced-toggle">
+          <button
+            type="button"
+            className="aims-btn aims-btn--ghost"
+            aria-expanded={moreFiltersOpen}
+            onClick={() => setMoreFiltersOpen((o) => !o)}
+          >
+            {moreFiltersOpen ? "Hide filters" : "More filters"}
+          </button>
+        </div>
+        {moreFiltersOpen && (
+          <div className="jobs-advanced-filters" data-testid="accounts-more-filters">
+            <label className="filter-bar__select">
+              Status
+              <select
+                className="aims-select"
+                value={statusFilter}
+                onChange={(e) =>
+                  onStatusFilterChange(e.target.value as AccountStatusFilter)
+                }
+                data-testid="f2-accounts-filter-status"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Both">Both</option>
+              </select>
+            </label>
+          </div>
+        )}
         <DataTable
           ariaLabel="Customer accounts"
           loading={loading}

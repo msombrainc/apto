@@ -23,3 +23,8 @@ Authenticated list surfaces **Login**, **Accounts**, **Jobs & SLA**, and **Inven
 
 - **WHEN** the accounts table renders SLA data
 - **THEN** each row SHALL show the segmented SLA bar visualization instead of separate numeric Input/Settlement/Sales columns
+
+#### Scenario: Accounts status filter disclosure
+
+- **WHEN** the accounts list primary filter bar is shown
+- **THEN** the status filter (`f2-accounts-filter-status`) SHALL live under a collapsed “More filters” disclosure so the primary bar matches preview density while BR-0210 status query remains available
