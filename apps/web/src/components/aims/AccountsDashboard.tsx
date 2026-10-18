@@ -57,15 +57,15 @@ function accountsKpiLabel(statusFilter: AccountStatusFilter): string {
   }
 }
 
-function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
-  switch (statusFilter) {
-    case "Inactive":
-      return "Inactive records";
-    case "Both":
-      return "All records";
-    default:
-      return "Matching filter";
-  }
+function accountsKpiSublabel(
+  statusFilter: AccountStatusFilter,
+  query: string,
+): string | undefined {
+  const trimmed = query.trim();
+  if (trimmed) return "Matching search";
+  if (statusFilter === "Inactive") return "Inactive records";
+  if (statusFilter === "Both") return "All records";
+  return undefined;
 }
 
 export function AccountsDashboard({
@@ -100,13 +100,13 @@ export function AccountsDashboard({
         <StatCard
           label={accountsKpiLabel(statusFilter)}
           value={accounts.length}
-          sublabel={accountsKpiSublabel(statusFilter)}
+          sublabel={accountsKpiSublabel(statusFilter, query)}
           icon={<IconUsers />}
         />
         <StatCard
           label="Average SLA"
           value={accounts.length === 0 ? "—" : Math.round(avg)}
-          sublabel={accounts.length === 0 ? undefined : "days mean commitment"}
+          sublabel={accounts.length === 0 ? undefined : "days"}
           icon={<IconClock />}
         />
       </div>
@@ -186,6 +186,7 @@ export function AccountsDashboard({
               header: "SLA",
               cell: (a) => (
                 <SlaSegmentBar
+                  variant="bar-only"
                   receivingDays={a.slaReceivingDays}
                   processingDays={a.slaProcessingDays}
                   shippingDays={a.slaShippingDays}

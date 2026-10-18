@@ -413,15 +413,22 @@ body:has(.aims-app) {
 
 .theme-segment-btn {
   flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.45rem;
+  gap: 0.35rem;
+  padding: 0.45rem 0.55rem;
   border-radius: 999px;
   border: none;
   background: transparent;
   color: inherit;
   cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.theme-segment-label {
+  letter-spacing: 0.02em;
 }
 
 .theme-segment-btn.is-pressed {
@@ -1244,6 +1251,15 @@ tr.row-selected {
   min-width: 10rem;
 }
 
+.sla-segment-cell--bar-only {
+  min-width: 6.5rem;
+  gap: 0;
+}
+
+.sla-segment-cell--bar-only .sla-segment-bar {
+  height: 0.45rem;
+}
+
 .sla-segment-bar {
   display: flex;
   height: 0.35rem;
@@ -1904,6 +1920,33 @@ tr.row-selected {
 .account-detail-title h1 {
   margin: 0;
   font-size: 1.35rem;
+}
+
+.account-detail-title__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 12rem;
+}
+
+.account-detail-title__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.account-detail-sla {
+  max-width: 22rem;
+}
+
+.login-theme-segment {
+  margin-top: 1.25rem;
+}
+
+.login-theme-segment .theme-segment {
+  border-color: var(--aims-border);
+  background: var(--aims-surface-elevated);
 }
 
 .account-profile-grid {
