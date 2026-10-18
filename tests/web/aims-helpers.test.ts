@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { accountInitials } from "../../apps/web/src/components/aims/AccountAvatar.tsx";
 import {
+  formatSlaPreviewAria,
   formatSlaSummary,
   slaTotalDays,
 } from "../../apps/web/src/components/aims/SlaSegmentBar.tsx";
@@ -26,6 +27,14 @@ test("slaTotalDays and formatSlaSummary", () => {
   assert.equal(slaTotalDays(2, 5, 3), 10);
   assert.equal(formatSlaSummary(0, 0, 0), "Not set");
   assert.equal(formatSlaSummary(2, 5, 3), "2d input · 5d settlement · 3d sales = 10d");
+});
+
+test("formatSlaPreviewAria (apto#125 pass 13)", () => {
+  assert.equal(formatSlaPreviewAria(0, 0, 0), "Not set");
+  assert.equal(
+    formatSlaPreviewAria(45, 30, 60),
+    "Receiving 45 days, processing 30 days, shipping 60 days",
+  );
 });
 
 test("filterJobs applies account, facility, and search haystack", () => {
