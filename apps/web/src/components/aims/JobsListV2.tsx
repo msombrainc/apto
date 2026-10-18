@@ -21,6 +21,7 @@ import { jobPath } from "../../routing/paths";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
 import { FacilityPills } from "./FacilityPills";
+import { FilterBar } from "./FilterBar";
 import { IconPlus, IconRefresh } from "./icons";
 import { Modal } from "./Modal";
 import { StatCard } from "./StatCard";
@@ -71,6 +72,7 @@ export function JobsListV2({
   const [sortKey, setSortKey] = useState<JobsListSortKey>("slaDaysRemaining");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [columnPickerOpen, setColumnPickerOpen] = useState(false);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
 
   const filtered = useMemo(() => filterJobs(jobs, filters), [jobs, filters]);
   const sorted = useMemo(
@@ -153,39 +155,43 @@ export function JobsListV2({
       </div>
 
       <div className="kpi-row kpi-row--4" role="region" aria-label="Jobs summary">
-        <StatCard label="Matching" value={String(filtered.length)} />
+        <StatCard label="All jobs" value={String(filtered.length)} />
         <StatCard label="On track" value={String(onTrack)} />
         <StatCard label="At risk" value={String(atRisk)} />
         <StatCard label="Overdue" value={String(overdue)} />
       </div>
 
       <section className="dashboard-panel" aria-label="Jobs list">
-      <div className="filter-bar" data-testid="jobs-filters">
-        <input
-          type="search"
-          placeholder="Search jobs…"
-          value={filters.search}
-          onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-          data-testid="jobs-search"
-        />
-        <select className="aims-select"
-          value={filters.accountId}
-          onChange={(e) => onFiltersChange({ ...filters, accountId: e.target.value })}
-          data-testid="jobs-filter-account"
-        >
-          <option value="">All accounts</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+      <FilterBar
+        searchPlaceholder="Search jobs"
+        searchValue={filters.search}
+        onSearchChange={(v) => onFiltersChange({ ...filters, search: v })}
+        countLabel={`${filtered.length} job${filtered.length === 1 ? "" : "s"}`}
+        searchId="jobs-search"
+      >
+        <label className="filter-bar__select">
+          Account
+          <select
+            className="aims-select"
+            value={filters.accountId}
+            onChange={(e) => onFiltersChange({ ...filters, accountId: e.target.value })}
+            data-testid="jobs-filter-account"
+          >
+            <option value="">All accounts</option>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <FacilityPills
           facilities={facilities}
           value={filters.facilityCode}
           onChange={(code) => onFiltersChange({ ...filters, facilityCode: code })}
         />
-        <select className="aims-select"
+        <select
+          className="aims-select"
           value={filters.opsStatus}
           onChange={(e) => onFiltersChange({ ...filters, opsStatus: e.target.value })}
         >
@@ -196,78 +202,16 @@ export function JobsListV2({
             </option>
           ))}
         </select>
-        <select className="aims-select"
-          value={filters.slaFlag}
-          onChange={(e) =>
-            onFiltersChange({
-              ...filters,
-              slaFlag: e.target.value as JobFilterState["slaFlag"],
-            })
-          }
+      </FilterBar>
+      <div className="filter-advanced-toggle">
+        <button
+          type="button"
+          className="aims-btn aims-btn--ghost"
+          aria-expanded={advancedFiltersOpen}
+          onClick={() => setAdvancedFiltersOpen((o) => !o)}
         >
-          <option value="">All SLA flags</option>
-          <option value="on-track">On track</option>
-          <option value="at-risk">At risk</option>
-          <option value="overdue">Overdue</option>
-        </select>
-        <label>
-          Created from
-          <input
-            type="date"
-            value={filters.createdFrom}
-            onChange={(e) => onFiltersChange({ ...filters, createdFrom: e.target.value })}
-            data-testid="jobs-created-from"
-          />
-        </label>
-        <label>
-          Created to
-          <input
-            type="date"
-            value={filters.createdTo}
-            onChange={(e) => onFiltersChange({ ...filters, createdTo: e.target.value })}
-          />
-        </label>
-        <label>
-          Start from
-          <input
-            type="date"
-            value={filters.startFrom}
-            onChange={(e) => onFiltersChange({ ...filters, startFrom: e.target.value })}
-          />
-        </label>
-        <label>
-          Start to
-          <input
-            type="date"
-            value={filters.startTo}
-            onChange={(e) => onFiltersChange({ ...filters, startTo: e.target.value })}
-          />
-        </label>
-        <label>
-          Due from
-          <input
-            type="date"
-            value={filters.dueFrom}
-            onChange={(e) => onFiltersChange({ ...filters, dueFrom: e.target.value })}
-          />
-        </label>
-        <label>
-          Due to
-          <input
-            type="date"
-            value={filters.dueTo}
-            onChange={(e) => onFiltersChange({ ...filters, dueTo: e.target.value })}
-          />
-        </label>
-        <label className="filter-checkbox">
-          <input
-            type="checkbox"
-            checked={filters.openOnly}
-            onChange={(e) => onFiltersChange({ ...filters, openOnly: e.target.checked })}
-            data-testid="jobs-open-only"
-          />
-          Open jobs only
-        </label>
+          {advancedFiltersOpen ? "Hide filters" : "More filters"}
+        </button>
         <button
           type="button"
           className="link-button"
@@ -291,6 +235,83 @@ export function JobsListV2({
           Clear filters
         </button>
       </div>
+      {advancedFiltersOpen && (
+        <div className="jobs-advanced-filters" data-testid="jobs-filters">
+          <select
+            className="aims-select"
+            value={filters.slaFlag}
+            onChange={(e) =>
+              onFiltersChange({
+                ...filters,
+                slaFlag: e.target.value as JobFilterState["slaFlag"],
+              })
+            }
+          >
+            <option value="">All SLA flags</option>
+            <option value="on-track">On track</option>
+            <option value="at-risk">At risk</option>
+            <option value="overdue">Overdue</option>
+          </select>
+          <label>
+            Created from
+            <input
+              type="date"
+              value={filters.createdFrom}
+              onChange={(e) => onFiltersChange({ ...filters, createdFrom: e.target.value })}
+              data-testid="jobs-created-from"
+            />
+          </label>
+          <label>
+            Created to
+            <input
+              type="date"
+              value={filters.createdTo}
+              onChange={(e) => onFiltersChange({ ...filters, createdTo: e.target.value })}
+            />
+          </label>
+          <label>
+            Start from
+            <input
+              type="date"
+              value={filters.startFrom}
+              onChange={(e) => onFiltersChange({ ...filters, startFrom: e.target.value })}
+            />
+          </label>
+          <label>
+            Start to
+            <input
+              type="date"
+              value={filters.startTo}
+              onChange={(e) => onFiltersChange({ ...filters, startTo: e.target.value })}
+            />
+          </label>
+          <label>
+            Due from
+            <input
+              type="date"
+              value={filters.dueFrom}
+              onChange={(e) => onFiltersChange({ ...filters, dueFrom: e.target.value })}
+            />
+          </label>
+          <label>
+            Due to
+            <input
+              type="date"
+              value={filters.dueTo}
+              onChange={(e) => onFiltersChange({ ...filters, dueTo: e.target.value })}
+            />
+          </label>
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={filters.openOnly}
+              onChange={(e) => onFiltersChange({ ...filters, openOnly: e.target.checked })}
+              data-testid="jobs-open-only"
+            />
+            Open jobs only
+          </label>
+        </div>
+      )}
 
       <DataTable
         ariaLabel="Jobs"
@@ -398,6 +419,18 @@ export function JobsListV2({
   );
 }
 
+function formatSlaStatus(status: Job["slaStatus"]): string {
+  if (status === "on-track") return "On track";
+  if (status === "at-risk") return "At risk";
+  return "Overdue";
+}
+
+function slaStatusPillClass(status: Job["slaStatus"]): string {
+  if (status === "on-track") return "status-pill status-pill--active";
+  if (status === "at-risk") return "status-pill status-pill--inactive";
+  return "status-pill status-pill--inactive";
+}
+
 function cellForColumn(job: Job, col: JobsListColumnId): ReactNode {
   switch (col) {
     case "jobId":
@@ -416,10 +449,16 @@ function cellForColumn(job: Job, col: JobsListColumnId): ReactNode {
       return job.opsStatus ?? "—";
     case "daysSinceStart":
       return String(job.daysSinceStart);
+    case "dueDateUtc":
+      return job.dueDateUtc
+        ? new Date(job.dueDateUtc).toLocaleDateString()
+        : "—";
     case "slaDaysRemaining":
       return String(job.daysRemaining);
     case "slaFlag":
       return job.slaStatus;
+    case "slaStatus":
+      return <span className={slaStatusPillClass(job.slaStatus)}>{formatSlaStatus(job.slaStatus)}</span>;
     case "wipAssets":
       return String(job.wipAssetCount);
     case "exceptionAssets":

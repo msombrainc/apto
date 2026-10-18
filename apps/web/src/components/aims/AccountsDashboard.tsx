@@ -10,7 +10,7 @@ import { EmptyState } from "./EmptyState";
 import { FilterBar } from "./FilterBar";
 import { IconClock, IconPlus, IconRefresh, IconUsers } from "./icons";
 import { Modal } from "./Modal";
-import { slaTotalDays } from "./SlaSegmentBar";
+import { SlaSegmentBar, slaTotalDays } from "./SlaSegmentBar";
 import { StatCard } from "./StatCard";
 
 export type AccountStatusFilter = "Active" | "Inactive" | "Both";
@@ -48,11 +48,11 @@ function statusPillClass(status: string): string {
 function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
   switch (statusFilter) {
     case "Inactive":
-      return "Inactive customer records";
+      return "Inactive records";
     case "Both":
-      return "All customer records";
+      return "All records";
     default:
-      return "Active customer records";
+      return "Active customers";
   }
 }
 
@@ -85,14 +85,14 @@ export function AccountsDashboard({
 
       <div className="kpi-row kpi-row--2" role="region" aria-label="Accounts summary">
         <StatCard
-          label="Accounts"
+          label="Active customers"
           value={accounts.length}
           sublabel={accountsKpiSublabel(statusFilter)}
           icon={<IconUsers />}
         />
         <StatCard
           label="Average SLA"
-          value={accounts.length === 0 ? "—" : `${avg}d`}
+          value={accounts.length === 0 ? "—" : `${avg} days`}
           sublabel="Input + settlement + sales"
           icon={<IconClock />}
         />
@@ -100,25 +100,12 @@ export function AccountsDashboard({
 
       <section className="dashboard-panel">
         <FilterBar
-          searchPlaceholder="Filter by name or code"
+          searchPlaceholder="Search accounts"
           searchValue={query}
           onSearchChange={onQueryChange}
           countLabel={`${accounts.length} account${accounts.length === 1 ? "" : "s"}`}
           searchId="accounts-filter"
-        >
-          <label className="filter-bar__select">
-            Status
-            <select className="aims-select"
-              data-testid="f2-accounts-filter-status"
-              value={statusFilter}
-              onChange={(e) => onStatusFilterChange(e.target.value as AccountStatusFilter)}
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Both">Both</option>
-            </select>
-          </label>
-        </FilterBar>
+        />
         <DataTable
           ariaLabel="Customer accounts"
           loading={loading}
@@ -153,28 +140,29 @@ export function AccountsDashboard({
               ),
             },
             {
-              id: "apto",
-              header: "Apto %",
+              id: "sla",
+              header: "SLA",
               cell: (a) => (
-                <span className="numeric-cell">
-                  {Math.round(a.settings?.aptoPercentage ?? 0)}%
-                </span>
+                <SlaSegmentBar
+                  receivingDays={a.slaReceivingDays}
+                  processingDays={a.slaProcessingDays}
+                  shippingDays={a.slaShippingDays}
+                />
               ),
             },
             {
-              id: "inputSla",
-              header: "Input SLA",
-              cell: (a) => <span className="numeric-cell">{a.slaReceivingDays}</span>,
-            },
-            {
-              id: "settlementSla",
-              header: "Settlement SLA",
-              cell: (a) => <span className="numeric-cell">{a.slaProcessingDays}</span>,
-            },
-            {
-              id: "salesSla",
-              header: "Sales SLA",
-              cell: (a) => <span className="numeric-cell">{a.slaShippingDays}</span>,
+              id: "open",
+              header: "",
+              cell: (a) => (
+                <Link
+                  to={accountPath(a.id)}
+                  className="accounts-open-chevron"
+                  aria-label={`Open ${a.name}`}
+                  data-testid={`f2-accounts-open-${a.id}`}
+                >
+                  <span aria-hidden>›</span>
+                </Link>
+              ),
             },
           ]}
           emptyState={

@@ -42,6 +42,8 @@
   --aims-sidebar-bg: #0f172a;
   --aims-sidebar-text: #f8fafc;
   --aims-hero-bg: linear-gradient(135deg, #e8edf5 0%, #f4f6f9 60%, #eef2f7 100%);
+  --aims-login-hero-text: #f1efeb;
+  --aims-login-hero-text-muted: #b8c4d6;
   --aims-login-panel: #ffffff;
   --aims-input-bg: #ffffff;
   --aims-btn-bg: #1d4ed8;
@@ -120,6 +122,25 @@ body:has(.aims-app) {
   position: relative;
   overflow: hidden;
   padding: 2.5rem 3rem;
+}
+
+/* apto#125: preview keeps dark branded hero even when app theme is light */
+[data-theme="light"] .login-hero {
+  --aims-hero-bg: linear-gradient(135deg, #0c1118 0%, #141c28 45%, #10151c 100%);
+  background: var(--aims-hero-bg);
+  color: var(--aims-login-hero-text);
+}
+
+[data-theme="light"] .login-hero .brand-name,
+[data-theme="light"] .login-hero .login-headline,
+[data-theme="light"] .login-hero .login-pillars strong {
+  color: var(--aims-login-hero-text);
+}
+
+[data-theme="light"] .login-hero .brand-suffix,
+[data-theme="light"] .login-hero .login-lede,
+[data-theme="light"] .login-hero .login-pillars span {
+  color: var(--aims-login-hero-text-muted);
 }
 
 .login-hero::before {
