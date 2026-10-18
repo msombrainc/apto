@@ -414,11 +414,11 @@ export function App() {
     view === "accounts" && routeAccountId
       ? "View and edit customer profile, fees, billing, and QuickBooks sync."
       : view === "accounts"
-      ? "Active customers and SLA commitments at a glance."
+      ? "Every customer Apto collects equipment from, with the SLA they're promised."
       : view === "jobs" && spreadsheetImportJobId
         ? "Map columns, validate rows, and create serialized assets on this job."
       : view === "jobs"
-        ? "Track facility jobs and SLA countdown from intake through shipping."
+        ? "Pickups in progress, newest first. Use the cards to focus on at-risk or overdue jobs."
         : view === "sla-dashboard"
           ? "Company-wide SLA health, breakdowns, and jobs that need attention."
         : view === "scan"
