@@ -218,6 +218,7 @@ test("admin list panels use FilterBar (apto#125 pass 6)", () => {
   assert.match(ref, /from "\.\/FilterBar"/);
   assert.match(ref, /searchId="ref-admin-search"/);
   const pn = read("apps/web/src/components/aims/PartNumbersAdmin.tsx");
+  assert.match(pn, /from "\.\/FilterBar"/);
   assert.match(pn, /searchId="pn-admin-search"/);
 });
 
