@@ -266,6 +266,42 @@ test("jobs ops column header matches preview (apto#125 pass 9)", () => {
   assert.equal(JOBS_LIST_COLUMN_LABELS.opsStatus, "Ops status");
 });
 
+test("accounts open column header visible (apto#125 pass 11)", () => {
+  const accounts = read("apps/web/src/components/aims/AccountsDashboard.tsx");
+  assert.match(accounts, /header: "Open"/);
+  assert.match(accounts, /accounts-open-col/);
+});
+
+test("account detail hero uses bar-only SLA in panel (apto#125 pass 11)", () => {
+  const detail = read("apps/web/src/components/aims/AccountDetailPage.tsx");
+  assert.match(detail, /account-detail-hero/);
+  assert.match(detail, /variant="bar-only"/);
+});
+
+test("inventory column normalization helper (apto#125 pass 11)", () => {
+  const mod = read("apps/web/src/inventoryListColumns.ts");
+  assert.match(mod, /export function normalizePreviewInventoryColumns/);
+  const app = read("apps/web/src/App.tsx");
+  assert.match(app, /normalizePreviewInventoryColumns/);
+});
+
+test("jobs list column storage v3 (apto#125 pass 11)", () => {
+  const jobs = read("apps/web/src/jobsListColumns.ts");
+  assert.match(jobs, /apto\.jobsList\.columns\.v3/);
+});
+
+test("QBO sync queue uses FilterBar (apto#125 pass 11)", () => {
+  const qbo = read("apps/web/src/components/aims/QboSyncAdmin.tsx");
+  assert.match(qbo, /from "\.\/FilterBar"/);
+  assert.match(qbo, /hideSearch/);
+  assert.match(qbo, /qbo-sync-queue-panel/);
+});
+
+test("inventory preview panel compact table class (apto#125 pass 11)", () => {
+  const inv = read("apps/web/src/components/aims/InventoryDashboard.tsx");
+  assert.match(inv, /inventory-preview-panel/);
+});
+
 test("jobs list preview chrome pass 9 (apto#125)", () => {
   const app = read("apps/web/src/App.tsx");
   assert.match(

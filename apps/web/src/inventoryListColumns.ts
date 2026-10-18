@@ -35,6 +35,21 @@ export const INVENTORY_PREVIEW_DEFAULT_COLUMNS: InventoryListColumnId[] = [
   "account",
 ];
 
+/** Keep preview SoT columns when restoring saved searches (apto#125 pass 11). */
+export function normalizePreviewInventoryColumns(
+  columns: string[],
+): InventoryListColumnId[] {
+  const allowed = new Set(INVENTORY_COLUMN_IDS);
+  const preview = INVENTORY_PREVIEW_DEFAULT_COLUMNS.filter((id) => columns.includes(id));
+  if (preview.length === INVENTORY_PREVIEW_DEFAULT_COLUMNS.length) {
+    return [...INVENTORY_PREVIEW_DEFAULT_COLUMNS];
+  }
+  const filtered = columns.filter(
+    (c): c is InventoryListColumnId => allowed.has(c as InventoryListColumnId),
+  );
+  return filtered.length > 0 ? filtered : [...INVENTORY_PREVIEW_DEFAULT_COLUMNS];
+}
+
 export const INVENTORY_COLUMN_LABELS: Record<InventoryListColumnId, string> = {
   apto: "APTO",
   serial: "Serial",

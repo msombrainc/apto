@@ -45,7 +45,7 @@ export const DEFAULT_JOBS_LIST_COLUMNS: JobsListColumnId[] = [
   ...PREVIEW_JOBS_LIST_COLUMNS,
 ];
 
-const STORAGE_KEY = "apto.jobsList.columns.v2";
+const STORAGE_KEY = "apto.jobsList.columns.v3";
 
 export function loadJobsListColumns(): JobsListColumnId[] {
   try {

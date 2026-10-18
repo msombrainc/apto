@@ -167,7 +167,8 @@ export function AccountsDashboard({
             },
             {
               id: "open",
-              header: "",
+              header: "Open",
+              className: "accounts-open-col",
               cell: (a) => (
                 <Link
                   to={accountPath(a.id)}
