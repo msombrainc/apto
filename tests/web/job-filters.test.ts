@@ -64,6 +64,24 @@ test("sortJobs orders by numeric column", () => {
   assert.equal(sorted[0].id, "b");
 });
 
+test("sortJobs orders by dueDateUtc", () => {
+  const jobs = [
+    jobFixture({ id: "late", dueDateUtc: "2026-12-01T00:00:00Z" }),
+    jobFixture({ id: "early", dueDateUtc: "2026-01-01T00:00:00Z" }),
+  ];
+  const sorted = sortJobs(jobs, "dueDateUtc", "asc");
+  assert.equal(sorted[0].id, "early");
+});
+
+test("sortJobs orders by slaStatus", () => {
+  const jobs = [
+    jobFixture({ id: "over", slaStatus: "overdue" }),
+    jobFixture({ id: "ok", slaStatus: "on-track" }),
+  ];
+  const sorted = sortJobs(jobs, "slaStatus", "asc");
+  assert.equal(sorted[0].id, "ok");
+});
+
 test("escapeCsv quotes commas", () => {
   assert.equal(escapeCsv("a,b"), '"a,b"');
 });

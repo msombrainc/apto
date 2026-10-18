@@ -46,6 +46,17 @@ function statusPillClass(status: string): string {
     : "status-pill status-pill--active";
 }
 
+function accountsKpiLabel(statusFilter: AccountStatusFilter): string {
+  switch (statusFilter) {
+    case "Inactive":
+      return "Inactive accounts";
+    case "Both":
+      return "Accounts";
+    default:
+      return "Active customers";
+  }
+}
+
 function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
   switch (statusFilter) {
     case "Inactive":
@@ -53,7 +64,7 @@ function accountsKpiSublabel(statusFilter: AccountStatusFilter): string {
     case "Both":
       return "All records";
     default:
-      return "Active customers";
+      return "Matching filter";
   }
 }
 
@@ -87,7 +98,7 @@ export function AccountsDashboard({
 
       <div className="kpi-row kpi-row--2" role="region" aria-label="Accounts summary">
         <StatCard
-          label="Active customers"
+          label={accountsKpiLabel(statusFilter)}
           value={accounts.length}
           sublabel={accountsKpiSublabel(statusFilter)}
           icon={<IconUsers />}
