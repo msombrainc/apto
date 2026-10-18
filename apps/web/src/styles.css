@@ -1834,8 +1834,7 @@ tr.row-selected {
 
 .paging-footer,
 .inventory-paging,
-.pagination-row,
-.table-paging {
+.pagination-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1850,8 +1849,7 @@ tr.row-selected {
   justify-content: center;
 }
 
-.inventory-paging .inventory-account-select,
-.table-paging__page-size {
+.inventory-paging .inventory-account-select {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
