@@ -236,7 +236,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
     if (error) {
       return (
         <div className="dashboard-stack">
-          <Link to={ROUTES.accounts} className="text-button">← Accounts</Link>
+          <Link to={ROUTES.accounts} className="text-button">← Customer accounts</Link>
           <AlertBanner message={error} />
         </div>
       );
@@ -248,7 +248,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
 
   return (
     <div className="dashboard-stack" data-testid="f2-account-detail-page">
-      <Link to={ROUTES.accounts} className="text-button">← Accounts</Link>
+      <Link to={ROUTES.accounts} className="text-button">← Customer accounts</Link>
 
       <section className="dashboard-panel account-detail-hero">
       <div className="dashboard-actions account-detail-header">

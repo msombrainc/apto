@@ -309,6 +309,31 @@ test("inventory preview panel compact table class (apto#125 pass 11)", () => {
   assert.match(inv, /inventory-preview-panel/);
 });
 
+test("job detail route uses dedicated AppShell subtitle (apto#125 pass 12)", () => {
+  const app = read("apps/web/src/App.tsx");
+  const subtitleBlock = app.slice(app.indexOf("const pageSubtitle"), app.indexOf("const hideGlobalLookup"));
+  assert.match(subtitleBlock, /routeJobId/);
+  assert.match(subtitleBlock, /Edit job dates and ops status/);
+  const jobsOnly = subtitleBlock.slice(subtitleBlock.indexOf(': view === "jobs"'));
+  const detailIdx = jobsOnly.indexOf("routeJobId");
+  const listIdx = jobsOnly.indexOf('? "Pickups in progress');
+  assert.ok(detailIdx >= 0 && listIdx > detailIdx, "job detail subtitle must precede jobs list fallback");
+});
+
+test("job detail hero uses shared SLA status pill (apto#125 pass 12)", () => {
+  const detail = read("apps/web/src/components/aims/JobDetailPage.tsx");
+  assert.match(detail, /job-detail-hero/);
+  assert.match(detail, /jobSlaPillClass/);
+  assert.match(detail, /formatJobSlaStatusLabel/);
+  assert.match(detail, /data-testid="f3-job-sla-status"/);
+});
+
+test("account detail back link matches list title (apto#125 pass 12)", () => {
+  const detail = read("apps/web/src/components/aims/AccountDetailPage.tsx");
+  assert.match(detail, /← Customer accounts/);
+  assert.doesNotMatch(detail, /← Accounts</);
+});
+
 test("jobs list preview chrome pass 9 (apto#125)", () => {
   const app = read("apps/web/src/App.tsx");
   assert.match(

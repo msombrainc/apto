@@ -420,6 +420,8 @@ export function App() {
       ? "Every customer Apto collects equipment from, with the SLA they're promised."
       : view === "jobs" && spreadsheetImportJobId
         ? "Map columns, validate rows, and create serialized assets on this job."
+      : view === "jobs" && routeJobId
+        ? "Edit job dates and ops status, add assets, and open intake tools for this pickup."
       : view === "jobs"
         ? "Pickups in progress, newest first. Use the cards to focus on at-risk or overdue jobs."
         : view === "sla-dashboard"
