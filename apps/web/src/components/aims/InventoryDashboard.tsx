@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { Modal } from "./Modal";
 import { Link } from "react-router-dom";
 import type { Account, Asset, AssetInventoryRow } from "../../api";
 import { AssetChangeLogTable } from "../../AssetChangeLogTable";
@@ -6,7 +7,6 @@ import { AccountAvatar } from "./AccountAvatar";
 import { AimsButton } from "./Button";
 import { DataTable } from "./DataTable";
 import { EmptyState } from "./EmptyState";
-import { FacilityPills } from "./FacilityPills";
 import { FilterBar } from "./FilterBar";
 import { IconBox, IconClock, IconPart, IconRefresh, IconUsers } from "./icons";
 import { isCreatedTodayUtc } from "../../inventoryDates";
@@ -104,7 +104,13 @@ export function InventoryDashboard({
   );
 
   const createdToday = inventoryRows.filter((r) => isCreatedTodayUtc(r.createdAtUtc)).length;
+  const distinctAccountsOnPage = useMemo(
+    () => new Set(inventoryRows.map((r) => r.accountName)).size,
+    [inventoryRows],
+  );
   const pageCount = Math.max(1, Math.ceil(inventoryTotal / inventoryPageSize));
+  const [columnPickerOpen, setColumnPickerOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const allColumns = useMemo(
     () =>
@@ -216,6 +222,9 @@ export function InventoryDashboard({
   return (
     <div className="dashboard-stack">
       <div className="dashboard-actions dashboard-actions--end">
+        <AimsButton variant="secondary" onClick={() => setColumnPickerOpen(true)}>
+          Columns
+        </AimsButton>
         <AimsButton variant="secondary" onClick={() => exportInventoryCsv(inventoryRows)}>
           Export page CSV
         </AimsButton>
@@ -245,9 +254,9 @@ export function InventoryDashboard({
       </div>
 
       <div className="kpi-row kpi-row--3" role="region" aria-label="Inventory summary">
-        <StatCard label="On page" value={inventoryRows.length} icon={<IconBox />} />
-        <StatCard label="Created today (page)" value={createdToday} icon={<IconClock />} />
-        <StatCard label="Total matching" value={inventoryTotal} icon={<IconUsers />} />
+        <StatCard label="Assets" value={inventoryTotal} icon={<IconBox />} />
+        <StatCard label="Created today" value={createdToday} icon={<IconClock />} />
+        <StatCard label="Accounts" value={distinctAccountsOnPage} icon={<IconUsers />} />
       </div>
 
       <section className="dashboard-panel">
@@ -272,108 +281,108 @@ export function InventoryDashboard({
               ))}
             </select>
           </label>
+          <label className="filter-bar__select" htmlFor="inventory-facility-filter">
+            Facility
+            <select
+              className="aims-select"
+              id="inventory-facility-filter"
+              value={inventoryFacility}
+              onChange={(e) => onInventoryFacilityChange(e.target.value)}
+            >
+              <option value="">All facilities</option>
+              {(facilities.length ? facilities : ["GA", "TX", "CA"]).map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </label>
         </FilterBar>
 
-        <div className="inventory-filters-row">
-          <FacilityPills
-            facilities={facilities.length ? facilities : ["GA", "TX", "CA"]}
-            value={inventoryFacility}
-            onChange={onInventoryFacilityChange}
-          />
-          <label className="filter-field">
-            Grade
-            <input
-              className="aims-input"
-              value={inventoryGrade}
-              onChange={(e) => onInventoryGradeChange(e.target.value)}
-            />
-          </label>
-          <label className="filter-field">
-            Status
-            <input
-              className="aims-input"
-              value={inventoryStatus}
-              onChange={(e) => onInventoryStatusChange(e.target.value)}
-            />
-          </label>
-          <label className="filter-field">
-            Category
-            <input
-              className="aims-input"
-              value={inventoryCategory}
-              onChange={(e) => onInventoryCategoryChange(e.target.value)}
-            />
-          </label>
-          <label className="filter-field">
-            Created from
-            <input
-              className="aims-input"
-              type="date"
-              value={createdFrom}
-              onChange={(e) => onCreatedFromChange(e.target.value)}
-            />
-          </label>
-          <label className="filter-field">
-            Created to
-            <input
-              className="aims-input"
-              type="date"
-              value={createdTo}
-              onChange={(e) => onCreatedToChange(e.target.value)}
-            />
-          </label>
-        </div>
-
-        <div className="inventory-paste-panel">
+        <div className="filter-advanced-toggle">
           <button
             type="button"
             className="aims-btn aims-btn--ghost"
-            aria-expanded={pasteOpen}
-            onClick={() => setPasteOpen((o) => !o)}
+            aria-expanded={advancedOpen}
+            onClick={() => setAdvancedOpen((o) => !o)}
           >
-            Paste Apto IDs / serials
+            {advancedOpen ? "Hide filters" : "More filters"}
           </button>
-          {pasteOpen && (
-            <div className="inventory-paste-body">
-              <textarea
-                aria-label="Paste list of Apto IDs or serials"
-                rows={4}
-                value={pasteCodes}
-                onChange={(e) => onPasteCodesChange(e.target.value)}
-                placeholder="One code per line"
-              />
-              {notFoundCodes.length > 0 && (
-                <p className="muted" role="status">
-                  Not found: {notFoundCodes.join(", ")}
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
-        <div className="inventory-column-chooser" role="group" aria-label="Visible columns">
-          <span className="inventory-column-chooser__title">Columns</span>
-          <div className="inventory-column-chooser__chips">
-            {INVENTORY_COLUMN_IDS.map((id) => (
-              <label key={id} className="inventory-column-chip">
+        {advancedOpen && (
+          <>
+            <div className="inventory-filters-row">
+              <label className="filter-field">
+                Grade
                 <input
-                  type="checkbox"
-                  checked={visibleColumns.includes(id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      onVisibleColumnsChange([...visibleColumns, id]);
-                    } else {
-                      const next = visibleColumns.filter((c) => c !== id);
-                      if (next.length === 0) return;
-                      onVisibleColumnsChange(next);
-                    }
-                  }}
+                  className="aims-input"
+                  value={inventoryGrade}
+                  onChange={(e) => onInventoryGradeChange(e.target.value)}
                 />
-                <span>{INVENTORY_COLUMN_LABELS[id]}</span>
               </label>
-            ))}
-          </div>
-        </div>
+              <label className="filter-field">
+                Status
+                <input
+                  className="aims-input"
+                  value={inventoryStatus}
+                  onChange={(e) => onInventoryStatusChange(e.target.value)}
+                />
+              </label>
+              <label className="filter-field">
+                Category
+                <input
+                  className="aims-input"
+                  value={inventoryCategory}
+                  onChange={(e) => onInventoryCategoryChange(e.target.value)}
+                />
+              </label>
+              <label className="filter-field">
+                Created from
+                <input
+                  className="aims-input"
+                  type="date"
+                  value={createdFrom}
+                  onChange={(e) => onCreatedFromChange(e.target.value)}
+                />
+              </label>
+              <label className="filter-field">
+                Created to
+                <input
+                  className="aims-input"
+                  type="date"
+                  value={createdTo}
+                  onChange={(e) => onCreatedToChange(e.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="inventory-paste-panel">
+              <button
+                type="button"
+                className="aims-btn aims-btn--ghost"
+                aria-expanded={pasteOpen}
+                onClick={() => setPasteOpen((o) => !o)}
+              >
+                Paste Apto IDs / serials
+              </button>
+              {pasteOpen && (
+                <div className="inventory-paste-body">
+                  <textarea
+                    aria-label="Paste list of Apto IDs or serials"
+                    rows={4}
+                    value={pasteCodes}
+                    onChange={(e) => onPasteCodesChange(e.target.value)}
+                    placeholder="One code per line"
+                  />
+                  {notFoundCodes.length > 0 && (
+                    <p className="muted" role="status">
+                      Not found: {notFoundCodes.join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         <DataTable
           ariaLabel="Cross-job inventory"
@@ -422,6 +431,31 @@ export function InventoryDashboard({
           </label>
         </div>
       </section>
+
+      <Modal open={columnPickerOpen} title="Visible columns" onClose={() => setColumnPickerOpen(false)}>
+        <div className="inventory-column-chooser" role="group" aria-label="Visible columns">
+          <div className="inventory-column-chooser__chips">
+            {INVENTORY_COLUMN_IDS.map((id) => (
+              <label key={id} className="inventory-column-chip">
+                <input
+                  type="checkbox"
+                  checked={visibleColumns.includes(id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      onVisibleColumnsChange([...visibleColumns, id]);
+                    } else {
+                      const next = visibleColumns.filter((c) => c !== id);
+                      if (next.length === 0) return;
+                      onVisibleColumnsChange(next);
+                    }
+                  }}
+                />
+                <span>{INVENTORY_COLUMN_LABELS[id]}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </Modal>
 
       {selectedAsset && (
         <section className="dashboard-panel" aria-labelledby="inventory-asset-detail-title">

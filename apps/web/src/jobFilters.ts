@@ -62,8 +62,10 @@ export type JobsListSortKey =
   | "facility"
   | "opsStatus"
   | "daysSinceStart"
+  | "dueDateUtc"
   | "slaDaysRemaining"
   | "slaFlag"
+  | "slaStatus"
   | "wipAssets"
   | "exceptionAssets"
   | "finishedAssets"
@@ -98,9 +100,12 @@ function jobSortValue(job: Job, key: JobsListSortKey): string | number {
       return job.opsStatus ?? "";
     case "daysSinceStart":
       return job.daysSinceStart;
+    case "dueDateUtc":
+      return job.dueDateUtc ?? "";
     case "slaDaysRemaining":
       return job.daysRemaining;
     case "slaFlag":
+    case "slaStatus":
       return job.slaStatus;
     case "wipAssets":
       return job.wipAssetCount;

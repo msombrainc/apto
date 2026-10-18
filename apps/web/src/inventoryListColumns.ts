@@ -25,6 +25,16 @@ export const INVENTORY_COLUMN_IDS: InventoryListColumnId[] = [
   "created",
 ];
 
+/** Compact preview SoT default (apto#125). */
+export const INVENTORY_PREVIEW_DEFAULT_COLUMNS: InventoryListColumnId[] = [
+  "apto",
+  "serial",
+  "part",
+  "grade",
+  "status",
+  "account",
+];
+
 export const INVENTORY_COLUMN_LABELS: Record<InventoryListColumnId, string> = {
   apto: "Apto ID",
   serial: "Serial",

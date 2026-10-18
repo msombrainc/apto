@@ -15,6 +15,7 @@ type AppShellProps = {
   onGlobalLookupError: (message: string | null) => void;
   title: string;
   subtitle?: string;
+  showGlobalLookup?: boolean;
   children: ReactNode;
 };
 
@@ -51,6 +52,7 @@ export function AppShell({
   onGlobalLookupError,
   title,
   subtitle,
+  showGlobalLookup = true,
   children,
 }: AppShellProps) {
   const { theme, setTheme } = useTheme();
@@ -131,7 +133,7 @@ export function AppShell({
             <h1>{title}</h1>
             {subtitle && <p className="page-subtitle muted">{subtitle}</p>}
           </div>
-          <GlobalAssetLookup onError={onGlobalLookupError} />
+          {showGlobalLookup && <GlobalAssetLookup onError={onGlobalLookupError} />}
         </header>
         <div className="page-content">{children}</div>
       </main>

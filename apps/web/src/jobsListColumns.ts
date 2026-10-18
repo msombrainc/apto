@@ -5,8 +5,10 @@ export type JobsListColumnId =
   | "facility"
   | "opsStatus"
   | "daysSinceStart"
+  | "dueDateUtc"
   | "slaDaysRemaining"
   | "slaFlag"
+  | "slaStatus"
   | "wipAssets"
   | "exceptionAssets"
   | "finishedAssets"
@@ -17,32 +19,33 @@ export const JOBS_LIST_COLUMN_LABELS: Record<JobsListColumnId, string> = {
   account: "Account",
   accountCode: "Account Code",
   facility: "Facility",
-  opsStatus: "Ops Status",
+  opsStatus: "Ops status",
   daysSinceStart: "Days since start",
-  slaDaysRemaining: "SLA days remaining",
+  dueDateUtc: "Deadline",
+  slaDaysRemaining: "Days left",
   slaFlag: "SLA flag",
+  slaStatus: "Status",
   wipAssets: "WIP assets",
   exceptionAssets: "Exceptions",
   finishedAssets: "Finished",
   progressPercent: "Progress %",
 };
 
-export const DEFAULT_JOBS_LIST_COLUMNS: JobsListColumnId[] = [
-  "jobId",
+/** Design preview table density (apto#125). */
+export const PREVIEW_JOBS_LIST_COLUMNS: JobsListColumnId[] = [
   "account",
-  "accountCode",
   "facility",
   "opsStatus",
-  "daysSinceStart",
+  "dueDateUtc",
   "slaDaysRemaining",
-  "slaFlag",
-  "wipAssets",
-  "exceptionAssets",
-  "finishedAssets",
-  "progressPercent",
+  "slaStatus",
 ];
 
-const STORAGE_KEY = "apto.jobsList.columns.v1";
+export const DEFAULT_JOBS_LIST_COLUMNS: JobsListColumnId[] = [
+  ...PREVIEW_JOBS_LIST_COLUMNS,
+];
+
+const STORAGE_KEY = "apto.jobsList.columns.v2";
 
 export function loadJobsListColumns(): JobsListColumnId[] {
   try {

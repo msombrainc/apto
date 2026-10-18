@@ -42,7 +42,7 @@ import { AccountDetailPage } from "./components/aims/AccountDetailPage";
 import { AccountsDashboard, type AccountStatusFilter } from "./components/aims/AccountsDashboard";
 import { AlertBanner } from "./components/aims/AlertBanner";
 import { InventoryDashboard } from "./components/aims/InventoryDashboard";
-import { INVENTORY_COLUMN_IDS } from "./inventoryListColumns";
+import { INVENTORY_PREVIEW_DEFAULT_COLUMNS } from "./inventoryListColumns";
 import { JobDetailPage } from "./components/aims/JobDetailPage";
 import { BulkUnserializedPage } from "./components/aims/BulkUnserializedPage";
 import { JobCertificatePage } from "./components/aims/JobCertificatePage";
@@ -132,7 +132,7 @@ export function App() {
   const [inventoryTotal, setInventoryTotal] = useState(0);
   const [inventoryNotFoundCodes, setInventoryNotFoundCodes] = useState<string[]>([]);
   const [inventoryVisibleColumns, setInventoryVisibleColumns] = useState<string[]>([
-    ...INVENTORY_COLUMN_IDS,
+    ...INVENTORY_PREVIEW_DEFAULT_COLUMNS,
   ]);
   const [inventoryRows, setInventoryRows] = useState<AssetInventoryRow[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(false);
@@ -384,13 +384,13 @@ export function App() {
     view === "accounts" && routeAccountId
       ? "Account detail"
       : view === "accounts"
-      ? "Customer accounts"
+      ? "Accounts"
       : view === "jobs" && spreadsheetImportJobId
         ? "Import spreadsheet"
       : view === "jobs" && routeJobId
         ? "Job detail"
       : view === "jobs"
-        ? "Jobs"
+        ? "Jobs & SLA"
         : view === "sla-dashboard"
           ? "SLA dashboard"
         : view === "scan"
@@ -409,12 +409,12 @@ export function App() {
                       ? "Production dashboard"
                       : view === "asset-images"
                         ? "Asset images"
-                        : "Inventory browse";
+                        : "Inventory";
   const pageSubtitle =
     view === "accounts" && routeAccountId
       ? "View and edit customer profile, fees, billing, and QuickBooks sync."
       : view === "accounts"
-      ? "Every customer Apto collects equipment from, with the SLA they're promised."
+      ? "Active customers and SLA commitments at a glance."
       : view === "jobs" && spreadsheetImportJobId
         ? "Map columns, validate rows, and create serialized assets on this job."
       : view === "jobs"
@@ -437,7 +437,12 @@ export function App() {
                       ? "Facility output by operator and category with run-rate summary (sample data)."
                       : view === "asset-images"
                         ? "Capture up to three photos per sample asset from this device."
-                        : "Search assets across jobs with account and facility filters.";
+                        : "Cross-job asset search with compact filters matching the design preview.";
+
+  const hideGlobalLookup =
+    (view === "accounts" && !routeAccountId) ||
+    (view === "jobs" && !routeJobId && !spreadsheetImportJobId) ||
+    view === "inventory";
 
   return (
     <AppShell
@@ -449,6 +454,7 @@ export function App() {
       onGlobalLookupError={setError}
       title={pageTitle}
       subtitle={pageSubtitle}
+      showGlobalLookup={!hideGlobalLookup}
     >
       {view === "accounts" && routeAccountId && (
         <AccountDetailPage accountId={routeAccountId} />

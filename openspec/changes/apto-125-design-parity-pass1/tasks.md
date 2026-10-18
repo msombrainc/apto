@@ -1,0 +1,3 @@
+- [x] OpenSpec proposal + parity contract tests
+- [x] Login light hero + inventory/jobs/accounts preview alignment (pass 1)
+- [ ] Follow-on PRs per screen until matrix ≥95 (parent #125 stays open)
