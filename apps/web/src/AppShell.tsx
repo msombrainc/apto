@@ -63,7 +63,7 @@ export function AppShell({
     <div className="aims-app">
       <aside className="aims-sidebar" aria-label="Main menu">
         <div className="sidebar-brand">
-          <BrandMark />
+          <BrandMark variant="sidebar" />
           <span className="sidebar-product">AIMS</span>
         </div>
         <nav className="sidebar-nav" aria-label="Operations">

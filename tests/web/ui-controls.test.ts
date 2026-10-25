@@ -27,7 +27,7 @@ test("light theme muted text token meets charter contrast bump (apto#99)", () =>
     /\[data-theme="light"\]\s*\{([\s\S]*?)\n\}/,
   );
   assert.ok(lightBlock, "expected light theme block");
-  assert.match(lightBlock[1], /--aims-text-muted:\s*#64748b/);
+  assert.match(lightBlock[1], /--aims-text-muted:\s*#5a6578/);
 });
 
 test("dark theme muted + table links + chips + buttons (apto#107 charter §3–§5)", () => {

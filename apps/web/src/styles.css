@@ -7,6 +7,8 @@
   --aims-text: #f1efeb;
   --aims-text-muted: #b8c4d6;
   --aims-accent: #e85d2b;
+  --aims-brand-amber: #f9a51f;
+  --aims-sidebar-text-muted: #b8c4d6;
   --aims-cta-bg: #f1efeb;
   --aims-cta-text: #10151c;
   --aims-sidebar-bg: #121820;
@@ -35,8 +37,10 @@
   --aims-surface-elevated: #ffffff;
   --aims-border: #d8dee8;
   --aims-text: #0f172a;
-  --aims-text-muted: #64748b;
+  --aims-text-muted: #5a6578;
   --aims-accent: #e85d2b;
+  --aims-brand-amber: #f9a51f;
+  --aims-sidebar-text-muted: #b8c4d6;
   --aims-cta-bg: #0f172a;
   --aims-cta-text: #f8fafc;
   --aims-sidebar-bg: #0f172a;
@@ -192,6 +196,34 @@ body:has(.aims-app) {
 .brand-suffix {
   color: var(--aims-text-muted);
   font-weight: 500;
+}
+
+.brand-mark--sidebar {
+  gap: 0.5rem;
+}
+
+.brand-mark--sidebar .brand-suffix {
+  color: var(--aims-sidebar-text-muted);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.brand-disc-svg {
+  flex-shrink: 0;
+  display: block;
+}
+
+.dashboard-stack--accounts .accounts-page-lede {
+  margin: 0 0 0.35rem;
+  max-width: 42rem;
+}
+
+.dashboard-stack--accounts .dashboard-actions {
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-stack--accounts .kpi-row {
+  margin-top: 0;
 }
 
 .login-headline {

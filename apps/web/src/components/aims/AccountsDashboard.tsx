@@ -21,6 +21,7 @@ import {
 export type { AccountStatusFilter };
 
 type AccountsDashboardProps = {
+  pageLede?: string;
   accounts: Account[];
   query: string;
   statusFilter: AccountStatusFilter;
@@ -45,6 +46,7 @@ function averageSlaDays(accounts: Account[]): number {
 }
 
 export function AccountsDashboard({
+  pageLede,
   accounts,
   query,
   statusFilter,
@@ -62,7 +64,7 @@ export function AccountsDashboard({
   const avg = averageSlaDays(accounts);
 
   return (
-    <div className="dashboard-stack">
+    <div className="dashboard-stack dashboard-stack--accounts">
       <div className="dashboard-actions">
         <AimsButton variant="secondary" icon={<IconRefresh />} onClick={onRefresh}>
           Refresh
@@ -71,6 +73,10 @@ export function AccountsDashboard({
           New account
         </AimsButton>
       </div>
+
+      {pageLede ? (
+        <p className="page-subtitle muted accounts-page-lede">{pageLede}</p>
+      ) : null}
 
       <div className="kpi-row kpi-row--2" role="region" aria-label="Accounts summary">
         <StatCard
