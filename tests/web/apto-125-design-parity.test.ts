@@ -356,6 +356,37 @@ test("warehouse scan uses preview panel stack class (apto#125 pass 13)", () => {
   assert.match(scan, /warehouse-scan-preview-panel/);
 });
 
+test("account detail SLA fields use preview segment names (apto#125 pass 14)", () => {
+  const detail = read("apps/web/src/components/aims/AccountDetailPage.tsx");
+  assert.match(detail, /Receiving \(days\)/);
+  assert.match(detail, /Processing \(days\)/);
+  assert.match(detail, /Shipping \(days\)/);
+  assert.doesNotMatch(detail, /Input SLA \(days\)/);
+  assert.match(detail, /account-detail-tab-panel/);
+});
+
+test("account rules tab uses multi-column rules grid (apto#125 pass 14)", () => {
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\.rules-grid[\s\S]*grid-template-columns: repeat\(auto-fill, minmax\(16rem, 1fr\)\)/);
+});
+
+test("QBO admin uses preview panel sections (apto#125 pass 14)", () => {
+  const qbo = read("apps/web/src/components/aims/QboSyncAdmin.tsx");
+  assert.match(qbo, /qbo-sync-connection-panel admin-preview-panel/);
+  assert.match(qbo, /panel-section-title">Connection/);
+  assert.match(qbo, /panel-section-title">Sync queue/);
+});
+
+test("reference data admin uses admin preview panel (apto#125 pass 14)", () => {
+  const ref = read("apps/web/src/components/aims/ReferenceDataAdmin.tsx");
+  assert.match(ref, /dashboard-panel admin-preview-panel/);
+});
+
+test("light theme muted text matches DESIGN.md (apto#125 pass 14)", () => {
+  const css = read("apps/web/src/styles.css");
+  assert.match(css, /\[data-theme="light"\][\s\S]*--aims-text-muted: #64748b/);
+});
+
 test("jobs list preview chrome pass 9 (apto#125)", () => {
   const app = read("apps/web/src/App.tsx");
   assert.match(

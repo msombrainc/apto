@@ -35,7 +35,7 @@
   --aims-surface-elevated: #ffffff;
   --aims-border: #d8dee8;
   --aims-text: #0f172a;
-  --aims-text-muted: #5c6578;
+  --aims-text-muted: #64748b;
   --aims-accent: #e85d2b;
   --aims-cta-bg: #0f172a;
   --aims-cta-text: #f8fafc;
@@ -2142,7 +2142,31 @@ tr.row-selected {
 
 .rules-grid {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.5rem 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  justify-items: start;
+  text-align: left;
+}
+
+.account-detail-tab-panel .rules-grid {
+  margin-top: 0.25rem;
+}
+
+.panel-section-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--aims-text);
+}
+
+.admin-preview-panel .data-table-wrap .data-table td,
+.admin-preview-panel .data-table-wrap .data-table th {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+.qbo-sync-connection-panel .status-pill {
+  margin-bottom: 0.35rem;
 }
 
 .checkbox-row {

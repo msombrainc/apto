@@ -430,7 +430,7 @@ export function ReferenceDataAdmin() {
         </AimsButton>
       </div>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel admin-preview-panel">
         <div className="filter-bar ref-admin-filters">
           <label className="filter-field">
             List type
@@ -470,7 +470,7 @@ export function ReferenceDataAdmin() {
         </div>
       </section>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel admin-preview-panel">
         <FilterBar
           searchPlaceholder="Search code or name"
           searchValue={search}
