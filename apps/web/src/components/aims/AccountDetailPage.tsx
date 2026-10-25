@@ -326,7 +326,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
           </select>
         </label>
         <label>
-          Input SLA (days)
+          Receiving (days)
           <input
             type="number"
             min={0}
@@ -335,7 +335,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
           />
         </label>
         <label>
-          Settlement SLA (days)
+          Processing (days)
           <input
             type="number"
             min={0}
@@ -344,7 +344,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
           />
         </label>
         <label>
-          Sales SLA (days)
+          Shipping (days)
           <input
             type="number"
             min={0}
@@ -382,7 +382,7 @@ export function AccountDetailPage({ accountId }: AccountDetailPageProps) {
         ))}
       </div>
 
-      <section className="dashboard-panel" role="tabpanel">
+      <section className="dashboard-panel account-detail-tab-panel" role="tabpanel">
         {tab === "fees" && (
           <div data-testid="f2-account-fees-grid" className="fee-grid">
             <table>

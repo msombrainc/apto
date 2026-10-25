@@ -286,7 +286,7 @@ export function PartNumbersAdmin() {
         </AimsButton>
       </div>
 
-      <section className="dashboard-panel">
+      <section className="dashboard-panel admin-preview-panel">
         <FilterBar
           searchPlaceholder="Search part number"
           searchValue={search}

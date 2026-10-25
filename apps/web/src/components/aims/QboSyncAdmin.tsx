@@ -267,10 +267,11 @@ export function QboSyncAdmin() {
       </div>
 
       <section
-        className="dashboard-panel"
+        className="dashboard-panel qbo-sync-connection-panel admin-preview-panel"
         data-testid="qbo-sync-connection"
         aria-live="polite"
       >
+        <h2 className="panel-section-title">Connection</h2>
         {statusLoading ? (
           <p role="status" className="muted">Loading connection…</p>
         ) : connection?.connected ? (
@@ -301,7 +302,8 @@ export function QboSyncAdmin() {
         )}
       </section>
 
-      <section className="dashboard-panel qbo-sync-queue-panel">
+      <section className="dashboard-panel qbo-sync-queue-panel admin-preview-panel">
+        <h2 className="panel-section-title">Sync queue</h2>
         <FilterBar
           searchPlaceholder=""
           searchValue=""
