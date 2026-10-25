@@ -382,9 +382,9 @@ test("reference data admin uses admin preview panel (apto#125 pass 14)", () => {
   assert.match(ref, /dashboard-panel admin-preview-panel/);
 });
 
-test("light theme muted text matches DESIGN.md (apto#125 pass 14)", () => {
+test("light theme muted text uses AA charter token (apto#125/#147)", () => {
   const css = read("apps/web/src/styles.css");
-  assert.match(css, /\[data-theme="light"\][\s\S]*--aims-text-muted: #64748b/);
+  assert.match(css, /\[data-theme="light"\][\s\S]*--aims-text-muted: #5a6578/);
 });
 
 test("jobs list preview chrome pass 9 (apto#125)", () => {

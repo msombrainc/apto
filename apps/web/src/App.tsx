@@ -413,11 +413,14 @@ export function App() {
                       : view === "asset-images"
                         ? "Asset images"
                         : "Inventory";
+  const accountsListLede =
+    "Every customer Apto collects equipment from, with the SLA they're promised.";
+
   const pageSubtitle =
     view === "accounts" && routeAccountId
       ? "View and edit customer profile, fees, billing, and QuickBooks sync."
       : view === "accounts"
-      ? "Every customer Apto collects equipment from, with the SLA they're promised."
+      ? undefined
       : view === "jobs" && spreadsheetImportJobId
         ? "Map columns, validate rows, and create serialized assets on this job."
       : view === "jobs" && routeJobId
@@ -444,6 +447,9 @@ export function App() {
                         ? "Capture up to three photos per sample asset from this device."
                         : "Every asset received, across all jobs and facilities.";
 
+  const shellSubtitle =
+    view === "accounts" && !routeAccountId ? undefined : pageSubtitle;
+
   const hideGlobalLookup =
     view === "inventory" ||
     view === "scan" ||
@@ -463,7 +469,7 @@ export function App() {
       }}
       onGlobalLookupError={setError}
       title={pageTitle}
-      subtitle={pageSubtitle}
+      subtitle={shellSubtitle}
       showGlobalLookup={!hideGlobalLookup}
     >
       {view === "accounts" && routeAccountId && (
@@ -472,6 +478,7 @@ export function App() {
 
       {view === "accounts" && !routeAccountId && (
         <AccountsDashboard
+          pageLede={accountsListLede}
           accounts={accounts}
           query={query}
           statusFilter={accountStatusFilter}
